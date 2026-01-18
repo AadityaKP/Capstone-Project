@@ -1,0 +1,6 @@
+pettingzoo
+gymnasium
+numpy
+torch
+matplotlib
+scikit-learn
