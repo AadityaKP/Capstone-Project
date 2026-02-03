@@ -1,6 +1,7 @@
-pettingzoo
 gymnasium
 numpy
-torch
+pydantic
+pandas
 matplotlib
-scikit-learn
+chromadb
+neo4j
