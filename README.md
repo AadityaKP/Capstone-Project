@@ -1,63 +1,61 @@
-# Startup/Market Simulator Implementation Plan
+# Oracle Agent Documentation
 
-## Goal Description
-Build a robust, Gym-style **State Transition Engine** for a startup market simulator. This simulator serves as the "World" for AI agents (CrewAI, Agno, etc.) to interact with. It allows agents to take strategic actions (marketing, hiring, pricing) and receive feedback (metrics, rewards) via a rigorous mathematical model incorporating stochastic market forces.
+## Overview
+The **Oracle Agent** is an LLM-augmented intelligence designed to serve as the "brain" of the startup simulator. It provides context-aware insights, predicts market effects, and builds a persistent memory of the simulation's history and causal logic.
 
-## User Review Required
-> [!IMPORTANT]
-> **Math & Logic Verification**: The transition equations (e.g., how exactly `marketing_spend` impacts `cac` and `growth`) need to be tuned. We will start with standard S-curves and linear decays but expect iteration.
+**File Location**: `agents/oracle_agent.py`
 
-> [!NOTE]
-> **Time Step**: We are defaulting to **Weekly** time steps ($t$) as requested for granular simulation.
+## Architecture
+The agent operates on a **Retrieval-Augmented Generation (RAG)** loop with a **Write-Back** mechanism.
 
-## Proposed Changes
+1.  **Input**: Natural language user query.
+2.  **Retrieval**: Fetches relevant context from two databases.
+3.  **Reasoning**: Uses an LLM (Llama 3.1 via Ollama) to synthesize an answer.
+4.  **Write-Back**: Stores the new experience and any inferred causal links back into memory.
+5.  **Output**: Structured JSON containing insights and predictions.
 
-### Core Environment (`env/`)
+## Inputs & Outputs
 
-#### [NEW] [startup_env.py](file:///c:/College/Capstone/CapstoneProject/env/startup_env.py)
-*   **Class**: `StartupEnv(gym.Env)`
-*   **`__init__`**: Define action space (Dict) and observation space (Box). Initialize random seed.
-*   **`reset()`**: Returns initial state $S_0$.
-*   **`step(action)`**: Implements $S_t + A_t \to S_{t+1} + R_t$.
-    *   Validates invariants (Cash \ge 0).
-    *   Calculates derived metrics.
-    *   Checks termination conditions (Bankruptcy, Time limit).
+### Input
+-   **Query (`str`)**: A natural language string describing the current simulation state or asking for advice (e.g., *"We increased marketing spend by 50% but churn is high. Why?"*)
 
-#### [NEW] [business_logic.py](file:///c:/College/Capstone/CapstoneProject/env/business_logic.py)
-*   Encapsulate transition logic to keep Env clean.
-*   **Functions**:
-    *   `calculate_marketing_effect(spend, specific_channel_efficiency)`
-    *   `calculate_churn(product_quality, pricing, competition_noise)`
-    *   `calculate_burn(headcount, infrastructure_cost)`
-    *   `apply_stochastic_shock(value, volatility)`
+### Output
+Returns a `Dictionary` with the following structure:
+```json
+{
+    "insight": "A one-sentence high-level summary of the situation.",
+    "predicted_effects": ["List of likely future consequences", "e.g., CAC will rise"],
+    "suggested_causal_links": [
+        ["Subject", "PREDICATE", "Object"] 
+    ],
+    "store_episode_summary": "A consolidated text summary of this analysis for future recall."
+}
+```
 
-#### [NEW] [schemas.py](file:///c:/College/Capstone/CapstoneProject/env/schemas.py)
-*   **Pydantic Models** for strict typing of State and Actions.
-*   Ensures agents send valid JSON-serializable interactions.
+## Internal Working Components
 
-### Agent Interface (`agents/`)
+### 1. Memory Systems
+The agent uses a Dual-Memory architecture:
+*   **Episodic Memory (ChromaDB)**: Stores unstructured text summaries of past events (e.g., "In Q1, we hired 5 engineers"). Used for recalling similar past situations.
+*   **Causal Memory (Neo4j)**: Stores structured Knowledge Graph triples (e.g., `(Marketing) --[INCREASES]--> (BrandAwareness)`). Used for understanding variable relationships.
 
-#### [NEW] [adapter.py](file:///c:/College/Capstone/CapstoneProject/agents/adapter.py)
-*   **Translator Layer**: Converts agent string/JSON outputs into valid `env.step()` arguments.
-*   Handling of "invalid" actions (e.g., spending more than available cash).
+### 2. Analysis Pipeline (`analyze_situation`)
+When `analyze_situation(query)` is called:
+1.  **Context Retrieval**:
+    *   Calls `recall_similar_episodes(query)` to get top-k matches from Chroma.
+    *   Calls `recall_entity_context(query)` to find related nodes/edges in Neo4j.
+2.  **Prompt Construction**: Dynamically builds a prompt including the User Query, Past Episodes, and Causal Facts.
+3.  **LLM Inference**: Sends the prompt to Ollama (`llama3.1:8b`).
+4.  **Parsing & Safety**: Standardizes the LLM's raw string output into valid JSON.
 
-### Configuration (`config/`)
+### 3. Write-Back Mechanism
+To ensure the agent learns over time:
+*   **Episodes**: The `store_episode_summary` from the output is embedded and saved to ChromaDB.
+*   **Causal Links**: Any `suggested_causal_links` (e.g., `["Price", "DECREASES", "Demand"]`) are merged into the Neo4j graph.
 
-#### [NEW] [sim_config.py](file:///c:/College/Capstone/CapstoneProject/config/sim_config.py)
-*   Centralized constants: `MAX_STEPS`, `INITIAL_CASH`, `MARKET_VOLATILITY`, `BASE_CAC`.
-
-## Verification Plan
-
-### Automated Tests
-*   **Unit Tests**:
-    *   `test_invariants`: Assert Cash never becomes negative without termination.
-    *   `test_mechanics`: Assert Marketing spend > 0 increases Brand/Users (deterministically before noise).
-    *   `test_gym_api`: Verify `check_env(StartupEnv())` passes Gymnasium compliance.
-*   **Regression Tests**:
-    *   Run a `RandomPolicy` for 100 episodes. Ensure 0 crashes.
-
-### Manual Verification
-*   **Sanity Check Plotting**:
-    *   Run a simulation with a fixed policy (e.g., "Spend 10k/week").
-    *   Plot `Revenue` vs `Time`.
-    *   Visual check: "Does the startup die if burn > revenue?" "Does it grow if marketing is effective?"
+## Setup & Dependencies
+*   **Python Libraries**: `chromadb`, `neo4j`, `ollama` (client), `pydantic`, `python-dotenv`.
+*   **External Services**:
+    *   **Ollama**: Must be running locally (`ollama serve`) with `llama3.1` pulled.
+    *   **Neo4j**: Database must be active (default: `bolt://localhost:7687`).
+    *   **ChromaDB**: usage is local file-based by default.

@@ -1,6 +1,6 @@
 # Startup Simulator Project Explainer
 
-This document outlines the **5-Phase Development Process** used to build the Startup/Market Simulator. It explains the "Why" and "How" of each phase, providing a roadmap for understanding the codebase.
+This document outlines the **Development Phases** used to build the Startup/Market Simulator. It explains the "Why" and "How" of each phase, providing a roadmap for understanding the codebase.
 
 ---
 
@@ -64,3 +64,25 @@ We built a `RandomPolicy` to spam the environment with random actions for 100+ e
 *   **Clamped Invariants**: Fixed bugs where Cash could become negative.
 
 **Result:** A verified, crash-resistant sandbox ready for intelligent agents.
+
+---
+
+## Phase 6: Memory & Logical Reasoning (The Oracle)
+**Goal:** Add persistent memory and causal reasoning logic to the agent system.
+**Key Components:** 
+*   `agents/dummy_oracle_agent.py`: **OracleAgent** - The brain that queries memory and uses LLM to reason.
+*   `agents/llm_client.py`: **LLMClient** - Wrapper for local LLM inference (Ollama).
+*   `seed_dbs.py`: Script to populate ChromaDB (episodic) and Neo4j (causal) with initial world knowledge.
+*   `tests/test_llm_oracle.py`: Validation suite for the Oracle's reasoning pipeline.
+
+**How it works:**
+1.  **ChromaDB**: Stores "Episodes" (past experiences like "Raising prices caused churn").
+2.  **Neo4j**: Stores "Causal Graph" (facts like `PRICE_INCREASE -> CAUSES -> CHURN`).
+3.  **OracleAgent**: 
+    - Takes a query ("Should we raise prices?").
+    - Fetches relevant past episodes and causal facts.
+    - Sends this context to **Llama 3.1** (via Ollama).
+    - Returns a structured JSON insight + new causal links.
+    - **Writes back** new findings to the databases (learning loop).
+
+**Why this matters:** This transforms the agent from a random actor into a *learning system* that builds a knowledge graph over time.

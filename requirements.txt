@@ -5,3 +5,4 @@ pandas
 matplotlib
 chromadb
 neo4j
+ollama

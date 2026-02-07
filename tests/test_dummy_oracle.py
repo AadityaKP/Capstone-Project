@@ -5,12 +5,12 @@ import time
 # Add parent directory to path to allow importing 'agents'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from agents.dummy_oracle_agent import DummyOracleAgent
+from agents.dummy_oracle_agent import OracleAgent
 
 def test_dummy_oracle():
     print("=== Initializing Dummy Oracle Agent ===")
     try:
-        agent = DummyOracleAgent()
+        agent = OracleAgent()
     except Exception as e:
         print(f"Failed to initialize agent. Ensure Neo4j is running and .env is correct.\nError: {e}")
         return
@@ -38,9 +38,9 @@ def test_dummy_oracle():
     print("\n--- Test 2: Neo4j (Semantic Memory) ---")
     
     triples = [
-        ("MarketingSpend", "INCREASES", "UserAcquisition"),
-        ("UserAcquisition", "INCREASES", "ServerLoad"),
-        ("ServerLoad", "INCREASES", "Cost")
+        ["MarketingSpend", "INCREASES", "UserAcquisition"],
+        ["UserAcquisition", "INCREASES", "ServerLoad"],
+        ["ServerLoad", "INCREASES", "Cost"]
     ]
     
     print("1. Storing causal links...")
