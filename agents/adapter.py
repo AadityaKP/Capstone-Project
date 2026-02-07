@@ -9,67 +9,79 @@ class ActionAdapter:
     """
     The Safety Layer between Agents and the Sim.
     
-    Why this exists:
-    - LLM Agents (CrewAI, LangGraph) are probabilistic. They make mistakes.
-    - They might output `{"price": -10}` or `{"marketing": "lots"}`.
-    - If we plug that directly into `env.step()`, the math breaks.
-    
     Responsibilities:
-    1. Validate TYPES: Is 'fire_everyone' a valid action? (No).
-    2. Sanitize PARAMS: Is price negative? (Clamp it). Is amount a string? (Cast it).
-    3. Fail Gracefully: If action is garbage, return 'skip' rather than crashing.
+    1. Validate Input Structure (ActionBundle).
+    2. Sanitize Sub-Action Params.
+    3. Provide Default/No-Op values for missing components.
+    4. Fail Gracefully.
     """
-    
-    VALID_ACTIONS = ["marketing", "hiring", "product", "pricing", "skip"]
     
     @staticmethod
     def translate_action(agent_output: Union[Dict[str, Any], str]) -> Dict[str, Any]:
         """
-        Converts raw Agent output into a clean, Gym-compatible Action Dict.
+        Converts raw Agent output into a clean, Gym-compatible ActionBundle Dict.
+        Expected Input Structure:
+        {
+            "marketing": {"spend": 1000, "channel": "ppc"},
+            "hiring": {"hires": 1, ...},
+            ...
+        }
         """
         
-        # 1. Fallback for total gibberish (e.g., Agent returns a String instead of JSON)
+        # 1. Fallback for total gibberish
         if not isinstance(agent_output, dict):
-            logger.warning(f"Received non-dict action: {agent_output}. Skipping.")
-            return {"type": "skip", "params": {}}
+            logger.warning(f"Received non-dict action: {agent_output}. Returning Defaults.")
+            return ActionAdapter._get_noop()
             
-        # 2. Extract and Normalize Type
-        raw_type = agent_output.get("type", "").lower().strip()
-        params = agent_output.get("params", {})
+        clean_action = {}
         
-        # 3. Type Validation
-        if raw_type not in ActionAdapter.VALID_ACTIONS:
-            if raw_type:
-               logger.warning(f"Unknown action type: '{raw_type}'. Skipping.")
-            return {"type": "skip", "params": {}}
-            
-        # 4. Parameter Sanitization (Per Action Type)
-        clean_params = {}
-        
+        # 2. Marketing
         try:
-            if raw_type == "marketing":
-                # Ensure 'amount' is a positive float
-                amount = float(params.get("amount", 0.0))
-                clean_params["amount"] = max(0.0, amount) 
-                
-            elif raw_type == "hiring":
-                # Ensure 'count' is a positive integer
-                count = int(params.get("count", 0))
-                clean_params["count"] = max(0, count) 
-                
-            elif raw_type == "product":
-                # Ensure 'amount' is a positive float
-                amount = float(params.get("amount", 0.0))
-                clean_params["amount"] = max(0.0, amount)
-                
-            elif raw_type == "pricing":
-                # Ensure 'price' is a positive float (Min $0.01)
-                price = float(params.get("price", 10.0))
-                clean_params["price"] = max(0.01, price) 
-                
-        except (ValueError, TypeError) as e:
-            # If casting fails (e.g. float("free")), log it and skip.
-            logger.error(f"Parameter validation failed for {raw_type}: {e}")
-            return {"type": "skip", "params": {}}
+            mkt = agent_output.get("marketing", {})
+            clean_action["marketing"] = {
+                "spend": max(0.0, float(mkt.get("spend", 0.0))),
+                "channel": mkt.get("channel", "ppc") if mkt.get("channel") in ["ppc", "brand"] else "ppc"
+            }
+        except Exception:
+             clean_action["marketing"] = {"spend": 0.0, "channel": "ppc"}
+
+        # 3. Hiring
+        try:
+            hire = agent_output.get("hiring", {})
+            clean_action["hiring"] = {
+                "hires": max(0, int(hire.get("hires", 0))),
+                "cost_per_employee": max(1.0, float(hire.get("cost_per_employee", 10000.0)))
+            }
+        except Exception:
+            clean_action["hiring"] = {"hires": 0, "cost_per_employee": 10000.0}
             
-        return {"type": raw_type, "params": clean_params}
+        # 4. Product
+        try:
+            prod = agent_output.get("product", {})
+            clean_action["product"] = {
+                "r_and_d_spend": max(0.0, float(prod.get("r_and_d_spend", 0.0)))
+            }
+        except Exception:
+            clean_action["product"] = {"r_and_d_spend": 0.0}
+            
+        # 5. Pricing
+        try:
+            price = agent_output.get("pricing", {})
+            # Clamp percentage change to avoiding crashing the math (e.g. -200% price)
+            pct = float(price.get("price_change_pct", 0.0))
+            clean_action["pricing"] = {
+                "price_change_pct": max(-0.5, min(1.0, pct)) # Safety clamps -50% to +100%
+            }
+        except Exception:
+             clean_action["pricing"] = {"price_change_pct": 0.0}
+            
+        return clean_action
+
+    @staticmethod
+    def _get_noop() -> Dict[str, Any]:
+        return {
+            "marketing": {"spend": 0.0, "channel": "ppc"},
+            "hiring": {"hires": 0, "cost_per_employee": 10000},
+            "product": {"r_and_d_spend": 0.0},
+            "pricing": {"price_change_pct": 0.0}
+        }

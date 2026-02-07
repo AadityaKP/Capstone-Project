@@ -4,19 +4,19 @@ import numpy as np
 from typing import Dict, Any, Tuple
 
 from config import sim_config
-from env.schemas import StartupState
+from env.schemas import EnvState, ActionBundle, MarketingAction, HiringAction, ProductAction, PricingAction
 from env import business_logic
 
 class StartupEnv(gym.Env):
     """
-    The Gymnasium Environment for the Startup Simulator.
+    The Gymnasium Environment for the Startup Simulator (Physics Engine).
     
     Responsibilities:
-    1. Maintain the State (StartupState).
-    2. Orchestrate time steps (week by week).
-    3. Route Actions to proper Logic handlers.
-    4. Enforce Invariants (e.g., Cash cannot be negative).
-    5. Calculate Rewards.
+    1. Maintain the State (EnvState).
+    2. Orchestrate time steps (monthly).
+    3. Decode ActionBundle.
+    4. Run Business Logic (Shocks -> Physics -> Financials).
+    5. Calculate Rewards (Rule of 40).
     """
     
     metadata = {'render_modes': ['human']}
@@ -27,172 +27,197 @@ class StartupEnv(gym.Env):
         # -------------------
         # Action Space
         # -------------------
-        # We formally define a Dict space for Gym compatibility, 
-        # though the 'step' function is flexible with inputs.
-        # "type": Discrete(5) maps to -> 0:marketing, 1:hiring, 2:product, 3:pricing, 4:skip
+        # We expect a Dictionary that maps to ActionBundle.
+        # However, for Gym compatibility, we define a Dict space that roughly shapes it.
+        # Real validation happens in Pydantic.
         self.action_space = spaces.Dict({
-            "type": spaces.Discrete(5), 
-            "amount": spaces.Box(low=0, high=np.inf, shape=(1,), dtype=np.float32) 
+            "marketing": spaces.Dict({
+                "spend": spaces.Box(0, np.inf, (1,)),
+                "channel": spaces.Discrete(2) # 0=ppc, 1=brand
+            }),
+            "hiring": spaces.Dict({
+                "hires": spaces.Box(0, np.inf, (1,)),
+                "cost_per_employee": spaces.Box(0, np.inf, (1,))
+            }),
+            "product": spaces.Dict({
+                "r_and_d_spend": spaces.Box(0, np.inf, (1,))
+            }),
+            "pricing": spaces.Dict({
+                "price_change_pct": spaces.Box(-1.0, 10.0, (1,))
+            })
         })
 
         # -------------------
         # Observation Space
         # -------------------
-        # Defines the bounds of what the agent can see.
-        # Vector: [cash, users, revenue, burn, cac, churn, growth, quality, brand, price, time]
-        low = np.array([0, 0, 0, 0, 0, 0, -1.0, 0, 0, 0, 0], dtype=np.float32)
-        # using np.inf for unbounded upper limits
-        high = np.array([np.inf, np.inf, np.inf, np.inf, np.inf, 1.0, np.inf, 1.0, np.inf, np.inf, sim_config.MAX_STEPS], dtype=np.float32)
+        # Vector: 
+        # [mrr, cash, cac, ltv, churn_ent, churn_smb, churn_b2c, 
+        #  interest, confidence, competitors, quality, months]
+        low = np.array([0, -np.inf, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
+        high = np.array([np.inf, np.inf, np.inf, np.inf, 1.0, 1.0, 1.0, np.inf, 200, np.inf, 1.0, sim_config.MAX_STEPS], dtype=np.float32)
         
         self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
-        self.current_state: StartupState = None
-        
-        # Internal State (Hidden from Agent directly, but effects are visible)
-        self.headcount = 1  # Starting with just the Founder.
+        self.state: EnvState = None
         
     def reset(self, seed=None, options=None) -> Tuple[np.ndarray, Dict[str, Any]]:
-        """
-        Resets the environment to Week 0.
-        Must be called before the first step.
-        """
         super().reset(seed=seed)
         
-        # Initialize State with Config defaults
-        self.current_state = StartupState(
+        # Initialize State with reasonable defaults (could be moved to config)
+        self.state = EnvState(
+            mrr=50_000,
             cash=sim_config.INITIAL_CASH,
-            users=sim_config.INITIAL_USERS,
-            revenue=0.0,
-            burn_rate=sim_config.MIN_BURN_RATE,
             cac=sim_config.BASE_CAC,
-            churn=sim_config.MIN_CHURN,
-            growth_rate=0.0,
+            ltv=7_000,
+            churn_enterprise=0.01,
+            churn_smb=0.03,
+            churn_b2c=0.05,
+            interest_rate=3.0,
+            consumer_confidence=100.0,
+            competitors=5,
             product_quality=sim_config.INITIAL_PRODUCT_QUALITY,
-            brand_strength=sim_config.INITIAL_BRAND,
-            price=10.0, # Default entry price
-            time_step=0
+            price=50.0, # Initial ARPU
+            months_elapsed=0
         )
-        
-        self.headcount = 1
         
         return self._get_obs(), {}
 
-    def step(self, action: Dict[str, Any]) -> Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]:
+    def step(self, action_dict: Dict[str, Any]) -> Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]:
         """
-        The Heart of the Simulator.
-        Advances time by 1 unit (1 Week).
-        
-        Process:
-        1. Parse & Apply Action (Spend Cash, Change Price).
-        2. Update Financials (Deduct Burn).
-        3. Enforce Invariants (Check Bankruptcy).
-        4. Run Market Dynamics (Revenue, Churn, Stochastic events).
-        5. Check Termination Conditions.
-        6. Calculate Reward.
+        Advances the simulation by 1 Month.
         """
-        
-        # --- 1. CONFIGURATION & ACTION APPLICATION ---
-        action_type = action.get("type", "skip")
-        action_params = action.get("params", {})
-        
-        spend = 0.0 # Variable costs incurred THIS specific step (one-time).
-        
-        # Route actions to Logic
-        if action_type == "marketing":
-            spend = action_params.get("amount", 0.0)
-            self.current_state.users, self.current_state.brand_strength = \
-                business_logic.apply_marketing_effect(self.current_state.users, self.current_state.brand_strength, spend)
-        
-        elif action_type == "pricing":
-            new_price = action_params.get("price", self.current_state.price)
-            self.current_state.price = float(new_price)
-            
-        elif action_type == "hiring":
-            hire_count = int(action_params.get("count", 0))
-            if hire_count > 0:
-                # Recruiting Fee: $2000 one-time cost per hire.
-                spend += hire_count * 2000.0 
-                self.headcount += hire_count
-                
-        elif action_type == "product":
-            invest_amount = action_params.get("amount", 0.0)
-            spend += invest_amount
-            # Improve product quality through investment
-            self.current_state.product_quality = business_logic.apply_product_investment(
-                self.current_state.product_quality, 
-                invest_amount
+        # 1. Decode Action (Assumes ActionAdapter has already cleaned it or it's a valid dict)
+        # We manually construct models to ensure types are correct before logic
+        try:
+            action = ActionBundle(
+                marketing=MarketingAction(**action_dict.get("marketing", {"spend": 0.0, "channel": "ppc"})),
+                hiring=HiringAction(**action_dict.get("hiring", {"hires": 0, "cost_per_employee": 10000})),
+                product=ProductAction(**action_dict.get("product", {"r_and_d_spend": 0.0})),
+                pricing=PricingAction(**action_dict.get("pricing", {"price_change_pct": 0.0}))
             )
-                
-        # --- 2. FINANCIAL UPDATES ---
-        # Calculate weekly burn (Fixed + Salaries + This week's One-time Spend)
-        self.current_state.burn_rate = business_logic.calculate_burn(self.headcount, 0.0) + spend
-        self.current_state.cash -= self.current_state.burn_rate
+        except Exception as e:
+            # Fallback for empty/bad actions
+            print(f"Action Decoding Failed: {e}. Using defaults.")
+            action = ActionBundle(
+                marketing=MarketingAction(spend=0.0, channel="ppc"),
+                hiring=HiringAction(hires=0, cost_per_employee=10000),
+                product=ProductAction(r_and_d_spend=0.0),
+                pricing=PricingAction(price_change_pct=0.0)
+            )
+
+        prev_mrr = self.state.mrr
+
+        # --- 2. APPLY SHOCKS ---
+        business_logic.interest_rate_shock(self.state)
+        business_logic.consumer_confidence_shock(self.state)
+        business_logic.competitive_entry_shock(self.state)
+
+        # --- 3. APPLY LOGIC ---
+        # Marketing → new MRR
+        new_mrr = business_logic.compute_new_mrr(self.state, action.marketing)
+
+        # Product → expansion
+        expansion = business_logic.compute_expansion_mrr(self.state, action.product)
+
+        # Churn
+        churn_rate = business_logic.compute_churn_rate(self.state)
+
+        # Update MRR (Organic + Marketing + Product)
+        self.state.mrr = self.state.mrr * (1 - churn_rate) + new_mrr + expansion
+
+        # Revenue Collection (Cash In) -> Happens BEFORE Pricing changes impact future MRR
+        # User feedback: "update MRR fully -> then collect revenue"
+        self.state.cash += self.state.mrr
+
+        # Pricing effect (Updates MRR for NEXT step, but doesn't affect current cash collection?)
+        # Actually user said: "state.cash += state.mrr then pricing effect mutates mrr... cash is collected at pre-pricing revenue... Correct order: update MRR fully -> then collect revenue"
+        # Wait. If I update MRR first, then collect, that IS collecting post-update revenue.
+        # The user said "state.cash += state.mrr THEN pricing effect mutates mrr" is WRONG.
+        # Implies pricing effect SHOULD happen before collection? OR pricing effect should happen AFTER collection?
+        # "Correct order: update MRR fully -> then collect revenue".
+        # If "pricing effect mutates mrr", then it should correspond to the *next* period's billing or effective immediately? 
+        # Usually price changes affect *future* billing or *current* if immediate.
+        # Let's assume: 
+        # 1. Base MRR update (Churn, New, Expansion).
+        # 2. Pricing Effect (Elasticity impacts MRR).
+        # 3. THEN Collect Revenue (Cash += Final MRR).
         
-        # CRITICAL INVARIANT: Cash cannot be negative.
-        # If it drops below zero, we clamp it to 0.0 and will terminate later.
-        if self.current_state.cash < 0:
-            self.current_state.cash = 0.0
+        business_logic.apply_pricing_effect(self.state, action.pricing) # Mutates MRR
         
-        # --- 3. MARKET DYNAMICS (The "World" Reacts) ---
+        # NOW Collect (after all MRR mutations for this step are done)
+        # Note: I previously had cash+=mrr BEFORE pricing. The user said that was "collecting at pre-pricing revenue" (which implies pricing SHOULD impact it).
+        # BUT they also said "Correct order: update MRR fully -> then collect revenue".
+        # So yes: Update MRR (including pricing) -> Collect.
         
-        # Churn: Users leaving depending on Price vs Value
-        self.current_state.churn = business_logic.calculate_churn(
-            self.current_state.product_quality, 
-            self.current_state.price
-        )
+        # Hiring (One-time cost)
+        # CFO Constraint: Max hires based on 18-month runway
+        # Max additional burn allowed = Cash / 18
+        # Max hires = (Cash / 18) / cost_per_employee
+        if action.hiring.hires > 0:
+            max_hires = int((self.state.cash / 18.0) / action.hiring.cost_per_employee)
+            if action.hiring.hires > max_hires:
+                # CFO Reject: Not enough cash for safe runway
+                action.hiring.hires = max_hires
         
-        # Remove churned users
-        churned_users = int(self.current_state.users * self.current_state.churn)
-        self.current_state.users = max(0, self.current_state.users - churned_users)
+        one_time_hiring_cost = action.hiring.hires * action.hiring.cost_per_employee
+        business_logic.apply_hiring_cost(self.state, action.hiring) # Deducts one-time cost
+        self.state.headcount += action.hiring.hires
         
-        # Revenue Generation: Users * Price + Random Market Noise
-        raw_revenue = business_logic.calculate_revenue(self.current_state.users, self.current_state.price)
-        self.current_state.revenue = business_logic.apply_stochastic_shock(raw_revenue)
+        # Recurring Burn (Salaries)
+        salary_burn = self.state.headcount * 8000.0
         
-        # Add Revenue to Cash
-        self.current_state.cash += self.current_state.revenue
+        # Deduct other burn (Marketing + Product)
+        total_spend = action.marketing.spend + action.product.r_and_d_spend
         
-        # --- 4. TIME & TERMINATION ---
-        self.current_state.time_step += 1
+        # DEDUCT BURN (Fixing Double Subtraction)
+        # business_logic.apply_hiring_cost already deducted `one_time_hiring_cost`.
+        # So we deduct `salary_burn` and `total_spend`.
+        self.state.cash -= (salary_burn + total_spend)
         
-        terminated = False # Reached terminal state (Bankruptcy)
-        truncated = False  # Time Limit Exceeded
+        # --- UPDATE UNIT ECONOMICS ---
+        # Calculate CAC (Marketing Spend / New Users)
+        # We need to estimate 'new_users' generated this step. 
+        # mrr_gain = new_mrr. Assuming avg price ~ state.price (approx)
+        # new_users = new_mrr / state.price
+        if self.state.price > 0:
+            estimated_new_users = new_mrr / self.state.price
+            raw_cac = business_logic.compute_cac(action.marketing.spend, estimated_new_users)
+            self.state.cac = business_logic.scale_cac_by_macro(raw_cac, self.state)
         
-        # Bankruptcy Condition
-        if self.current_state.cash <= 0:
-            terminated = True
-            
-        # Time Limit Condition
-        if self.current_state.time_step >= sim_config.MAX_STEPS:
-            truncated = True
-            
-        # --- 5. REWARD FUNCTION ---
-        # Current Goal: Profitability + Growth.
-        # Reward = Net Profit - Churn Penalty.
-        reward = (self.current_state.revenue - self.current_state.burn_rate)
-        # Heavy penalty for losing users
-        reward -= (churned_users * 10.0) 
-        
-        # Massive penalty for Bankruptcy to discourage reckless spending
-        if terminated and self.current_state.cash <= 0:
-            reward -= 10000.0
-            
-        return self._get_obs(), reward, terminated, truncated, {"state": self.current_state.model_dump()}
+        # Calculate LTV (ARPU / Churn)
+        # ARPU = Price (simplified)
+        self.state.ltv = business_logic.compute_ltv(self.state.price, churn_rate)
+
+        # Calculate total burn for Rule of 40 (Spend + Hiring Cost + Salaries)
+        rule40_burn = one_time_hiring_cost + salary_burn + total_spend
+
+        # --- 4. REWARDS & METRICS ---
+        rule40 = business_logic.compute_rule_of_40(prev_mrr, self.state.mrr, rule40_burn)
+        reward = business_logic.compute_reward(self.state, rule40)
+
+        # Time progression
+        self.state.months_elapsed += 1
+
+        terminated = self.state.cash <= 0
+        truncated = self.state.months_elapsed >= 120 # 10 years or config max
+
+        return self._get_obs(), reward, terminated, truncated, {
+            "rule_of_40": rule40,
+            "state": self.state.model_dump()
+        }
 
     def _get_obs(self) -> np.ndarray:
-        """
-        Helper to flatten the State Dict into a Numpy Array for Gym.
-        """
         return np.array([
-            self.current_state.cash,
-            self.current_state.users,
-            self.current_state.revenue,
-            self.current_state.burn_rate,
-            self.current_state.cac,
-            self.current_state.churn,
-            self.current_state.growth_rate,
-            self.current_state.product_quality,
-            self.current_state.brand_strength,
-            self.current_state.price,
-            self.current_state.time_step
+            self.state.mrr,
+            self.state.cash,
+            self.state.cac,
+            self.state.ltv,
+            self.state.churn_enterprise,
+            self.state.churn_smb,
+            self.state.churn_b2c,
+            self.state.interest_rate,
+            self.state.consumer_confidence,
+            self.state.competitors,
+            self.state.product_quality,
+            self.state.months_elapsed
         ], dtype=np.float32)

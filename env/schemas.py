@@ -1,5 +1,6 @@
+from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import Dict, Any, Literal
+from typing import Dict, Literal, Optional
 
 # ==========================================
 # Schema Definitions
@@ -7,39 +8,67 @@ from typing import Dict, Any, Literal
 # We use Pydantic to strictly define the structure of data moving through the system.
 # This guarantees type safety and provides auto-generated documentation for Agents.
 
-class StartupState(BaseModel):
+class EnvState(BaseModel):
     """
     Represents the full snapshot of the Startup at a specific point in time (t).
     This is what the Agent 'sees' (Observation Space).
+    Includes Core Financials, Unit Economics, Segmented Churn, Macro Variables, and Lifecycle.
     """
     
-    # Financials
-    cash: float = Field(..., description="Current liquid cash balance. if <= 0, Game Over.")
-    revenue: float = Field(..., ge=0.0, description="Revenue generated in the LAST step (Weekly).")
-    burn_rate: float = Field(..., ge=0.0, description="Total expenses incurred in the LAST step (Salaries + Spend).")
+    # Core Financials
+    mrr: float = Field(..., description="Monthly Recurring Revenue ($).")
+    cash: float = Field(..., description="Current liquid cash balance ($). If <= 0, Game Over.")
     
-    # User Metrics
-    users: int = Field(..., ge=0, description="Total active users currently on the platform.")
-    growth_rate: float = Field(..., description="Percentage growth in users vs previous step.")
-    churn: float = Field(..., ge=0.0, le=1.0, description="Percentage of users lost this step (0.0 to 1.0).")
+    # Unit Economics
+    cac: float = Field(..., description="Customer Acquisition Cost ($).")
+    ltv: float = Field(..., description="Lifetime Value ($).")
     
-    # Market/Product Metrics
-    cac: float = Field(..., ge=0.0, description="Effective Cost Per Acquisition for the last marketing push.")
-    product_quality: float = Field(..., ge=0.0, le=1.0, description="Product score (0=Broken, 1=Perfect). Reduces Churn.")
-    brand_strength: float = Field(..., ge=0.0, description="Accumulated brand equity. Multiplier for marketing efficiency.")
-    price: float = Field(..., ge=0.0, description="Current subscription price per user.")
+    # Churn by Segment (Monthly Rates 0.0-1.0)
+    churn_enterprise: float = Field(..., ge=0.0, le=1.0)
+    churn_smb: float = Field(..., ge=0.0, le=1.0)
+    churn_b2c: float = Field(..., ge=0.0, le=1.0)
     
-    # Meta
-    time_step: int = Field(..., ge=0, description="Current simulation week (0 to MAX_STEPS).")
+    # Macro Variables
+    interest_rate: float = Field(..., description="Current Interest Rate (%). Affects capital costs.")
+    consumer_confidence: float = Field(..., description="Consumer Confidence Index (0-200). Affects demand.")
+    competitors: int = Field(..., ge=0, description="Number of direct competitors.")
+    
+    # Product / Quality Proxy
+    product_quality: float = Field(..., ge=0.0, le=1.0, description="Product Quality Score (0=Broken, 1=Perfect).")
+    
+    # Pricing
+    price: float = Field(..., ge=0.0, description="Average revenue per user (ARPU) / Price.")
 
-class Action(BaseModel):
-    """
-    Defines the structure of a valid decision an Agent can make.
-    """
-    # The Type governs which parameters are respected.
-    type: Literal["marketing", "hiring", "product", "pricing", "skip"]
+    # Lifecycle
+    months_elapsed: int = Field(default=0, ge=0, description="Time step / simulation month.")
     
-    # Flexible dictionary for parameters (e.g., {"amount": 5000})
-    # We use a Dict here instead of strict fields to allow the Adapter to handle
-    # partial/messy inputs from LLMs gracefully.
-    params: Dict[str, Any] = Field(default_factory=dict)
+    # Internal Ops
+    headcount: int = Field(default=1, ge=1, description="Number of full-time employees.")
+
+
+# =============================
+# ACTION DEFINITIONS
+# =============================
+
+class MarketingAction(BaseModel):
+    spend: float = Field(..., ge=0.0, description="Marketing spend amount ($).")
+    channel: Literal["ppc", "brand"] = Field(..., description="Marketing channel strategy.")
+
+class HiringAction(BaseModel):
+    hires: int = Field(..., ge=0, description="Number of new employees to hire.")
+    cost_per_employee: float = Field(..., ge=0.0, description="Cost per new hire (recruiting + salary setup).")
+
+class ProductAction(BaseModel):
+    r_and_d_spend: float = Field(..., ge=0.0, description=" investment in Product R&D ($).")
+
+class PricingAction(BaseModel):
+    price_change_pct: float = Field(..., description="Percentage change in price (e.g., 0.1 = +10%).")
+
+class ActionBundle(BaseModel):
+    """
+    A bundle of actions to be executed simultaneously in a single time step.
+    """
+    marketing: MarketingAction
+    hiring: HiringAction
+    product: ProductAction
+    pricing: PricingAction
