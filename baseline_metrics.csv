@@ -1,0 +1,3 @@
+Policy,Survival %,Avg Lifespan (Mo),Median MRR,Mean MRR,% > $1M ARR,% > $10M ARR,Avg Rule-40,Median LTV:CAC,Bankruptcy %,Median Cash @ Fail
+Random,57.0%,85.8,"$1,234,512","$973,495",100.0%,57.0%,-93.3,16.68,43.0%,"$-28,865"
+Heuristic,100.0%,120.0,"$2,337,514","$2,428,516",100.0%,100.0%,-46.5,15.98,0.0%,$0

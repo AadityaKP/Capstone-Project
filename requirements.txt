@@ -6,3 +6,5 @@ matplotlib
 chromadb
 neo4j
 ollama
+tabulate
+pytest

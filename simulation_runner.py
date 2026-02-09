@@ -14,14 +14,22 @@ from env.startup_env import StartupEnv
 from agents.adapter import ActionAdapter
 from config import sim_config
 
+from agents.baseline_agents import merge_actions
+
 # ==========================================
 # Simulation Runner & Baseline Agent
 # ==========================================
 
+class BaselineJointAgent:
+    """
+    Acts as a container for the C-Suite agents, merging their decisions.
+    """
+    def get_action(self, state):
+        return merge_actions(state)
+
 class RandomBundleAgent:
     """
     A 'Dumb' Agent that makes random ActionBundles.
-    Used to stress-test the Environment and Adapter.
     """
     def get_action(self, state):
         return {
@@ -41,28 +49,45 @@ class RandomBundleAgent:
             }
         }
 
-def run_simulation(num_episodes=100):
-    print(f"Running {num_episodes} episodes for sanity check...")
+def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_start: int = 0):
+    print(f"Running {num_episodes} episodes with Policy: {policy} (Seeds {seed_start}-{seed_start+num_episodes-1})...")
     
     env = StartupEnv()
-    agent = RandomBundleAgent()
+    
+    if policy == "heuristic":
+        agent = BaselineJointAgent()
+    elif policy == "random":
+        agent = RandomBundleAgent()
+    else:
+        raise ValueError(f"Unknown policy: {policy}")
     
     results = []
     
-    for episode in range(num_episodes):
-        # Start fresh simulation
-        obs, _ = env.reset()
+    for i in range(num_episodes):
+        episode_seed = seed_start + i
+        
+        # Start fresh simulation with FIXED SEED
+        obs, _ = env.reset(seed=episode_seed)
+        
+        # Reseed python random for agent consistency if needed (though env.reset handles env RNG)
+        # But our local random agents use `random` module directly.
+        random.seed(episode_seed)
+        np.random.seed(episode_seed)
+        
         terminated = False
         truncated = False
         total_reward = 0
         steps = 0
+        
+        # Metric tracking
+        rule_40_history = []
         
         # Loop until Bankruptcy or Time Limit
         while not (terminated or truncated):
             # 1. Agent decides action
             raw_action = agent.get_action(env.state)
             
-            # 2. Adapter sanitizes action (Crucial Step!)
+            # 2. Adapter sanitizes action
             clean_action = ActionAdapter.translate_action(raw_action)
             
             # 3. Environment executes action
@@ -70,44 +95,52 @@ def run_simulation(num_episodes=100):
             
             total_reward += reward
             steps += 1
+            rule_40_history.append(info.get("rule_of_40", 0))
             
         # Log episode results
         state = env.state
+        
+        # Calc aggregate metrics
+        avg_rule_40 = np.mean(rule_40_history) if rule_40_history else 0
+        months_above_40 = sum(1 for x in rule_40_history if x >= 40)
+        pct_above_40 = (months_above_40 / len(rule_40_history)) * 100 if rule_40_history else 0
+        
+        # LTV:CAC Ratio
+        ltv_cac = state.ltv / state.cac if state.cac > 0 else 0
+        
         result = {
-            "episode": episode,
+            "episode": i,
+            "seed": episode_seed,
+            "policy": policy,
             "steps": steps,
             "final_mrr": state.mrr,
             "final_cash": state.cash,
             "final_cac": state.cac,
             "final_ltv": state.ltv,
+            "final_ltv_cac": ltv_cac,
             "final_headcount": state.headcount,
-            "interest_rate": state.interest_rate,
-            "consumer_confidence": state.consumer_confidence,
-            "competitors": state.competitors,
-            "quality": state.product_quality,
             "cause": "Bankruptcy" if terminated else "Time Limit",
-            "total_reward": total_reward
+            "total_reward": total_reward,
+            "avg_rule_40": avg_rule_40,
+            "pct_above_40": pct_above_40
         }
         results.append(result)
         
-        # Print progress every 10 episodes
-        if episode % 10 == 0:
-            print(f"Episode {episode}: {result['cause']} after {steps} months. MRR: ${state.mrr:,.0f} Cash: ${state.cash:,.0f}")
+        # Print progress every 20 episodes
+        if i % 20 == 0:
+            print(f"Ep {i} ({policy}): {result['cause']} after {steps} mos. MRR: ${state.mrr:,.0f} Cash: ${state.cash:,.0f}")
 
     # --- Analysis & Reporting ---
     df = pd.DataFrame(results)
     
-    print("\n--- Simulation Summary ---")
-    print(f"Success Rate (Survived): {(df['cause'] == 'Time Limit').mean():.2%}")
+    print(f"\n--- Simulation Summary ({policy}) ---")
+    print(f"Survival Rate: {(df['cause'] == 'Time Limit').mean():.2%}")
     print(f"Avg Duration: {df['steps'].mean():.1f} months")
     print(f"Avg Final MRR: ${df['final_mrr'].mean():,.2f}")
-    print(f"Avg Final Cash: ${df['final_cash'].mean():,.2f}")
-    
-    # Export for further analysis
-    df.to_csv("simulation_results.csv", index=False)
-    print("Results saved to simulation_results.csv")
+    print(f"Avg Rule of 40: {df['avg_rule_40'].mean():.1f}")
     
     return df
 
 if __name__ == "__main__":
-    run_simulation()
+    # Default behavior if run directly
+    run_simulation(policy="heuristic", num_episodes=5)
