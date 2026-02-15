@@ -55,6 +55,12 @@ def run_baseline_experiment():
         bankrupt_mask = df["cause"] == "Bankruptcy"
         median_cash_fail = df.loc[bankrupt_mask, "final_cash"].median() if bankrupt_mask.any() else 0.0
         
+        # Shock Engine Metrics
+        avg_innovation = df["final_innovation_factor"].mean()
+        avg_unemployment = df["final_unemployment"].mean()
+        avg_depression_months = df["depression_months"].mean()
+        avg_valuation = df["final_valuation_multiple"].mean()
+
         return {
             "Policy": policy_name,
             "Survival %": f"{survival_rate:.1f}%",
@@ -66,7 +72,11 @@ def run_baseline_experiment():
             "Avg Rule-40": f"{avg_rule_40:.1f}",
             "Median LTV:CAC": f"{median_ltv_cac:.2f}",
             "Bankruptcy %": f"{bankruptcy_rate:.1f}%",
-            "Median Cash @ Fail": f"${median_cash_fail:,.0f}"
+            "Median Cash @ Fail": f"${median_cash_fail:,.0f}",
+            "Avg Innovation": f"{avg_innovation:.2f}",
+            "Avg Unemployment": f"{avg_unemployment:.1f}%",
+            "Avg Depression Mos": f"{avg_depression_months:.1f}",
+            "Avg Valuation": f"{avg_valuation:.1f}x"
         }
 
     stats_random = compute_metrics(df_random, "Random")

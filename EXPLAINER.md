@@ -70,7 +70,7 @@ We built a `RandomPolicy` to spam the environment with random actions for 100+ e
 ## Phase 6: Memory & Logical Reasoning (The Oracle)
 **Goal:** Add persistent memory and causal reasoning logic to the agent system.
 **Key Components:** 
-*   `agents/dummy_oracle_agent.py`: **OracleAgent** - The brain that queries memory and uses LLM to reason.
+*   `agents/oracle_agent.py`: **OracleAgent** - The brain that queries memory and uses LLM to reason.
 *   `agents/llm_client.py`: **LLMClient** - Wrapper for local LLM inference (Ollama).
 *   `seed_dbs.py`: Script to populate ChromaDB (episodic) and Neo4j (causal) with initial world knowledge.
 *   `tests/test_llm_oracle.py`: Validation suite for the Oracle's reasoning pipeline.

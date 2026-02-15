@@ -52,9 +52,10 @@ class StartupEnv(gym.Env):
         # -------------------
         # Vector: 
         # [mrr, cash, cac, ltv, churn_ent, churn_smb, churn_b2c, 
-        #  interest, confidence, competitors, quality, months]
-        low = np.array([0, -np.inf, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
-        high = np.array([np.inf, np.inf, np.inf, np.inf, 1.0, 1.0, 1.0, np.inf, 200, np.inf, 1.0, sim_config.MAX_STEPS], dtype=np.float32)
+        #  interest, confidence, competitors, quality, months,
+        #  valuation, unemployment, innovation, depression_months]
+        low = np.array([0, -np.inf, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
+        high = np.array([np.inf, np.inf, np.inf, np.inf, 1.0, 1.0, 1.0, np.inf, 200, np.inf, 1.0, sim_config.MAX_STEPS, np.inf, 100.0, 1.0, sim_config.MAX_STEPS], dtype=np.float32)
         
         self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
@@ -77,7 +78,12 @@ class StartupEnv(gym.Env):
             competitors=5,
             product_quality=sim_config.INITIAL_PRODUCT_QUALITY,
             price=50.0, # Initial ARPU
-            months_elapsed=0
+            months_elapsed=0,
+            # Shock Engine State
+            valuation_multiple=10.0,
+            unemployment=4.0,
+            innovation_factor=1.0,
+            months_in_depression=0
         )
         
         return self._get_obs(), {}
@@ -108,9 +114,17 @@ class StartupEnv(gym.Env):
         prev_mrr = self.state.mrr
 
         # --- 2. APPLY SHOCKS ---
+        # Exogenous (Macro/External)
         business_logic.interest_rate_shock(self.state)
         business_logic.consumer_confidence_shock(self.state)
         business_logic.competitive_entry_shock(self.state)
+
+        # Endogenous (Systemic Feedback)
+        business_logic.apply_recession_cascade(self.state)
+        business_logic.apply_hysteresis(self.state)
+
+        # Recovery (Mean Reversion)
+        business_logic.apply_recovery(self.state)
 
         # --- 3. APPLY LOGIC ---
         # Marketing → new MRR
@@ -219,5 +233,9 @@ class StartupEnv(gym.Env):
             self.state.consumer_confidence,
             self.state.competitors,
             self.state.product_quality,
-            self.state.months_elapsed
+            self.state.months_elapsed,
+            self.state.valuation_multiple,
+            self.state.unemployment,
+            self.state.innovation_factor,
+            self.state.months_in_depression
         ], dtype=np.float32)

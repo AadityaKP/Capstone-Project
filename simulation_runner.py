@@ -118,7 +118,12 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
             "final_cac": state.cac,
             "final_ltv": state.ltv,
             "final_ltv_cac": ltv_cac,
+            "final_ltv_cac": ltv_cac,
             "final_headcount": state.headcount,
+            "final_valuation_multiple": state.valuation_multiple,
+            "final_unemployment": state.unemployment,
+            "final_innovation_factor": state.innovation_factor,
+            "depression_months": state.months_in_depression,
             "cause": "Bankruptcy" if terminated else "Time Limit",
             "total_reward": total_reward,
             "avg_rule_40": avg_rule_40,
@@ -138,6 +143,8 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
     print(f"Avg Duration: {df['steps'].mean():.1f} months")
     print(f"Avg Final MRR: ${df['final_mrr'].mean():,.2f}")
     print(f"Avg Rule of 40: {df['avg_rule_40'].mean():.1f}")
+    print(f"Avg Innovation Factor: {df['final_innovation_factor'].mean():.2f}")
+    print(f"Avg Unemployment: {df['final_unemployment'].mean():.1f}%")
     
     return df
 

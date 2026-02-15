@@ -8,15 +8,79 @@ from env.schemas import EnvState, MarketingAction, ProductAction, PricingAction,
 
 def interest_rate_shock(state: EnvState, prob: float = 0.1) -> None:
     if random.random() < prob:
-        state.interest_rate += random.uniform(0.5, 1.5)  # +50–150 bps
+        state.interest_rate += 1.5  # +150 bps
+        # Valuation Multiplier Compression (Tier 1)
+        state.valuation_multiple *= 0.85
+        # SMB Churn Sensitivity
+        state.churn_smb *= 1.2
 
 def consumer_confidence_shock(state: EnvState, prob: float = 0.1) -> None:
     if random.random() < prob:
-        state.consumer_confidence -= random.uniform(10, 25)
+        state.consumer_confidence -= 20
+        # Feedback to Unemployment (Tier 1)
+        state.unemployment += 1.0
 
 def competitive_entry_shock(state: EnvState, prob: float = 0.1) -> None:
-    if random.random() < prob:
-        state.competitors += random.randint(1, 3)
+    # Tier 1 Dynamic Entry: Sigmoid based on Market Size (MRR)
+    # Normed MRR: 50k = 0, 100k = 1. High MRR = Higher Entry Prob.
+    market_attractiveness = (state.mrr - 50_000) / 50_000 
+    dynamic_prob = 1 / (1 + math.exp(-market_attractiveness)) 
+    # Scale base prob by dynamic factor (max 2x base)
+    actual_prob = prob * (2 * dynamic_prob)
+
+    if random.random() < actual_prob:
+        state.competitors += 1
+        # Bidding War (Tier 1)
+        # Note: CAC impact happens in compute_cac via scale_cac_by_macro
+        # Price War (Tier 1)
+        state.price *= 0.9
+
+# =============================
+# ENDOGENOUS SHOCKS (TIER 2)
+# =============================
+
+def apply_recession_cascade(state: EnvState) -> None:
+    """
+    Credit-Bankruptcy Loop.
+    If Unemployment High + Rates High -> Confidence Crash.
+    """
+    if state.unemployment > 8.0 and state.interest_rate > 7.0:
+        if random.random() < 0.2: # Stochastic Trigger
+            state.consumer_confidence -= 10
+            state.valuation_multiple *= 0.8
+            state.unemployment += 0.5 # Spiral
+
+def apply_hysteresis(state: EnvState) -> None:
+    """
+    Growth Hysteresis.
+    Long depressions permanently scar innovation.
+    """
+    if state.consumer_confidence < 50:
+        state.months_in_depression += 1
+    else:
+        state.months_in_depression = max(0, state.months_in_depression - 1)
+
+    if state.months_in_depression >= 6:
+        # Permanent Scar
+        state.innovation_factor *= 0.95
+
+def apply_recovery(state: EnvState) -> None:
+    """
+    Mean-reversion mechanics.
+    """
+    # Innovation recovers very slowly (Knowledge rediscovery)
+    if state.innovation_factor < 1.0:
+        state.innovation_factor += 0.001 # approx 0.01 per year
+
+    # Valuation mean reverts to 10
+    if state.valuation_multiple < 10.0:
+        state.valuation_multiple += 0.05
+    elif state.valuation_multiple > 10.0:
+        state.valuation_multiple -= 0.05
+
+    # Confidence recovers if not in deep spiral
+    if state.consumer_confidence < 100 and state.unemployment < 8.0:
+        state.consumer_confidence += 2.0
 
 # =============================
 # TRANSITION PHYSICS
@@ -85,7 +149,9 @@ def compute_churn_rate(state: EnvState) -> float:
     return base * quality_factor * macro_multiplier * decay_multiplier
 
 def compute_expansion_mrr(state: EnvState, action: ProductAction) -> float:
-    upsell_factor = 1 + min(action.r_and_d_spend / 50_000, 0.5)
+    # Application of Innovation Factor (Hysteresis effect)
+    effective_rnd = action.r_and_d_spend * state.innovation_factor
+    upsell_factor = 1 + min(effective_rnd / 50_000, 0.5)
     return state.mrr * 0.02 * upsell_factor
 
 def apply_pricing_effect(state: EnvState, action: PricingAction) -> None:
@@ -124,6 +190,13 @@ def scale_cac_by_macro(raw_cac: float, state: EnvState) -> float:
     # Competitors: Bidding wars for ads
     if state.competitors > 5:
         modifier *= 1.15
+        
+    # Competitive Entry Shock Effect (explicit trigger check not needed if we just use variable)
+    # But user asked for "if competitor_entry -> CAC *= 1.5". 
+    # Since we increment `competitors` in the shock, we can perform a dynamic check.
+    # Let's say high competition (>8) scales CAC aggressively.
+    if state.competitors >= 8:
+         modifier *= 1.3
         
     return raw_cac * modifier
 
@@ -164,5 +237,13 @@ def compute_reward(state: EnvState, rule_of_40: float) -> float:
 
     if state.cash <= 0:
         reward -= 20
+
+    # Innovation Decay Penalty
+    if state.innovation_factor < 0.8:
+        reward -= 5
+
+    # Valuation Compression Penalty
+    if state.valuation_multiple < 5.0:
+        reward -= 2
 
     return reward

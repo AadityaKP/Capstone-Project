@@ -44,6 +44,12 @@ class EnvState(BaseModel):
     
     # Internal Ops
     headcount: int = Field(default=1, ge=1, description="Number of full-time employees.")
+    
+    # Macro Feedback State (Shock Engine)
+    valuation_multiple: float = Field(default=10.0, description="Current revenue valuation multiple (e.g. 10x ARR).")
+    unemployment: float = Field(default=4.0, ge=0.0, le=100.0, description="National unemployment rate (%).")
+    innovation_factor: float = Field(default=1.0, ge=0.0, le=1.0, description="R&D efficiency multiplier (1.0 = normal).")
+    months_in_depression: int = Field(default=0, ge=0, description="Consecutive months with low consumer confidence (<50).")
 
 
 # =============================
