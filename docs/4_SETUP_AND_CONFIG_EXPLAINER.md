@@ -35,7 +35,7 @@ This script **initializes the World Knowledge** for the Oracle Agent.
     *   This gives the Oracle *prior knowledge* before the simulation starts.
 2.  **Neo4j (Causal Memory)**:
     *   Connects to Database.
-    *   Injects **Causal Graph**: `(Interest Rate) --[INCREASES]--> (Churn)`.
+    *   Injects **Causal Graph**: `(Price Increase) --[CAUSES]--> (Customer Churn)`.
     *   This teaches the Oracle basic economic theory.
 
 ### The Graph Schema

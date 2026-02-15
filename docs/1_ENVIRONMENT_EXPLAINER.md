@@ -86,7 +86,7 @@ $$ NewUsers = \beta \frac{x^\alpha}{\gamma^\alpha + x^\alpha} $$
 ### B. Churn Physics
 Churn is not random; it is a function of dissatisfaction and macro pressure.
 
-$$ Churn = Base \times (1 - Quality/2) \times MacroMultiplier \times TenureDecay $$
+$$ Churn = Base \times QualityFactor \times MacroMultiplier \times TenureDecay $$
 
 *   **Quality**: High R&D spend reduces churn.
 *   **Macro**: Low Consumer Confidence increases churn (especially for SMBs).

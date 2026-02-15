@@ -52,7 +52,7 @@ To benchmarks the Oracle, we use "Heuristic Agents" (Hard-coded Logic). They rep
 ### A. The CFO (Chief Financial Officer)
 *   **Prime Directive**: Survival & Efficiency (Rule of 40).
 *   **Logic**:
-    *   *Runway Check*: `Cash / Burn`. If < 18 months -> **Hiring Freeze**.
+    *   *Runway Check*: `Cash / Burn`. If <= 24 months -> **Hiring Freeze**.
     *   *Efficiency Check*: `LTV:CAC`. If < 3.0 -> **Raise Prices** (Try to boost LTV).
     *   *Growth check*: If `Runway > 24 months` -> Allow hiring.
 

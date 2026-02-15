@@ -7,9 +7,9 @@
 # -------------------
 # Time Configurations
 # -------------------
-# The simulation runs in discrete weekly steps.
-# 52 weeks/year * 5 years = 260 steps total.
-MAX_STEPS = 52 * 5 
+# The simulation runs in discrete MONTHLY steps.
+# 12 months/year * 10 years = 120 steps total.
+MAX_STEPS = 120 # 10 Years 
 
 # ------------------------
 # Initial State Parameters
