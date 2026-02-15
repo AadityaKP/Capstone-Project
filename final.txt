@@ -1,0 +1,121 @@
+# Final System Identity: Startup Simulator
+
+## 1. System Overview
+
+### Purpose
+The system is a **Governed multi-agent economic decision simulator with macro-shock dynamics and LLM-augmented strategic reasoning.**
+
+It enables:
+*   Realistic SaaS-economy simulation.
+*   Systemic macro-crisis propagation.
+*   C-suite governance negotiation.
+*   Causal reasoning via an Oracle.
+*   Comparison of heuristic, deliberative, and learning policies.
+
+This transforms the simulator into a **computational laboratory for strategic decision intelligence.**
+
+---
+
+## 2. High-Level Architecture
+
+The final product consists of **five tightly coupled layers**:
+
+```
+┌─────────────────────────────────────┐
+│ 5. Learning & Evaluation Layer      │
+│    (MARL, experiments, metrics)     │
+├─────────────────────────────────────┤
+│ 4. Boardroom Governance Layer       │
+│    (CFO/CMO/CPO negotiation)        │
+├─────────────────────────────────────┤
+│ 3. Oracle Reasoning Layer           │
+│    (LLM causal + prescriptive)      │
+├─────────────────────────────────────┤
+│ 2. Economic Simulation Engine       │
+│    (firm + macro ABM physics)       │
+├─────────────────────────────────────┤
+│ 1. Infrastructure & Data Layer      │
+│    (state, logging, storage)        │
+└─────────────────────────────────────┘
+```
+
+Each layer is independently testable and causally composable.
+
+---
+
+## 3. Economic Simulation Engine (Core Physics)
+
+### 3.1 Micro-firm Dynamics
+*   **Financial**: MRR, Cash, Headcount, Price/ARPU.
+*   **Unit Economics**: CAC, LTV, Segmented Churn (Ent/SMB/B2C).
+*   **Product**: Quality, Expansion Revenue, R&D Investment.
+
+### 3.2 Macro-economic Shock Engine
+*   **Tier-1 (Exogenous)**: Interest Rate (Valuation), Confidence (Demand), Competition (Price War).
+*   **Tier-2 (Endogenous)**: Credit-Bankruptcy Cascade, Demand Hysteresis (Innovation Scarring).
+*   **Tier-3 (Recovery)**: Mean-reverting valuation/confidence/innovation.
+
+### 3.3 Transition System
+`Macro Shocks -> Endogenous Cascades -> Recovery -> Firm Decisions -> Physics -> Rewards`
+*   A **closed-loop stochastic dynamical economic system.**
+
+---
+
+## 4. Oracle Reasoning Layer
+
+### 4.1 Role
+An **LLM-driven causal analyst** that interprets state, forecasts trajectories, and generates **Prescriptive Briefs**. It does *not* control actions directly.
+
+### 4.2 Knowledge Integration
+Fuses telemetry, history, and causal context to output risk narratives and strategic priorities.
+
+---
+
+## 5. Boardroom Governance Layer
+
+### 5.1 Agents
+*   **CFO**: Runway, Pricing, Efficiency (Rule-of-40).
+*   **CMO**: Growth, CAC, Channels.
+*   **CPO**: Retention, Innovation, Capability.
+
+### 5.2 Intelligence Modes
+1.  **Heuristic**: Deterministic baseline.
+2.  **LLM-Guided**: Oracle-aware reasoning.
+3.  **MARL-Trained**: Learned optimal policy.
+
+### 5.3 Negotiation Protocol
+`State -> Oracle Brief -> Proposals -> Negotiation -> Consensus Action` via weighted voting and utility comparison.
+
+---
+
+## 6. Learning & Evaluation Layer
+
+### 6.1 Policy Regimes
+1.  Random Baseline.
+2.  Heuristic C-Suite.
+3.  Oracle-Guided Boardroom.
+4.  MARL-Optimized Governance.
+
+### 6.2 Metrics
+*   **Firm**: Survival, MRR, LTV:CAC.
+*   **Macro**: Unemployment, Innovation Decay, Depression Duration.
+*   **Governance**: Crisis Resilience, Recovery Speed.
+
+---
+
+## 7. Infrastructure & Data Layer
+*   **State Management**: Typed Pydantic schema for reproducibility.
+*   **Logging**: Episode logs for MARL training and causal analysis.
+
+---
+
+## 8. Research Contribution
+1.  **Macro-Aware SaaS Simulation**: Crisis-propagating ABM.
+2.  **Governed Multi-Agent Architecture**: Boardroom negotiation vs independent agents.
+3.  **LLM-as-Oracle Paradigm**: Causal reasoning support.
+4.  **Comparative Intelligence Evaluation**: Benchmarking architectures under shock.
+
+---
+
+## 9. Final Identity
+It is not just a simulator. It is a **governed, macro-economic, multi-agent decision laboratory for evaluating artificial strategic intelligence.**
