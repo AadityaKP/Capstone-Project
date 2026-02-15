@@ -12,8 +12,8 @@ This file contains the **Global Constants** that tune the simulation.
 *   **Initialization**: `INITIAL_CASH` ($1M), `INITIAL_PRODUCT_QUALITY` (0.5).
 *   **Time**: `MAX_STEPS` (120 months = 10 years).
 *   **Physics Tuning**:
-    *   `BASE_CAC`: Starting Cost of Acquisition ($300).
-    *   `CHURN_BASE`: Starting Churn Rate (3%).
+    *   `BASE_CAC`: Starting Cost of Acquisition ($50.0).
+    *   `MAX_CHURN`: 30% Hard cap. `MIN_CHURN`: 2% Floor.
 *   **Shock Tuning**:
     *   `INTEREST_RATE_VOLATILITY`: How much rates swing.
     *   `CONFIDENCE_VOLATILITY`: How much sentiment swings.
@@ -31,7 +31,7 @@ This script **initializes the World Knowledge** for the Oracle Agent.
 ### What it does (Step-by-Step)
 1.  **ChromaDB (Episodic Memory)**:
     *   Creates collection `episodes`.
-    *   Injects **Synthetic History**: "In 2008, rates rose -> Churn spiked."
+    *   Injects **Synthetic History**: "In Q1, the company increased subscription price... -> Churn rose."
     *   This gives the Oracle *prior knowledge* before the simulation starts.
 2.  **Neo4j (Causal Memory)**:
     *   Connects to Database.
@@ -40,9 +40,9 @@ This script **initializes the World Knowledge** for the Oracle Agent.
 
 ### The Graph Schema
 We inject nodes (`Concepts`) and edges (`Causes`).
-*   **Nodes**: `Interest Rate`, `Churn`, `Price`, `Demand`.
-*   **Edges**: `INCREASES`, `DECREASES`.
-*   **Example Triple**: `(Price) --[DECREASES]--> (Demand)`.
+*   **Nodes**: `Price Increase`, `Customer Churn`, `Revenue`.
+*   **Edges**: `CAUSES`, `REDUCES`, `INCREASES`.
+*   **Example Triple**: `(Marketing Spend) --[INCREASES]--> (User Acquisition)`.
 
 ### When to run?
 *   **Once** before starting experiments.

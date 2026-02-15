@@ -70,8 +70,9 @@ To benchmarks the Oracle, we use "Heuristic Agents" (Hard-coded Logic). They rep
 ### C. The CPO (Chief Product Officer)
 *   **Prime Directive**: Retention (Churn Reduction).
 *   **Logic**:
-    *   *Crisis Mode*: If `Churn > 4%` -> Spend **$15k** on R&D.
-    *   *Maintenance*: If `Churn < 2%` -> Spend **$3k**.
+    *   *Crisis Mode*: If `Avg Churn > 4%` -> Spend **$15k** on R&D.
+    *   *Maintenance*: If `Avg Churn > 2%` -> Spend **$8k**.
+    *   *Safe Mode*: Else -> Spend **$3k**.
     *   *Budget Constraint*: If `Cash < $200k`, cut R&D by 50%.
 
 ---

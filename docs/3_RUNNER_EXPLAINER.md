@@ -67,7 +67,11 @@ Every single month is logged for debugging.
 | `step` | Month number (0-120). |
 | `mrr` | Revenue. |
 | `cash` | Bank balance. |
-| `final_innovation_factor` | Health of R&D capability. |
+| `final_innovation_factor` | Health of R&D capability (1.0 = Normal). |
+| `final_valuation_multiple` | Final Revenue Multiple (e.g., 10x). |
+| `final_unemployment` | Final Macro Unemployment Rate (%). |
+| `avg_rule_40` | Average Rule of 40 score over the episode. |
+| `pct_above_40` | % of months where Rule of 40 was >= 40. |
 | `cause` | "Time Limit" (Success) or "Bankruptcy" (Failure). |
 
 ### Usage

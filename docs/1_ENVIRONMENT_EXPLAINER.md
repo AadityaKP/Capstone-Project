@@ -96,8 +96,9 @@ $$ Churn = Base \times QualityFactor \times MacroMultiplier \times TenureDecay $
 The environment isn't static. It includes a sophisticated crisis engine:
 
 1.  **Exogenous (External)**:
-    *   *Interest Rate Spike*: `Rate += 1.5%`. Results in `Valuation *= 0.85`.
+    *   *Interest Rate Spike*: `Rate += 1.5%`. Results in `Valuation *= 0.85` and `SMB Churn *= 1.2`.
     *   *Confidence Crash*: `Confidence -= 20`. Results in `Unemployment += 1%`.
+    *   *Competitive Entry*: Probability scales with MRR. Results in `Price *= 0.9` (Price War).
 2.  **Endogenous (Systemic Feedback)**:
     *   *Recession Cascade*: IF `Unemployment > 8%` AND `Rates > 7%` -> Triggers a self-reinforcing downward spiral in Confidence.
     *   *Hysteresis (Scarring)*: IF `Depression > 6 months` -> `Innovation Factor` permanently decays (Brain Drain).
@@ -110,8 +111,17 @@ The environment isn't static. It includes a sophisticated crisis engine:
 
 The "Score" isn't just Revenue. It's **Sustainable Growth**. We use the **Rule of 40**:
 
-$$ Score = (Growth\% + Margin\%) $$
+### Reward Formula
+$$ Reward = (MRR / 1M) + (RuleOf40\_Modifier) + (Safety\_Penalties) $$
 
-*   **Penalty**: If `Rule of 40 < 0` (Burning cash with no growth), massive reward penalty.
-*   **Penalty**: If `Cash <= 0` (Bankruptcy), game over (-20 reward).
-*   **Penalty**: If `Innovation Factor` decays (Long term damage), penalty applied.
+*   **Base Score**: Scaled MRR (Growth is good).
+*   **Rule of 40 Modifiers**:
+    *   If `Rule of 40 < 15`: **-2** (Inefficient).
+    *   If `Rule of 40 < 0`: **-5** (Burning cash).
+*   **Efficiency Penalties (LTV:CAC)**:
+    *   If `LTV:CAC < 3.0`: **-5** (Unsustainable Model).
+    *   If `LTV:CAC < 1.0`: **-10** (Losing money on every customer).
+*   **Safety Penalties**:
+    *   If `Cash <= 0` (Bankruptcy): **-20** (Game Over).
+    *   If `Innovation Factor < 0.8` (Long term damage): **-5**.
+    *   If `Valuation Multiple < 5.0x` (Lost investor confidence): **-2**.
