@@ -1,7 +1,6 @@
 import sys
 import os
 import numpy as np
-# Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from env.startup_env import StartupEnv
@@ -20,7 +19,6 @@ def test_step():
     env = StartupEnv()
     env.reset()
     
-    # Marketing Action
     action = {
         "type": "marketing",
         "params": {"amount": 10000.0}

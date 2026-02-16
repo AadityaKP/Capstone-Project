@@ -3,11 +3,9 @@ import os
 import random
 import numpy as np
 import pandas as pd
-# import matplotlib.pyplot as plt
 
 print("Starting simulation runner...", flush=True)
 
-# Add project root to python path so imports work
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from env.startup_env import StartupEnv
@@ -15,10 +13,6 @@ from agents.adapter import ActionAdapter
 from config import sim_config
 
 from agents.baseline_agents import merge_actions
-
-# ==========================================
-# Simulation Runner & Baseline Agent
-# ==========================================
 
 class BaselineJointAgent:
     """
@@ -66,11 +60,8 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
     for i in range(num_episodes):
         episode_seed = seed_start + i
         
-        # Start fresh simulation with FIXED SEED
         obs, _ = env.reset(seed=episode_seed)
         
-        # Reseed python random for agent consistency if needed (though env.reset handles env RNG)
-        # But our local random agents use `random` module directly.
         random.seed(episode_seed)
         np.random.seed(episode_seed)
         
@@ -79,33 +70,25 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
         total_reward = 0
         steps = 0
         
-        # Metric tracking
         rule_40_history = []
         
-        # Loop until Bankruptcy or Time Limit
         while not (terminated or truncated):
-            # 1. Agent decides action
             raw_action = agent.get_action(env.state)
             
-            # 2. Adapter sanitizes action
             clean_action = ActionAdapter.translate_action(raw_action)
             
-            # 3. Environment executes action
             obs, reward, terminated, truncated, info = env.step(clean_action)
             
             total_reward += reward
             steps += 1
             rule_40_history.append(info.get("rule_of_40", 0))
             
-        # Log episode results
         state = env.state
         
-        # Calc aggregate metrics
         avg_rule_40 = np.mean(rule_40_history) if rule_40_history else 0
         months_above_40 = sum(1 for x in rule_40_history if x >= 40)
         pct_above_40 = (months_above_40 / len(rule_40_history)) * 100 if rule_40_history else 0
         
-        # LTV:CAC Ratio
         ltv_cac = state.ltv / state.cac if state.cac > 0 else 0
         
         result = {
@@ -131,11 +114,9 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
         }
         results.append(result)
         
-        # Print progress every 20 episodes
         if i % 20 == 0:
             print(f"Ep {i} ({policy}): {result['cause']} after {steps} mos. MRR: ${state.mrr:,.0f} Cash: ${state.cash:,.0f}")
 
-    # --- Analysis & Reporting ---
     df = pd.DataFrame(results)
     
     print(f"\n--- Simulation Summary ({policy}) ---")
@@ -149,5 +130,4 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
     return df
 
 if __name__ == "__main__":
-    # Default behavior if run directly
     run_simulation(policy="heuristic", num_episodes=5)

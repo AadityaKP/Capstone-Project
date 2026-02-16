@@ -2,7 +2,6 @@ import sys
 import os
 import unittest
 
-# Add project root
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from agents.adapter import ActionAdapter
@@ -22,13 +21,10 @@ class TestActionAdapter(unittest.TestCase):
         self.assertEqual(clean["type"], "skip")
         
     def test_malformed_numbers(self):
-        # String number -> Float
         raw = {"type": "pricing", "params": {"price": "19.99"}}
         clean = ActionAdapter.translate_action(raw)
         self.assertEqual(clean["params"]["price"], 19.99)
         
-        # Invalid number -> Skip/Default? 
-        # Verify it logs an error but doesn't crash
         raw_bad = {"type": "pricing", "params": {"price": "free"}}
         with self.assertLogs("AgentAdapter", level='ERROR') as cm:
             clean_bad = ActionAdapter.translate_action(raw_bad)

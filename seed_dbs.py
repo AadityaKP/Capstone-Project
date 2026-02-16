@@ -3,7 +3,6 @@ import chromadb
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 def seed_chroma():
@@ -67,21 +66,10 @@ def seed_neo4j():
         ("Downtime", "CAUSES", "Enterprise Churn Risk")
     ]
 
-    query = (
-        "MERGE (a:Entity {name: $subj}) "
-        "MERGE (b:Entity {name: $obj}) "
-        "MERGE (a)-[:RELATION {type: $pred}]->(b)" 
-    ) 
-    # Note: Using dynamic relationship types in Cypher usually requires APOC or string formatting.
-    # Standard Cypher doesn't allow parameterizing the relationship TYPE.
-    # We will use f-string for the relationship type since this is a controlled seed script.
-
     try:
         driver = GraphDatabase.driver(uri, auth=(user, password))
         with driver.session() as session:
             for subj, pred, obj in causal_triples:
-                # SAFE only because pred is hardcoded and trusted here.
-                # In production, validate 'pred' to prevent injection if it came from user input.
                 cypher = (
                     f"MERGE (a:Entity {{name: $subj}}) "
                     f"MERGE (b:Entity {{name: $obj}}) "

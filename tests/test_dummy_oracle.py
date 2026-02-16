@@ -2,7 +2,6 @@ import sys
 import os
 import time
 
-# Add parent directory to path to allow importing 'agents'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from agents.dummy_oracle_agent import OracleAgent
@@ -15,7 +14,6 @@ def test_dummy_oracle():
         print(f"Failed to initialize agent. Ensure Neo4j is running and .env is correct.\nError: {e}")
         return
 
-    # --- Test 1: ChromaDB (Episodic Memory) ---
     print("\n--- Test 1: ChromaDB (Episodic Memory) ---")
     
     episode_text = "The startup increased marketing spend by 20% resulting in a 15% user growth."
@@ -24,7 +22,6 @@ def test_dummy_oracle():
     print("1. Storing episode...")
     agent.store_episode(episode_text, metadata)
     
-    # Allow a moment for ingestion if needed (usually instant for local)
     time.sleep(1) 
     
     query = "impact of marketing spend"
@@ -34,7 +31,6 @@ def test_dummy_oracle():
     print("   Result:", results['documents'][0])
     print("   Metadata:", results['metadatas'][0])
 
-    # --- Test 2: Neo4j (Semantic Memory) ---
     print("\n--- Test 2: Neo4j (Semantic Memory) ---")
     
     triples = [
@@ -60,12 +56,10 @@ def test_dummy_oracle():
     except Exception as e:
         print(f"Neo4j operation failed: {e}")
 
-    # Cleanup
     agent.close()
     print("\n=== Test Complete ===")
 
 if __name__ == "__main__":
-    # Ensure potential import issues are resolved if running directly
     import sys
     import os
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

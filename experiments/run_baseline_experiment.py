@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import numpy as np
 
-# Add project root to python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from simulation_runner import run_simulation
@@ -13,20 +12,17 @@ def run_baseline_experiment():
     print("PHASE 2 BASELINE EVALUATION: Random vs Heuristic")
     print("==================================================")
     
-    NUM_EPISODES = 200 # Per policy
+    NUM_EPISODES = 200 
     SEED_START = 0
     
-    # 1. Run Random Policy
     print("\n>>> Executing Random Policy...")
     df_random = run_simulation(policy="random", num_episodes=NUM_EPISODES, seed_start=SEED_START)
     df_random.to_csv("baseline_raw_random.csv", index=False)
     
-    # 2. Run Heuristic Policy
     print("\n>>> Executing Heuristic Policy...")
     df_heuristic = run_simulation(policy="heuristic", num_episodes=NUM_EPISODES, seed_start=SEED_START)
     df_heuristic.to_csv("baseline_raw_heuristic.csv", index=False)
     
-    # 3. Compute Comparative Metrics
     print("\n>>> Computing Comparative Metrics...")
     
     def compute_metrics(df, policy_name):
@@ -37,25 +33,17 @@ def run_baseline_experiment():
         median_mrr = df["final_mrr"].median()
         mean_mrr = df["final_mrr"].mean()
         
-        # Growth Milestones
-        # $1M ARR = $83,333 MRR
-        # $10M ARR = $833,333 MRR
         reached_1m_arr = (df["final_mrr"] >= 83_333).mean() * 100
         reached_10m_arr = (df["final_mrr"] >= 833_333).mean() * 100
         
-        # Efficiency
         avg_rule_40 = df["avg_rule_40"].mean()
         median_ltv_cac = df["final_ltv_cac"].median()
         
-        # Risk
-        # Bankruptcy rate is inverse of survival rate
         bankruptcy_rate = 100 - survival_rate
         
-        # Median Cash at Failure (only for bankrupt episodes)
         bankrupt_mask = df["cause"] == "Bankruptcy"
         median_cash_fail = df.loc[bankrupt_mask, "final_cash"].median() if bankrupt_mask.any() else 0.0
         
-        # Shock Engine Metrics
         avg_innovation = df["final_innovation_factor"].mean()
         avg_unemployment = df["final_unemployment"].mean()
         avg_depression_months = df["depression_months"].mean()
@@ -82,7 +70,6 @@ def run_baseline_experiment():
     stats_random = compute_metrics(df_random, "Random")
     stats_heuristic = compute_metrics(df_heuristic, "Heuristic")
     
-    # 4. Generate & Save Table
     comparison_df = pd.DataFrame([stats_random, stats_heuristic])
     
     print("\n=== FINAL BASELINE COMPARISON ===")
