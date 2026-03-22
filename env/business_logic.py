@@ -46,12 +46,14 @@ def apply_hysteresis(state: EnvState) -> None:
     if state.months_in_depression >= 6:
         state.innovation_factor *= 0.95
 
+    state.innovation_factor = max(0.0, min(1.0, state.innovation_factor))
+
 def apply_recovery(state: EnvState) -> None:
     """
     Mean-reversion mechanics.
     """
     if state.innovation_factor < 1.0:
-        state.innovation_factor += 0.001 
+        state.innovation_factor += 0.003
 
     if state.valuation_multiple < 10.0:
         state.valuation_multiple += 0.05
@@ -110,6 +112,32 @@ def compute_churn_rate(state: EnvState) -> float:
     decay_multiplier = max(0.3, tenure_decay)
 
     return base * quality_factor * macro_multiplier * decay_multiplier
+
+def apply_innovation_investment(state: EnvState, action: ProductAction) -> None:
+    """
+    Converts R&D spend into innovation gains (nonlinear, saturating).
+    """
+    spend = action.r_and_d_spend
+
+    if spend <= 0:
+        return
+
+    # Saturation curve (Hill-type response)
+    scale = 100_000  # tuning parameter
+    gain = (spend / (spend + scale)) * 0.05  # max ~0.05/month
+
+    # Harder to improve when already high
+    gain *= (1.0 - state.innovation_factor)
+
+    state.innovation_factor += gain
+
+    # Ensures innovation -> lower churn (since churn uses product_quality)
+    state.product_quality += gain * 0.5
+    state.product_quality = min(1.0, state.product_quality)
+    
+    # Clamp to valid range
+    state.innovation_factor = min(1.0, max(0.0, state.innovation_factor))
+
 
 def compute_expansion_mrr(state: EnvState, action: ProductAction) -> float:
     effective_rnd = action.r_and_d_spend * state.innovation_factor

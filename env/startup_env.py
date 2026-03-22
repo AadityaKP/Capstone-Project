@@ -107,6 +107,8 @@ class StartupEnv(gym.Env):
         new_mrr = business_logic.compute_new_mrr(self.state, action.marketing)
 
         expansion = business_logic.compute_expansion_mrr(self.state, action.product)
+        
+        business_logic.apply_innovation_investment(self.state, action.product)
 
         churn_rate = business_logic.compute_churn_rate(self.state)
 

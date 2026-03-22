@@ -9,11 +9,9 @@ class Boardroom:
         self.agents = agents
 
     def decide(self, state: EnvState) -> dict:
-        # 1. Agents generate proposals
         proposals = [agent.propose(state) for agent in self.agents]
-
-        # 2 & 3. Evaluate proposals across 4 objectives & compute weighted scores
         weights = self._compute_weights(state)
+        
         for p in proposals:
             p.score_vector = self._evaluate_proposal(p, state)
             p.confidence = (
@@ -25,27 +23,37 @@ class Boardroom:
 
         negotiation = NegotiationState(proposals=proposals, round_number=1)
 
-        # 4. Combine proposals into unified action (Domain Extraction)
         cfo_prop = next((p for p in proposals if p.agent == "CFO"), None)
         cmo_prop = next((p for p in proposals if p.agent == "CMO"), None)
         cpo_prop = next((p for p in proposals if p.agent == "CPO"), None)
         
-        # Default fallback if agents are missing for some reason
+        # Grab the global systemic innovation urgency
+        global_innov_score = proposals[0].score_vector.innovation if proposals else 0.0
+
+        base_rd = cpo_prop.actions.get("product", {}).get("r_and_d_spend", 0) if cpo_prop else 0
+        
+        # 1. SCALE R&D aggressively based on system size and innovation deficit
+        innovation_deficit = max(0.0, 1.0 - state.innovation_factor)
+        if state.innovation_factor < 0.3:
+            # Nonlinear escalation: Massive push when innovation is failing
+            aggressive_rd = state.mrr * innovation_deficit * 0.15 # Up to 15% of MRR
+            scaled_rd_spend = max(base_rd, aggressive_rd)
+        else:
+            scaled_rd_spend = base_rd * (1.0 + (global_innov_score * 2.0))
+        
         raw_action = {
             "marketing": cmo_prop.actions.get("marketing", {"spend": 0, "channel": "ppc"}) if cmo_prop else {"spend": 0, "channel": "ppc"},
             "hiring": cfo_prop.actions.get("hiring", {"hires": 0, "cost_per_employee": 10000}) if cfo_prop else {"hires": 0, "cost_per_employee": 10000},
             "pricing": cfo_prop.actions.get("pricing", {"price_change_pct": 0.0}) if cfo_prop else {"price_change_pct": 0.0},
-            "product": cpo_prop.actions.get("product", {"r_and_d_spend": 0}) if cpo_prop else {"r_and_d_spend": 0}
+            "product": {"r_and_d_spend": scaled_rd_spend}
         }
 
-        # Apply domain constraints
+        # Apply structural sanity checks
         raw_action = self._apply_sanity_bounds(raw_action, state)
-        
-        # 5. Apply minimum guarantees and macro nudges
-        raw_action = self._apply_dynamic_minimums(raw_action, state)
-
-        # 6. Apply conflict resolution (Constraint-based adjustment preserving intent hierarchy)
-        final_action = self._resolve_conflicts(raw_action, state)
+        # Apply strict minimum guarantees
+        raw_action = self._apply_dynamic_minimums(raw_action, state, global_innov_score)
+        # Sequence conflict resolutions
+        final_action = self._resolve_conflicts(raw_action, state, global_innov_score)
 
         negotiation.final_action = final_action
         negotiation.consensus_reached = True
@@ -56,21 +64,24 @@ class Boardroom:
     # Evaluation & Weights
     # -----------------------------
     def _evaluate_proposal(self, proposal: Proposal, state: EnvState) -> ScoreVector:
-        # Normalized metrics (0.0 to 1.0)
-        
-        # Efficiency (Cash runway health)
-        burn = max(1.0, float(state.headcount * 10000))  # Base burn roughly headcount * 10k
+        # Efficiency
+        burn = max(1.0, float(state.headcount * 10000))
         efficiency = min(1.0, max(0.0, state.cash / (burn * 12)))
         
-        # Growth (LTV to CAC health)
+        # Growth
         growth = 0.0
         if state.cac > 0:
             growth = min(1.0, max(0.0, (state.ltv / state.cac) / 5.0))
             
-        # Innovation (R&D health relative to targets)
-        innovation = min(1.0, max(0.0, state.innovation_factor))
+        # Innovation (Precision Formula)
+        innovation_deficit = max(0.0, 1.0 - state.innovation_factor)
+        avg_churn = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
+        churn_pressure = min(1.0, max(0.0, avg_churn / 0.10))
+        depression_pressure = min(1.0, state.months_in_depression / 12.0)
         
-        # Macro (Systemic recovery)
+        innovation = (0.5 * innovation_deficit) + (0.3 * churn_pressure) + (0.2 * depression_pressure)
+        
+        # Macro
         macro = min(1.0, max(0.0, 1.0 - (state.unemployment / 30.0)))
 
         return ScoreVector(
@@ -82,16 +93,13 @@ class Boardroom:
 
     def _compute_weights(self, state: EnvState) -> dict:
         weights = {
-            "efficiency": 0.40,
+            "efficiency": 0.30,
             "growth": 0.20,
-            "innovation": 0.20,
-            "macro": 0.20
+            "innovation": 0.40,  # Base weight vastly increased to force strategic shifts
+            "macro": 0.10
         }
         
-        # Gradually shift weight to innovation based on depression duration
         weights["innovation"] += (state.months_in_depression * 0.02)
-        
-        # Gradually shift weight to growth if unemployment is severely high
         if state.unemployment > 10.0:
             weights["growth"] += (state.unemployment - 10.0) * 0.02
         
@@ -102,34 +110,31 @@ class Boardroom:
     # Safeguards & Conflicts
     # -----------------------------
     def _apply_sanity_bounds(self, action: dict, state: EnvState) -> dict:
-        """Domain-level sanity bounds to reign in extreme proposals."""
-        # Marketing: cap spend ratio
         max_mkt = max(state.cash * 0.3, 20000)
         action["marketing"]["spend"] = min(action["marketing"].get("spend", 0), max_mkt)
-        
-        # Hiring: cap growth velocity
         action["hiring"]["hires"] = min(action["hiring"].get("hires", 0), 10)
-        
         return action
 
-    def _apply_dynamic_minimums(self, action: dict, state: EnvState) -> dict:
-        """Dynamic Minimum Guarantees tied directly to environment state."""
-        # R&D floor proportional to innovation deficit
+    def _apply_dynamic_minimums(self, action: dict, state: EnvState, innov_score: float) -> dict:
         innovation_deficit = max(0.0, 1.0 - state.innovation_factor)
-        rd_floor = 2000 + (innovation_deficit * 20000) # Scales safely
+        
+        # Dynamic R&D floor: strictly tied to % of MRR + deficit scaling
+        # E.g. up to 10% of MRR floor when innovation deficit is huge
+        rd_floor_mrr = state.mrr * (innovation_deficit * 0.10)
+        rd_floor_abs = 20000 + (innovation_deficit * 50000)
+        rd_floor = max(rd_floor_mrr, rd_floor_abs)
+        
+        # Ensure we always hit the floor minimum
         if action["product"].get("r_and_d_spend", 0) < rd_floor:
             action["product"]["r_and_d_spend"] = rd_floor
             
-        # Marketing floor proportional to MRR stagnation risks
-        # ensuring we don't zero out completely and hit a hysteresis growth trap
         mkt_floor = max(5000.0, state.mrr * 0.02)
         if action["marketing"].get("spend", 0) < mkt_floor:
             action["marketing"]["spend"] = mkt_floor
             
         return action
 
-    def _resolve_conflicts(self, action: dict, state: EnvState) -> dict:
-        """Priority-aware constraint reduction. Cut order: Marketing -> Hiring -> R&D (last)."""
+    def _resolve_conflicts(self, action: dict, state: EnvState, innov_score: float) -> dict:
         mkt_spend = action["marketing"].get("spend", 0)
         rd_spend = action["product"].get("r_and_d_spend", 0)
         cost_per_employee = max(1.0, action["hiring"].get("cost_per_employee", 10000))
@@ -140,16 +145,21 @@ class Boardroom:
         
         shortfall = total_needed - state.cash
         if shortfall <= 0:
-            return action  # Approved, enough cash
+            return action
             
-        # 1. Cut Marketing first
+        # Strong protection layer: R&D cannot be slashed entirely in a single round if innov_score is high
+        rd_protection_ratio = 1.0  # Under typical scenario, can cut down to 0
+        if innov_score > 0.6:
+            rd_protection_ratio = 0.2  # Max allowable cut is 20% of proposed R&D spend ensuring 80% survival capability
+            
+        # 1. Cut Marketing
         mkt_cut = min(mkt_spend, shortfall)
         action["marketing"]["spend"] -= mkt_cut
         shortfall -= mkt_cut
         
         if shortfall <= 0: return action
         
-        # 2. Cut Hiring second
+        # 2. Cut Hiring
         hires_value = action["hiring"].get("hires", 0) * cost_per_employee
         hiring_cut_value = min(hires_value, shortfall)
         hires_to_cut = math.floor(hiring_cut_value / cost_per_employee)
@@ -158,8 +168,9 @@ class Boardroom:
         
         if shortfall <= 0: return action
         
-        # 3. Cut R&D last (protect long-term)
-        rd_cut = min(action["product"]["r_and_d_spend"], shortfall)
+        # 3. Cut R&D (last priority)
+        max_allowed_rd_cut = action["product"]["r_and_d_spend"] * rd_protection_ratio
+        rd_cut = min(max_allowed_rd_cut, shortfall)
         action["product"]["r_and_d_spend"] -= rd_cut
         
         return action

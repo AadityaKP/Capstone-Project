@@ -23,9 +23,9 @@ def run_baseline_experiment():
     df_heuristic = run_simulation(policy="heuristic", num_episodes=NUM_EPISODES, seed_start=SEED_START)
     df_heuristic.to_csv("baseline_raw_heuristic.csv", index=False)
     
-    print("\n>>> Executing Boardroom v2 Policy...")
+    print("\n>>> Executing Boardroom v3 Policy...")
     df_boardroom = run_simulation(policy="boardroom", num_episodes=NUM_EPISODES, seed_start=SEED_START)
-    df_boardroom.to_csv("boardroomv2_raw.csv", index=False)
+    df_boardroom.to_csv("boardroomv3_raw.csv", index=False)
     
     print("\n>>> Computing Comparative Metrics...")
     
@@ -73,15 +73,15 @@ def run_baseline_experiment():
 
     stats_random = compute_metrics(df_random, "Random")
     stats_heuristic = compute_metrics(df_heuristic, "Heuristic")
-    stats_boardroom = compute_metrics(df_boardroom, "Boardroom v2")
+    stats_boardroom = compute_metrics(df_boardroom, "Boardroom v3")
     
     comparison_df = pd.DataFrame([stats_random, stats_heuristic, stats_boardroom])
     
     print("\n=== FINAL BASELINE COMPARISON ===")
     print(comparison_df.to_markdown(index=False))
     
-    comparison_df.to_csv("boardroomv2_vs_baseline_metrics.csv", index=False)
-    print("\nSaved to boardroomv2_vs_baseline_metrics.csv")
+    comparison_df.to_csv("boardroomv3_vs_baseline_metrics.csv", index=False)
+    print("\nSaved to boardroomv3_vs_baseline_metrics.csv")
 
 if __name__ == "__main__":
     run_baseline_experiment()
