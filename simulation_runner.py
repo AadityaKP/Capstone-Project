@@ -43,6 +43,20 @@ class RandomBundleAgent:
             }
         }
 
+from boardroom.boardroom import Boardroom
+from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
+
+class BoardroomAgent:
+    def __init__(self):
+        self.boardroom = Boardroom([
+            CFOProposalAgent(),
+            CMOProposalAgent(),
+            CPOProposalAgent(),
+        ])
+
+    def get_action(self, state):
+        return self.boardroom.decide(state)
+
 def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_start: int = 0):
     print(f"Running {num_episodes} episodes with Policy: {policy} (Seeds {seed_start}-{seed_start+num_episodes-1})...")
     
@@ -52,6 +66,8 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
         agent = BaselineJointAgent()
     elif policy == "random":
         agent = RandomBundleAgent()
+    elif policy == "boardroom":
+        agent = BoardroomAgent()
     else:
         raise ValueError(f"Unknown policy: {policy}")
     
@@ -130,4 +146,4 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
     return df
 
 if __name__ == "__main__":
-    run_simulation(policy="heuristic", num_episodes=5)
+    run_simulation(policy="boardroom", num_episodes=5)
