@@ -47,17 +47,17 @@ from boardroom.boardroom import Boardroom
 from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
 
 class BoardroomAgent:
-    def __init__(self):
+    def __init__(self, use_oracle=False, oracle_frequency=3):
         self.boardroom = Boardroom([
             CFOProposalAgent(),
             CMOProposalAgent(),
             CPOProposalAgent(),
-        ])
+        ], use_oracle=use_oracle, oracle_frequency=oracle_frequency)
 
     def get_action(self, state):
         return self.boardroom.decide(state)
 
-def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_start: int = 0):
+def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_start: int = 0, oracle_frequency: int = 3):
     print(f"Running {num_episodes} episodes with Policy: {policy} (Seeds {seed_start}-{seed_start+num_episodes-1})...")
     
     env = StartupEnv()
@@ -67,7 +67,9 @@ def run_simulation(policy: str = "heuristic", num_episodes: int = 100, seed_star
     elif policy == "random":
         agent = RandomBundleAgent()
     elif policy == "boardroom":
-        agent = BoardroomAgent()
+        agent = BoardroomAgent(use_oracle=False)
+    elif policy == "boardroom_oracle":
+        agent = BoardroomAgent(use_oracle=True, oracle_frequency=oracle_frequency)
     else:
         raise ValueError(f"Unknown policy: {policy}")
     

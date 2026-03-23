@@ -2,15 +2,34 @@ import math
 from typing import List
 from boardroom.schemas import Proposal, NegotiationState, ScoreVector
 from env.schemas import EnvState
+from oracle.oracle import Oracle
+from oracle.weight_adapter import WeightAdapter
 
 
 class Boardroom:
-    def __init__(self, agents: List):
+    def __init__(self, agents: List, use_oracle: bool = False, oracle_frequency: int = 3):
         self.agents = agents
+        self.use_oracle = use_oracle
+        self.oracle_frequency = oracle_frequency
+        if self.use_oracle:
+            self.oracle = Oracle()
+            self.weight_adapter = WeightAdapter()
+            self.last_brief = None
+            self.last_oracle_state = None
 
     def decide(self, state: EnvState) -> dict:
         proposals = [agent.propose(state) for agent in self.agents]
-        weights = self._compute_weights(state)
+        
+        base_weights = self._compute_weights(state)
+        
+        if self.use_oracle:
+            if (state.months_elapsed % self.oracle_frequency == 0) or (self.last_brief is None):
+                print(f"[Boardroom Oracle] Triggering LLM reasoning at Month {state.months_elapsed}...")
+                self.last_brief = self.oracle.generate_brief(state)
+                
+            weights = self.weight_adapter.adjust_weights(base_weights, self.last_brief)
+        else:
+            weights = base_weights
         
         for p in proposals:
             p.score_vector = self._evaluate_proposal(p, state)

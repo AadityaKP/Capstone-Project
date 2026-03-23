@@ -12,7 +12,17 @@ def run_baseline_experiment():
     print("PHASE 2 BASELINE EVALUATION: Random vs Heuristic vs Boardroom")
     print("==================================================")
     
-    NUM_EPISODES = 200 
+    MODE = "eval"  # Change to "eval" for final 200-episode runs
+    
+    if MODE == "dev":
+        NUM_EPISODES = 10
+        ORACLE_FREQUENCY = 5
+    else:
+        NUM_EPISODES = 200
+        ORACLE_FREQUENCY = 5
+
+    print(f"\n[CONFIG] Mode: {MODE.upper()} | Episodes: {NUM_EPISODES} | Oracle Freq: {ORACLE_FREQUENCY} months")
+    
     SEED_START = 0
     
     print("\n>>> Executing Random Policy...")
@@ -26,6 +36,10 @@ def run_baseline_experiment():
     print("\n>>> Executing Boardroom v3 Policy...")
     df_boardroom = run_simulation(policy="boardroom", num_episodes=NUM_EPISODES, seed_start=SEED_START)
     df_boardroom.to_csv("boardroomv3_raw.csv", index=False)
+    
+    print("\n>>> Executing Boardroom + Oracle Policy...")
+    df_boardroom_oracle = run_simulation(policy="boardroom_oracle", num_episodes=NUM_EPISODES, seed_start=SEED_START, oracle_frequency=ORACLE_FREQUENCY)
+    df_boardroom_oracle.to_csv("boardroom_oracle_raw.csv", index=False)
     
     print("\n>>> Computing Comparative Metrics...")
     
@@ -74,14 +88,15 @@ def run_baseline_experiment():
     stats_random = compute_metrics(df_random, "Random")
     stats_heuristic = compute_metrics(df_heuristic, "Heuristic")
     stats_boardroom = compute_metrics(df_boardroom, "Boardroom v3")
+    stats_boardroom_oracle = compute_metrics(df_boardroom_oracle, "Boardroom + Oracle")
     
-    comparison_df = pd.DataFrame([stats_random, stats_heuristic, stats_boardroom])
+    comparison_df = pd.DataFrame([stats_random, stats_heuristic, stats_boardroom, stats_boardroom_oracle])
     
     print("\n=== FINAL BASELINE COMPARISON ===")
     print(comparison_df.to_markdown(index=False))
     
-    comparison_df.to_csv("boardroomv3_vs_baseline_metrics.csv", index=False)
-    print("\nSaved to boardroomv3_vs_baseline_metrics.csv")
+    comparison_df.to_csv("boardroomv_oracle_vs_baseline_metrics.csv", index=False)
+    print("\nSaved to boardroomv_oracle_vs_baseline_metrics.csv")
 
 if __name__ == "__main__":
     run_baseline_experiment()
