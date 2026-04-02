@@ -22,6 +22,29 @@ def competitive_entry_shock(state: EnvState, prob: float = 0.1) -> None:
         state.competitors += 1
         state.price *= 0.9
 
+
+def inject_hard_shock(state: EnvState, shock_type: str) -> str:
+    """
+    Deterministic, hard shocks for controlled experiments.
+    Returns a shock label string for the Oracle prompt.
+    """
+    if shock_type == "competitor_surge":
+        state.competitors += 3
+        state.price *= 0.75
+        state.churn_smb *= 1.5
+        return "COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%"
+    if shock_type == "rate_hike":
+        state.interest_rate += 4.0
+        state.valuation_multiple *= 0.6
+        state.consumer_confidence -= 25
+        return "RATE_HIKE: +400bps, valuation -40%, confidence crash"
+    if shock_type == "recession":
+        state.consumer_confidence = 55
+        state.unemployment += 4.0
+        state.churn_b2c *= 2.0
+        return "RECESSION: confidence=55, unemployment spike, B2C churn doubled"
+    return "NO_SHOCK"
+
 def apply_recession_cascade(state: EnvState) -> None:
     """
     Credit-Bankruptcy Loop.

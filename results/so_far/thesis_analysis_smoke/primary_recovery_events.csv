@@ -1,0 +1,19 @@
+scenario_id,scenario_label,policy,episode,seed,shock_month,shock_label,pre_shock_rule_40,recovery_month,recovery_time_months,recovered
+boardroom,Boardroom Baseline,boardroom,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-38.61556600390571,,,False
+boardroom,Boardroom Baseline,boardroom,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-47.55437214084422,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-55.23703519973766,,,False
+boardroom,Boardroom Baseline,boardroom,1,1,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.80896731435322,35.0,11.0,True
+boardroom,Boardroom Baseline,boardroom,1,1,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.58222169707387,,,False
+boardroom,Boardroom Baseline,boardroom,1,1,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-56.77302823868895,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-32.40219940985715,,,False
+oracle_v1,Oracle v1,oracle_v1,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.59446971403971,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.28983805519358,,,False
+oracle_v1,Oracle v1,oracle_v1,1,1,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.418366660870475,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,1,1,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.77926804452812,,,False
+oracle_v1,Oracle v1,oracle_v1,1,1,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-46.8985100700824,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.083335416733373,,,False
+oracle_v3,Oracle v3,oracle_v3,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.061216508302756,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.68464054225415,,,False
+oracle_v3,Oracle v3,oracle_v3,1,1,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.0624175011577,32.0,8.0,True
+oracle_v3,Oracle v3,oracle_v3,1,1,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.057519003296584,,,False
+oracle_v3,Oracle v3,oracle_v3,1,1,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.565527056383,73.0,1.0,True

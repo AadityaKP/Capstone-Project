@@ -47,9 +47,11 @@ class StartupEnv(gym.Env):
         self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
         self.state: EnvState = None
+        self.episode_seed: int | None = None
         
     def reset(self, seed=None, options=None) -> Tuple[np.ndarray, Dict[str, Any]]:
         super().reset(seed=seed)
+        self.episode_seed = seed
         
         self.state = EnvState(
             mrr=50_000,
@@ -94,10 +96,16 @@ class StartupEnv(gym.Env):
             )
 
         prev_mrr = self.state.mrr
+        shock_label = "NO_SHOCK"
 
         business_logic.interest_rate_shock(self.state)
         business_logic.consumer_confidence_shock(self.state)
         business_logic.competitive_entry_shock(self.state)
+
+        if self.state.months_elapsed in {24, 48, 72}:
+            shock_cycle = ["competitor_surge", "rate_hike", "recession"]
+            shock_type = shock_cycle[(self.episode_seed or 0) % len(shock_cycle)]
+            shock_label = business_logic.inject_hard_shock(self.state, shock_type)
 
         business_logic.apply_recession_cascade(self.state)
         business_logic.apply_hysteresis(self.state)
@@ -152,7 +160,8 @@ class StartupEnv(gym.Env):
 
         return self._get_obs(), reward, terminated, truncated, {
             "rule_of_40": rule40,
-            "state": self.state.model_dump()
+            "state": self.state.model_dump(),
+            "shock_label": shock_label,
         }
 
     def _get_obs(self) -> np.ndarray:

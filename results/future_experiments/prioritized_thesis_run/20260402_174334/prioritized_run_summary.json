@@ -1,0 +1,21 @@
+{
+  "run_root": "results\\future_experiments\\prioritized_thesis_run\\20260402_174334",
+  "case_study_dir": "results\\future_experiments\\prioritized_thesis_run\\20260402_174334\\case_study",
+  "primary_dir": "results\\future_experiments\\prioritized_thesis_run\\20260402_174334\\primary_background",
+  "primary_background": {
+    "kind": "primary_background_run",
+    "pid": 34680,
+    "command": [
+      "C:\\College\\Capstone\\CapstoneProject\\venv\\Scripts\\python.exe",
+      "-c",
+      "from experiments.run_thesis_experiment import run_thesis_experiment; run_thesis_experiment(mode='eval', num_episodes=50, seed_start=0, oracle_frequency=10, output_dir=r'results\\future_experiments\\prioritized_thesis_run\\20260402_174334\\primary_background', include_primary=True, include_ablation=False, include_case_study=False)"
+    ],
+    "output_dir": "results\\future_experiments\\prioritized_thesis_run\\20260402_174334\\primary_background",
+    "log_path": "results\\future_experiments\\prioritized_thesis_run\\20260402_174334\\primary_background\\primary_background.log",
+    "num_episodes": 50,
+    "oracle_frequency": 10,
+    "seed_start": 0,
+    "started_at": "2026-04-02T18:37:37",
+    "metadata_path": "results\\future_experiments\\prioritized_thesis_run\\20260402_174334\\primary_background\\primary_background_metadata.json"
+  }
+}

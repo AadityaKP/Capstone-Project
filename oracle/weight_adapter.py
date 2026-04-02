@@ -1,7 +1,7 @@
-from oracle.schemas import OracleBrief, URGENCY_MAPPING
+from oracle.schemas import ExpectedOutcome, OracleBrief, URGENCY_MAPPING
 
 class WeightAdapter:
-    def adjust_weights(self, base_weights: dict, brief: OracleBrief) -> dict:
+    def adjust_weights(self, base_weights: dict, brief: OracleBrief, oracle_mode: str = "oracle_v1") -> dict:
         """
         Merges base weights with Oracle-driven adjustments.
         Applies exponential smoothing to prevent unstable policy jumps.
@@ -13,7 +13,8 @@ class WeightAdapter:
         macro_signal = URGENCY_MAPPING.get(brief.macro_condition.value, 0.5)
         
         # Dampen signal with confidence scalar
-        k = 0.2 * brief.confidence
+        base_k = 0.3 if oracle_mode == "oracle_v3" else 0.2
+        k = base_k * brief.confidence
         
         target_weights = {
             "efficiency": base_weights.get("efficiency", 0.3) + (k * eff_signal),
@@ -21,6 +22,10 @@ class WeightAdapter:
             "innovation": base_weights.get("innovation", 0.4) + (k * innov_signal),
             "macro": base_weights.get("macro", 0.1) + (k * macro_signal) 
         }
+
+        if oracle_mode == "oracle_v3" and brief.expected_outcome == ExpectedOutcome.DECLINE:
+            target_weights["innovation"] += 0.05
+            target_weights["efficiency"] += 0.05
         
         # Normalize target mathematically
         total = sum(target_weights.values())

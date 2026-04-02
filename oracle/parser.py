@@ -7,9 +7,13 @@ def parse_llm_response(raw_text: str) -> OracleBrief:
         # Strip markdown if present
         text = raw_text.strip()
         if text.startswith("```json"):
-            text = text[7:-3]
+            text = text[len("```json"):].strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
         elif text.startswith("```"):
-            text = text[3:-3]
+            text = text[3:].strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
             
         data = json.loads(text.strip())
         return OracleBrief(**data)

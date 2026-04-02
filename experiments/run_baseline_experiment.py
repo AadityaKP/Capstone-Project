@@ -1,5 +1,6 @@
 import sys
 import os
+from pathlib import Path
 import pandas as pd
 import numpy as np
 
@@ -7,39 +8,45 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from simulation_runner import run_simulation
 
+OUTPUT_DIR = Path("results") / "future_experiments" / "baseline_comparison"
+
 def run_baseline_experiment():
     print("==================================================")
-    print("PHASE 2 BASELINE EVALUATION: Random vs Heuristic vs Boardroom")
+    print("ORACLE MEMORY UPGRADE EVALUATION")
     print("==================================================")
     
     MODE = "eval"  # Change to "eval" for final 200-episode runs
     
     if MODE == "dev":
         NUM_EPISODES = 10
-        ORACLE_FREQUENCY = 5
+        ORACLE_FREQUENCY = 10
     else:
         NUM_EPISODES = 200
-        ORACLE_FREQUENCY = 5
+        ORACLE_FREQUENCY = 10
 
     print(f"\n[CONFIG] Mode: {MODE.upper()} | Episodes: {NUM_EPISODES} | Oracle Freq: {ORACLE_FREQUENCY} months")
     
     SEED_START = 0
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
-    print("\n>>> Executing Random Policy...")
-    df_random = run_simulation(policy="random", num_episodes=NUM_EPISODES, seed_start=SEED_START)
-    df_random.to_csv("baseline_raw_random.csv", index=False)
-    
-    print("\n>>> Executing Heuristic Policy...")
-    df_heuristic = run_simulation(policy="heuristic", num_episodes=NUM_EPISODES, seed_start=SEED_START)
-    df_heuristic.to_csv("baseline_raw_heuristic.csv", index=False)
-    
-    print("\n>>> Executing Boardroom v3 Policy...")
-    df_boardroom = run_simulation(policy="boardroom", num_episodes=NUM_EPISODES, seed_start=SEED_START)
-    df_boardroom.to_csv("boardroomv3_raw.csv", index=False)
-    
-    print("\n>>> Executing Boardroom + Oracle Policy...")
-    df_boardroom_oracle = run_simulation(policy="boardroom_oracle", num_episodes=NUM_EPISODES, seed_start=SEED_START, oracle_frequency=ORACLE_FREQUENCY)
-    df_boardroom_oracle.to_csv("boardroom_oracle_raw.csv", index=False)
+    policy_runs = [
+        ("boardroom", "Boardroom Baseline", OUTPUT_DIR / "boardroom_baseline_raw.csv"),
+        ("oracle_v1", "Oracle v1", OUTPUT_DIR / "oracle_v1_raw.csv"),
+        ("oracle_v2", "Oracle v2", OUTPUT_DIR / "oracle_v2_raw.csv"),
+        ("oracle_v3", "Oracle v3", OUTPUT_DIR / "oracle_v3_raw.csv"),
+    ]
+
+    raw_results = {}
+    for policy, label, filename in policy_runs:
+        print(f"\n>>> Executing {label}...")
+        df_result = run_simulation(
+            policy=policy,
+            num_episodes=NUM_EPISODES,
+            seed_start=SEED_START,
+            oracle_frequency=ORACLE_FREQUENCY,
+        )
+        df_result.to_csv(filename, index=False)
+        raw_results[policy] = df_result
     
     print("\n>>> Computing Comparative Metrics...")
     
@@ -85,18 +92,21 @@ def run_baseline_experiment():
             "Avg Valuation": f"{avg_valuation:.1f}x"
         }
 
-    stats_random = compute_metrics(df_random, "Random")
-    stats_heuristic = compute_metrics(df_heuristic, "Heuristic")
-    stats_boardroom = compute_metrics(df_boardroom, "Boardroom v3")
-    stats_boardroom_oracle = compute_metrics(df_boardroom_oracle, "Boardroom + Oracle")
-    
-    comparison_df = pd.DataFrame([stats_random, stats_heuristic, stats_boardroom, stats_boardroom_oracle])
+    comparison_df = pd.DataFrame(
+        [
+            compute_metrics(raw_results["boardroom"], "Boardroom Baseline"),
+            compute_metrics(raw_results["oracle_v1"], "Oracle v1"),
+            compute_metrics(raw_results["oracle_v2"], "Oracle v2"),
+            compute_metrics(raw_results["oracle_v3"], "Oracle v3"),
+        ]
+    )
     
     print("\n=== FINAL BASELINE COMPARISON ===")
     print(comparison_df.to_markdown(index=False))
     
-    comparison_df.to_csv("boardroomv_oracle_vs_baseline_metrics.csv", index=False)
-    print("\nSaved to boardroomv_oracle_vs_baseline_metrics.csv")
+    comparison_path = OUTPUT_DIR / "oracle_memory_upgrade_metrics.csv"
+    comparison_df.to_csv(comparison_path, index=False)
+    print(f"\nSaved to {comparison_path}")
 
 if __name__ == "__main__":
     run_baseline_experiment()

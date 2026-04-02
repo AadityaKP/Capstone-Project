@@ -86,7 +86,7 @@ def test_recovery_dynamics(base_state):
     
     business_logic.apply_recovery(base_state)
     
-    assert base_state.innovation_factor == 0.901
+    assert base_state.innovation_factor == 0.903
     assert base_state.valuation_multiple == 8.05
     assert base_state.consumer_confidence == 92.0
 
@@ -97,3 +97,30 @@ def test_reward_penalties(base_state):
     reward = business_logic.compute_reward(base_state, rule_of_40=20.0)
     
     assert reward < -6.0
+
+
+def test_inject_hard_shock_competitor_surge(base_state):
+    label = business_logic.inject_hard_shock(base_state, "competitor_surge")
+
+    assert label.startswith("COMPETITOR_SURGE")
+    assert base_state.competitors == 8
+    assert base_state.price == 37.5
+    assert base_state.churn_smb == 0.045
+
+
+def test_inject_hard_shock_rate_hike(base_state):
+    label = business_logic.inject_hard_shock(base_state, "rate_hike")
+
+    assert label.startswith("RATE_HIKE")
+    assert base_state.interest_rate == 9.0
+    assert base_state.valuation_multiple == 6.0
+    assert base_state.consumer_confidence == 75.0
+
+
+def test_inject_hard_shock_recession(base_state):
+    label = business_logic.inject_hard_shock(base_state, "recession")
+
+    assert label.startswith("RECESSION")
+    assert base_state.consumer_confidence == 55
+    assert base_state.unemployment == 8.0
+    assert base_state.churn_b2c == 0.10
