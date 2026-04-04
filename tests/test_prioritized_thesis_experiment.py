@@ -72,3 +72,37 @@ def test_run_prioritized_experiment_runs_case_study_then_background_primary(tmp_
 
     summary_path = Path(summary["run_root"]) / "prioritized_run_summary.json"
     assert summary_path.exists()
+
+
+def test_run_prioritized_experiment_can_skip_case_study_and_run_primary_in_terminal(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_run_thesis_experiment(**kwargs):
+        calls.append(kwargs)
+        Path(kwargs["output_dir"]).mkdir(parents=True, exist_ok=True)
+        return Path(kwargs["output_dir"])
+
+    monkeypatch.setattr(prioritized, "run_thesis_experiment", fake_run_thesis_experiment)
+
+    summary = prioritized.run_prioritized_thesis_experiment(
+        root_dir=tmp_path,
+        primary_num_episodes=75,
+        oracle_frequency=10,
+        seed_start=4,
+        include_case_study=False,
+        run_in_background=False,
+    )
+
+    assert len(calls) == 1
+
+    primary_kwargs = calls[0]
+    assert primary_kwargs["num_episodes"] == 75
+    assert primary_kwargs["oracle_frequency"] == 10
+    assert primary_kwargs["seed_start"] == 4
+    assert primary_kwargs["include_primary"] is True
+    assert primary_kwargs["include_ablation"] is False
+    assert primary_kwargs["include_case_study"] is False
+
+    assert "case_study_dir" not in summary
+    assert "primary_terminal" in summary
+    assert Path(summary["primary_terminal"]["metadata_path"]).exists()

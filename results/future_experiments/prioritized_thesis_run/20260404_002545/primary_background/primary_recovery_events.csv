@@ -1,0 +1,676 @@
+scenario_id,scenario_label,policy,episode,seed,shock_month,shock_label,pre_shock_rule_40,recovery_month,recovery_time_months,recovered
+boardroom,Boardroom Baseline,boardroom,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-38.61556600390571,,,False
+boardroom,Boardroom Baseline,boardroom,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-47.55437214084422,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-55.23703519973766,,,False
+boardroom,Boardroom Baseline,boardroom,1,1,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.80896731435322,35.0,11.0,True
+boardroom,Boardroom Baseline,boardroom,1,1,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.58222169707387,,,False
+boardroom,Boardroom Baseline,boardroom,1,1,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-56.77302823868895,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,2,2,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-36.474753509347316,,,False
+boardroom,Boardroom Baseline,boardroom,2,2,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.39984170647942,,,False
+boardroom,Boardroom Baseline,boardroom,2,2,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-55.75825683232453,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,3,3,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-43.3407268712726,,,False
+boardroom,Boardroom Baseline,boardroom,3,3,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-51.00868741263787,,,False
+boardroom,Boardroom Baseline,boardroom,3,3,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-65.15043172462981,74.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,4,4,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.734958716919518,85.0,61.0,True
+boardroom,Boardroom Baseline,boardroom,4,4,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.69532471877031,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,4,4,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-37.195391540227966,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,5,5,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-42.30835521015687,31.0,7.0,True
+boardroom,Boardroom Baseline,boardroom,5,5,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-51.38775507381963,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,5,5,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-64.02647231051442,,,False
+boardroom,Boardroom Baseline,boardroom,6,6,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-39.907320633289984,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,6,6,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-49.50859365467348,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,6,6,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-62.841707602103014,,,False
+boardroom,Boardroom Baseline,boardroom,7,7,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.37951644945639,28.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,7,7,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.33280816228021,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,7,7,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-54.7220725761076,95.0,23.0,True
+boardroom,Boardroom Baseline,boardroom,8,8,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-46.447558192147795,31.0,7.0,True
+boardroom,Boardroom Baseline,boardroom,8,8,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-57.62959818526081,50.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,8,8,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-83.64539794546457,,,False
+boardroom,Boardroom Baseline,boardroom,9,9,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-51.809959060990515,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,9,9,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-55.996182618840336,61.0,13.0,True
+boardroom,Boardroom Baseline,boardroom,9,9,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-66.93527551271711,,,False
+boardroom,Boardroom Baseline,boardroom,10,10,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.51627568237994,,,False
+boardroom,Boardroom Baseline,boardroom,10,10,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-56.66030078983722,50.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,10,10,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-55.47143512202712,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,11,11,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-51.48878396371406,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,11,11,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-65.1693521955855,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,11,11,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-86.37201035333632,,,False
+boardroom,Boardroom Baseline,boardroom,12,12,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-39.299171119440025,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,12,12,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-34.162172612791665,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,12,12,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.396037217496268,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,13,13,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.74760347018769,,,False
+boardroom,Boardroom Baseline,boardroom,13,13,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.03329064445702,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,13,13,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.728311823154684,83.0,11.0,True
+boardroom,Boardroom Baseline,boardroom,14,14,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-39.25318386236492,28.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,14,14,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-50.60289771844199,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,14,14,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-65.93842562126912,,,False
+boardroom,Boardroom Baseline,boardroom,15,15,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-44.98124188480969,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,15,15,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-34.8675421928449,67.0,19.0,True
+boardroom,Boardroom Baseline,boardroom,15,15,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-38.5156179161525,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,16,16,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.101948930067806,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,16,16,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-37.08742766682174,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,16,16,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.94067880996659,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,17,17,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-23.089474299970917,,,False
+boardroom,Boardroom Baseline,boardroom,17,17,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-39.1839517799721,,,False
+boardroom,Boardroom Baseline,boardroom,17,17,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-45.150760091605534,,,False
+boardroom,Boardroom Baseline,boardroom,18,18,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.41186133440686,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,18,18,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-34.23157487259765,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,18,18,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.679284145556206,74.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,19,19,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-46.978405109356984,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,19,19,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.222935005456144,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,19,19,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-49.321316295987856,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,20,20,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.258320869631966,,,False
+boardroom,Boardroom Baseline,boardroom,20,20,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-42.90413196977706,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,20,20,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-48.418868996868206,,,False
+boardroom,Boardroom Baseline,boardroom,21,21,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.28484792240302,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,21,21,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.48530532336131,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,21,21,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.265152387698265,,,False
+boardroom,Boardroom Baseline,boardroom,22,22,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.62314468717451,84.0,60.0,True
+boardroom,Boardroom Baseline,boardroom,22,22,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.60655572924634,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,22,22,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-46.90065634728013,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,23,23,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.35680887492604,,,False
+boardroom,Boardroom Baseline,boardroom,23,23,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-42.964875029881966,,,False
+boardroom,Boardroom Baseline,boardroom,23,23,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-46.05981782540555,,,False
+boardroom,Boardroom Baseline,boardroom,24,24,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-43.05896855936081,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,24,24,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-40.87002073355097,55.0,7.0,True
+boardroom,Boardroom Baseline,boardroom,24,24,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-43.52800643319124,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,25,25,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.09158752557993,89.0,65.0,True
+boardroom,Boardroom Baseline,boardroom,25,25,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.50727872117212,71.0,23.0,True
+boardroom,Boardroom Baseline,boardroom,25,25,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.41025044216164,78.0,6.0,True
+boardroom,Boardroom Baseline,boardroom,26,26,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-47.207987512378786,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,26,26,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-57.94022110739638,,,False
+boardroom,Boardroom Baseline,boardroom,26,26,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-79.62865802808292,74.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,27,27,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-45.48046482915465,,,False
+boardroom,Boardroom Baseline,boardroom,27,27,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-59.79339037249667,,,False
+boardroom,Boardroom Baseline,boardroom,27,27,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-77.58028045375728,,,False
+boardroom,Boardroom Baseline,boardroom,28,28,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.09487675899067,28.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,28,28,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.88560184518825,53.0,5.0,True
+boardroom,Boardroom Baseline,boardroom,28,28,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.72815341417726,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,29,29,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.00778913823015,,,False
+boardroom,Boardroom Baseline,boardroom,29,29,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.5692077462176,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,29,29,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-43.48780079747867,74.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,30,30,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-52.55072911074686,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,30,30,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-58.03694835641326,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,30,30,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-54.0303659478308,,,False
+boardroom,Boardroom Baseline,boardroom,31,31,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.64865940057892,52.0,28.0,True
+boardroom,Boardroom Baseline,boardroom,31,31,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.80472199053919,52.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,31,31,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.646935501867205,83.0,11.0,True
+boardroom,Boardroom Baseline,boardroom,32,32,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-52.495887689084576,28.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,32,32,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-66.37176737188429,,,False
+boardroom,Boardroom Baseline,boardroom,32,32,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-90.29956265119189,,,False
+boardroom,Boardroom Baseline,boardroom,33,33,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.91030669299947,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,33,33,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-58.57277263019382,59.0,11.0,True
+boardroom,Boardroom Baseline,boardroom,33,33,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-72.02629159349166,,,False
+boardroom,Boardroom Baseline,boardroom,34,34,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.02076278680243,111.0,87.0,True
+boardroom,Boardroom Baseline,boardroom,34,34,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.326071686414295,63.0,15.0,True
+boardroom,Boardroom Baseline,boardroom,34,34,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-48.5715266496392,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,35,35,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-48.26610270630967,,,False
+boardroom,Boardroom Baseline,boardroom,35,35,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-60.35728566579024,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,35,35,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-75.63456209554529,,,False
+boardroom,Boardroom Baseline,boardroom,36,36,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-36.37085291164857,29.0,5.0,True
+boardroom,Boardroom Baseline,boardroom,36,36,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-34.21646826986594,50.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,36,36,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-33.584800493618765,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,37,37,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.052880924254474,111.0,87.0,True
+boardroom,Boardroom Baseline,boardroom,37,37,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-54.761623850776004,57.0,9.0,True
+boardroom,Boardroom Baseline,boardroom,37,37,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-54.991818142266375,79.0,7.0,True
+boardroom,Boardroom Baseline,boardroom,38,38,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-42.339530585618704,,,False
+boardroom,Boardroom Baseline,boardroom,38,38,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-51.0635211682383,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,38,38,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-54.67493591508093,,,False
+boardroom,Boardroom Baseline,boardroom,39,39,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-46.25818312660457,,,False
+boardroom,Boardroom Baseline,boardroom,39,39,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-58.173821959343016,,,False
+boardroom,Boardroom Baseline,boardroom,39,39,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-96.17620428975832,,,False
+boardroom,Boardroom Baseline,boardroom,40,40,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.06554273021887,,,False
+boardroom,Boardroom Baseline,boardroom,40,40,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.73591889940492,67.0,19.0,True
+boardroom,Boardroom Baseline,boardroom,40,40,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.26079332175097,79.0,7.0,True
+boardroom,Boardroom Baseline,boardroom,41,41,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-31.27185018919843,,,False
+boardroom,Boardroom Baseline,boardroom,41,41,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-43.289934054751996,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,41,41,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-53.986226315273925,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,42,42,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-40.29419220698915,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,42,42,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-49.254042557547045,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,42,42,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-59.71772637047457,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,43,43,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.38421978510895,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,43,43,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.02965404773051,57.0,9.0,True
+boardroom,Boardroom Baseline,boardroom,43,43,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-49.36977796955536,83.0,11.0,True
+boardroom,Boardroom Baseline,boardroom,44,44,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-30.185727988563002,,,False
+boardroom,Boardroom Baseline,boardroom,44,44,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-49.92155636091435,52.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,44,44,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-65.90819280780883,,,False
+boardroom,Boardroom Baseline,boardroom,45,45,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-38.531251140458124,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,45,45,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-33.66506006283066,,,False
+boardroom,Boardroom Baseline,boardroom,45,45,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-38.37119368611031,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,46,46,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.64090234356094,83.0,59.0,True
+boardroom,Boardroom Baseline,boardroom,46,46,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-49.9743183607458,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,46,46,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.45835427921809,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,47,47,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-46.975009830856266,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,47,47,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-59.22250241255767,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,47,47,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-73.55324468337481,,,False
+boardroom,Boardroom Baseline,boardroom,48,48,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.37984745357314,92.0,68.0,True
+boardroom,Boardroom Baseline,boardroom,48,48,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-43.151291130768634,54.0,6.0,True
+boardroom,Boardroom Baseline,boardroom,48,48,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-45.894808635161425,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,49,49,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.52091162688843,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,49,49,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-50.40727899106133,61.0,13.0,True
+boardroom,Boardroom Baseline,boardroom,49,49,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-53.16806025243603,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,50,50,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-45.400520210830045,,,False
+boardroom,Boardroom Baseline,boardroom,50,50,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-63.65294637363938,,,False
+boardroom,Boardroom Baseline,boardroom,50,50,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-86.79226607437332,,,False
+boardroom,Boardroom Baseline,boardroom,51,51,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-45.257558705585645,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,51,51,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-49.60342969854239,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,51,51,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-56.35178743894062,74.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,52,52,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.34892615897913,45.0,21.0,True
+boardroom,Boardroom Baseline,boardroom,52,52,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.896219529437,64.0,16.0,True
+boardroom,Boardroom Baseline,boardroom,52,52,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.88393822837408,74.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,53,53,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.25016458400044,27.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,53,53,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-51.543252472951245,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,53,53,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-50.37780920109193,,,False
+boardroom,Boardroom Baseline,boardroom,54,54,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-44.85186500762165,104.0,80.0,True
+boardroom,Boardroom Baseline,boardroom,54,54,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-56.52632895172858,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,54,54,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-57.75484743550231,81.0,9.0,True
+boardroom,Boardroom Baseline,boardroom,55,55,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.674723735900706,92.0,68.0,True
+boardroom,Boardroom Baseline,boardroom,55,55,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.68526359656063,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,55,55,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.6492799799454,76.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,56,56,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-43.45278922854451,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,56,56,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-53.34539196854159,,,False
+boardroom,Boardroom Baseline,boardroom,56,56,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-69.50446871989672,,,False
+boardroom,Boardroom Baseline,boardroom,57,57,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-52.136517672072635,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,57,57,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-62.078374751989834,,,False
+boardroom,Boardroom Baseline,boardroom,57,57,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-79.91411343372882,,,False
+boardroom,Boardroom Baseline,boardroom,58,58,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-49.03607875557081,25.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,58,58,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.93634713615511,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,58,58,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-46.99456833136851,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,59,59,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-40.060221661609866,,,False
+boardroom,Boardroom Baseline,boardroom,59,59,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-52.40569726011183,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,59,59,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-64.02732178404149,,,False
+boardroom,Boardroom Baseline,boardroom,60,60,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.44731002450516,46.0,22.0,True
+boardroom,Boardroom Baseline,boardroom,60,60,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-45.526566269680686,,,False
+boardroom,Boardroom Baseline,boardroom,60,60,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-62.53707473199358,,,False
+boardroom,Boardroom Baseline,boardroom,61,61,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.98426097732648,43.0,19.0,True
+boardroom,Boardroom Baseline,boardroom,61,61,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.286255050034804,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,61,61,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.575579682456954,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,62,62,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-42.524839554604974,30.0,6.0,True
+boardroom,Boardroom Baseline,boardroom,62,62,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-50.02695979003788,,,False
+boardroom,Boardroom Baseline,boardroom,62,62,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-58.86329299114661,,,False
+boardroom,Boardroom Baseline,boardroom,63,63,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-49.24418175666936,36.0,12.0,True
+boardroom,Boardroom Baseline,boardroom,63,63,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-56.55007170264266,,,False
+boardroom,Boardroom Baseline,boardroom,63,63,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-61.533403889218555,,,False
+boardroom,Boardroom Baseline,boardroom,64,64,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.946451219052655,104.0,80.0,True
+boardroom,Boardroom Baseline,boardroom,64,64,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.86104015150737,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,64,64,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-57.21753620103006,74.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,65,65,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-37.57254739195312,27.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,65,65,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-52.40726007042774,50.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,65,65,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-65.87725458374793,,,False
+boardroom,Boardroom Baseline,boardroom,66,66,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-40.156756326843535,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,66,66,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-33.633048586403646,52.0,4.0,True
+boardroom,Boardroom Baseline,boardroom,66,66,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-40.117444883087344,,,False
+boardroom,Boardroom Baseline,boardroom,67,67,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-48.61710978490677,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,67,67,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.7852618471168,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,67,67,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-50.41486467525578,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,68,68,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.12360306591084,,,False
+boardroom,Boardroom Baseline,boardroom,68,68,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-44.7644772250195,49.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,68,68,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-44.07517126167457,,,False
+boardroom,Boardroom Baseline,boardroom,69,69,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-44.07771441926586,,,False
+boardroom,Boardroom Baseline,boardroom,69,69,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-57.987144875501215,54.0,6.0,True
+boardroom,Boardroom Baseline,boardroom,69,69,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-71.8906400269797,,,False
+boardroom,Boardroom Baseline,boardroom,70,70,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.44487631077506,65.0,41.0,True
+boardroom,Boardroom Baseline,boardroom,70,70,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.76697493142241,53.0,5.0,True
+boardroom,Boardroom Baseline,boardroom,70,70,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-48.08339257653376,75.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,71,71,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-48.95451568655808,26.0,2.0,True
+boardroom,Boardroom Baseline,boardroom,71,71,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-65.43750195254395,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,71,71,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-89.70412976460887,,,False
+boardroom,Boardroom Baseline,boardroom,72,72,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-44.33277497197895,,,False
+boardroom,Boardroom Baseline,boardroom,72,72,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-53.94353120928732,,,False
+boardroom,Boardroom Baseline,boardroom,72,72,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-73.24477546723055,,,False
+boardroom,Boardroom Baseline,boardroom,73,73,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-41.33701330431352,79.0,55.0,True
+boardroom,Boardroom Baseline,boardroom,73,73,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-46.89447261018924,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,73,73,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.73965425401028,73.0,1.0,True
+boardroom,Boardroom Baseline,boardroom,74,74,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-28.296225310661836,,,False
+boardroom,Boardroom Baseline,boardroom,74,74,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-39.30675528937041,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,74,74,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.75993077548844,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-26.654799492060302,,,False
+oracle_v1,Oracle v1,oracle_v1,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-32.29510925118346,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-36.6178240805338,,,False
+oracle_v1,Oracle v1,oracle_v1,1,1,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.150184574140134,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,1,1,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.875627614381976,,,False
+oracle_v1,Oracle v1,oracle_v1,1,1,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.51830877312684,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,2,2,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-28.730379695014044,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,2,2,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-28.145518722922237,58.0,10.0,True
+oracle_v1,Oracle v1,oracle_v1,2,2,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.517013699751075,75.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,3,3,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.980399871070084,29.0,5.0,True
+oracle_v1,Oracle v1,oracle_v1,3,3,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-40.38189520035205,,,False
+oracle_v1,Oracle v1,oracle_v1,3,3,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.57271507450208,74.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,4,4,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-20.53382980136919,84.0,60.0,True
+oracle_v1,Oracle v1,oracle_v1,4,4,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-26.892562679394906,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,4,4,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-27.066729405946447,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,5,5,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-31.42144283414743,,,False
+oracle_v1,Oracle v1,oracle_v1,5,5,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-39.90846237158444,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,5,5,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-48.50576073274921,75.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,6,6,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-27.735071159458318,27.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,6,6,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-34.95766724811429,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,6,6,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.425118458943786,,,False
+oracle_v1,Oracle v1,oracle_v1,7,7,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.68558863285592,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,7,7,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.451698348007085,81.0,33.0,True
+oracle_v1,Oracle v1,oracle_v1,7,7,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.10374619678324,75.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,8,8,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-38.706931477110956,31.0,7.0,True
+oracle_v1,Oracle v1,oracle_v1,8,8,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-45.23953431641875,50.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,8,8,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-60.732697524029035,,,False
+oracle_v1,Oracle v1,oracle_v1,9,9,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.700082807887895,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,9,9,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.712514968519905,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,9,9,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-59.015202875985324,,,False
+oracle_v1,Oracle v1,oracle_v1,10,10,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.50892788806562,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,10,10,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.485909430431555,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,10,10,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.66221058587102,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,11,11,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-52.17945200382792,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,11,11,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-67.76253725418391,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,11,11,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-84.7350198999715,,,False
+oracle_v1,Oracle v1,oracle_v1,12,12,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.533091583933693,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,12,12,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-23.54939151327906,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,12,12,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-18.96145997868644,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,13,13,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.44091871747687,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,13,13,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-41.543244222012845,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,13,13,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-37.63989658219671,83.0,11.0,True
+oracle_v1,Oracle v1,oracle_v1,14,14,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-27.573882315162546,28.0,4.0,True
+oracle_v1,Oracle v1,oracle_v1,14,14,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.38929425058387,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,14,14,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-39.85129584877168,,,False
+oracle_v1,Oracle v1,oracle_v1,15,15,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.79062689293657,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,15,15,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-24.202237628772806,50.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,15,15,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-27.65080897655965,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,16,16,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.251447380799004,29.0,5.0,True
+oracle_v1,Oracle v1,oracle_v1,16,16,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-26.34648803057668,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,16,16,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.187925674831334,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,17,17,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-15.492194525950296,,,False
+oracle_v1,Oracle v1,oracle_v1,17,17,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.870722765155858,59.0,11.0,True
+oracle_v1,Oracle v1,oracle_v1,17,17,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-30.42029226513651,84.0,12.0,True
+oracle_v1,Oracle v1,oracle_v1,18,18,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-25.298786543266417,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,18,18,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-23.890999151684532,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,18,18,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-20.487790054215285,78.0,6.0,True
+oracle_v1,Oracle v1,oracle_v1,19,19,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.14583165134778,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,19,19,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.450475601144866,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,19,19,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.6446595655161,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,20,20,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-23.518609424163465,,,False
+oracle_v1,Oracle v1,oracle_v1,20,20,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-26.245438264900766,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,20,20,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-28.525522242095104,,,False
+oracle_v1,Oracle v1,oracle_v1,21,21,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-30.868172912855183,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,21,21,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-30.115924764812238,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,21,21,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.39222226891871,,,False
+oracle_v1,Oracle v1,oracle_v1,22,22,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-25.43102371303079,86.0,62.0,True
+oracle_v1,Oracle v1,oracle_v1,22,22,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.984787250053632,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,22,22,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.972727622143275,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,23,23,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-25.836347509950805,,,False
+oracle_v1,Oracle v1,oracle_v1,23,23,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-27.00502360355471,,,False
+oracle_v1,Oracle v1,oracle_v1,23,23,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.81979886919233,,,False
+oracle_v1,Oracle v1,oracle_v1,24,24,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.68252814149087,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,24,24,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-33.242595041639554,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,24,24,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.81749331128546,75.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,25,25,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-27.636887266038947,30.0,6.0,True
+oracle_v1,Oracle v1,oracle_v1,25,25,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.06829165148169,67.0,19.0,True
+oracle_v1,Oracle v1,oracle_v1,25,25,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-29.71967248255976,78.0,6.0,True
+oracle_v1,Oracle v1,oracle_v1,26,26,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-44.16646834452173,29.0,5.0,True
+oracle_v1,Oracle v1,oracle_v1,26,26,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-47.29549526730108,,,False
+oracle_v1,Oracle v1,oracle_v1,26,26,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-65.03586418938809,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,27,27,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-43.83990921788411,,,False
+oracle_v1,Oracle v1,oracle_v1,27,27,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-53.85125000825056,,,False
+oracle_v1,Oracle v1,oracle_v1,27,27,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-68.60681003178482,,,False
+oracle_v1,Oracle v1,oracle_v1,28,28,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.88088183649873,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,28,28,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.518831514145376,53.0,5.0,True
+oracle_v1,Oracle v1,oracle_v1,28,28,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.138659778445707,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,29,29,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-25.066110829678536,,,False
+oracle_v1,Oracle v1,oracle_v1,29,29,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-31.109310554230905,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,29,29,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-31.340776707846413,74.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,30,30,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-51.64723070414008,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,30,30,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.8506460963153,59.0,11.0,True
+oracle_v1,Oracle v1,oracle_v1,30,30,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.462922208751564,,,False
+oracle_v1,Oracle v1,oracle_v1,31,31,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-27.97515469763943,52.0,28.0,True
+oracle_v1,Oracle v1,oracle_v1,31,31,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.22457062398037,52.0,4.0,True
+oracle_v1,Oracle v1,oracle_v1,31,31,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.13600037419385,82.0,10.0,True
+oracle_v1,Oracle v1,oracle_v1,32,32,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-48.916662640040656,,,False
+oracle_v1,Oracle v1,oracle_v1,32,32,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-66.13067519462061,,,False
+oracle_v1,Oracle v1,oracle_v1,32,32,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-87.63738820986113,,,False
+oracle_v1,Oracle v1,oracle_v1,33,33,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.76636813925224,26.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,33,33,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-46.11385024812356,59.0,11.0,True
+oracle_v1,Oracle v1,oracle_v1,33,33,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-56.77554402274516,75.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,34,34,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.015685873071856,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,34,34,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.716794907566666,54.0,6.0,True
+oracle_v1,Oracle v1,oracle_v1,34,34,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.293768711875266,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,35,35,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-45.60629377387978,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,35,35,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-49.77915179695854,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,35,35,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-63.36519748685606,,,False
+oracle_v1,Oracle v1,oracle_v1,36,36,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-25.344344349462048,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,36,36,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-23.40140389229711,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,36,36,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-18.037042023026924,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,37,37,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.516746224981624,29.0,5.0,True
+oracle_v1,Oracle v1,oracle_v1,37,37,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-47.59444485654785,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,37,37,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.44115702526276,79.0,7.0,True
+oracle_v1,Oracle v1,oracle_v1,38,38,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.587957115174916,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,38,38,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-40.94163912161321,50.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,38,38,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-36.35388430397083,,,False
+oracle_v1,Oracle v1,oracle_v1,39,39,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.305257494204675,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,39,39,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-54.975882314023266,,,False
+oracle_v1,Oracle v1,oracle_v1,39,39,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-86.8937628909971,,,False
+oracle_v1,Oracle v1,oracle_v1,40,40,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.26679321347237,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,40,40,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.683197062256994,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,40,40,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.427646998875055,79.0,7.0,True
+oracle_v1,Oracle v1,oracle_v1,41,41,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-21.95890439720723,,,False
+oracle_v1,Oracle v1,oracle_v1,41,41,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-31.311645506031827,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,41,41,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-38.61961583062315,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,42,42,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.358608638410196,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,42,42,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.630061869575556,58.0,10.0,True
+oracle_v1,Oracle v1,oracle_v1,42,42,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-34.35236085130526,74.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,43,43,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.19595415517439,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,43,43,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.05479080477465,57.0,9.0,True
+oracle_v1,Oracle v1,oracle_v1,43,43,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.59724099864903,74.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,44,44,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-23.81281015156788,,,False
+oracle_v1,Oracle v1,oracle_v1,44,44,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.92633124306963,52.0,4.0,True
+oracle_v1,Oracle v1,oracle_v1,44,44,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-43.619397763831245,,,False
+oracle_v1,Oracle v1,oracle_v1,45,45,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-27.91392889945353,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,45,45,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-23.53208200253459,65.0,17.0,True
+oracle_v1,Oracle v1,oracle_v1,45,45,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-23.357152598713828,,,False
+oracle_v1,Oracle v1,oracle_v1,46,46,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.49165444534862,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,46,46,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-37.47477925455724,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,46,46,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.47502646377134,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,47,47,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-37.62402125988548,26.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,47,47,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-42.590238345016246,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,47,47,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-54.9629695180371,,,False
+oracle_v1,Oracle v1,oracle_v1,48,48,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.64260117217912,37.0,13.0,True
+oracle_v1,Oracle v1,oracle_v1,48,48,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.987885625136535,54.0,6.0,True
+oracle_v1,Oracle v1,oracle_v1,48,48,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.09180794803903,75.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,49,49,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.189846424333997,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,49,49,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.65683004177788,61.0,13.0,True
+oracle_v1,Oracle v1,oracle_v1,49,49,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.658106899542126,76.0,4.0,True
+oracle_v1,Oracle v1,oracle_v1,50,50,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-42.15814009261565,41.0,17.0,True
+oracle_v1,Oracle v1,oracle_v1,50,50,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-45.142500722100294,,,False
+oracle_v1,Oracle v1,oracle_v1,50,50,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-60.047425586749036,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,51,51,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-30.90745919887818,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,51,51,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-36.02146150578049,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,51,51,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-40.11677916600127,74.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,52,52,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.39667541599461,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,52,52,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.202866365469927,64.0,16.0,True
+oracle_v1,Oracle v1,oracle_v1,52,52,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.286401518404023,76.0,4.0,True
+oracle_v1,Oracle v1,oracle_v1,53,53,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.851541659118087,27.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,53,53,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.08716107518865,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,53,53,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.00398577696563,,,False
+oracle_v1,Oracle v1,oracle_v1,54,54,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.86504350165508,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,54,54,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-51.637296730748886,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,54,54,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-52.090001422177636,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,55,55,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.303112242685668,26.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,55,55,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.395740489191073,60.0,12.0,True
+oracle_v1,Oracle v1,oracle_v1,55,55,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.097394855467012,75.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,56,56,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-37.99337546338301,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,56,56,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-39.73586646229155,,,False
+oracle_v1,Oracle v1,oracle_v1,56,56,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-48.82222311567865,,,False
+oracle_v1,Oracle v1,oracle_v1,57,57,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-47.572781725989536,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,57,57,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-59.83996433839788,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,57,57,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-70.59772737295137,,,False
+oracle_v1,Oracle v1,oracle_v1,58,58,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.61222879435603,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,58,58,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.01743349778626,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,58,58,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.78009042465848,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,59,59,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-27.53861377672586,,,False
+oracle_v1,Oracle v1,oracle_v1,59,59,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.472811047229854,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,59,59,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-31.48342158760716,,,False
+oracle_v1,Oracle v1,oracle_v1,60,60,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-27.25650889098036,41.0,17.0,True
+oracle_v1,Oracle v1,oracle_v1,60,60,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.941210620283996,,,False
+oracle_v1,Oracle v1,oracle_v1,60,60,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-32.50965995345115,,,False
+oracle_v1,Oracle v1,oracle_v1,61,61,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-22.986365527746813,43.0,19.0,True
+oracle_v1,Oracle v1,oracle_v1,61,61,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-23.631532010615814,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,61,61,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-21.788783496073624,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,62,62,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-33.93868575639628,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,62,62,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.0492190786919,,,False
+oracle_v1,Oracle v1,oracle_v1,62,62,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-38.34696126875991,,,False
+oracle_v1,Oracle v1,oracle_v1,63,63,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-49.77926922724425,34.0,10.0,True
+oracle_v1,Oracle v1,oracle_v1,63,63,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-52.264315325417556,60.0,12.0,True
+oracle_v1,Oracle v1,oracle_v1,63,63,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-55.598328821178406,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,64,64,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-41.327305915146006,55.0,31.0,True
+oracle_v1,Oracle v1,oracle_v1,64,64,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.81204760927167,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,64,64,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-46.29530265340205,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,65,65,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-24.522071566468394,27.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,65,65,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.36868845155482,52.0,4.0,True
+oracle_v1,Oracle v1,oracle_v1,65,65,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.50428353548077,,,False
+oracle_v1,Oracle v1,oracle_v1,66,66,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.550876867347544,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,66,66,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-22.244986125414172,52.0,4.0,True
+oracle_v1,Oracle v1,oracle_v1,66,66,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-25.80979119487948,,,False
+oracle_v1,Oracle v1,oracle_v1,67,67,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.544563929869675,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,67,67,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.36113511467332,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,67,67,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.21352457925672,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,68,68,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-24.636952493048653,,,False
+oracle_v1,Oracle v1,oracle_v1,68,68,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.22483114597507,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,68,68,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-28.373811932800443,,,False
+oracle_v1,Oracle v1,oracle_v1,69,69,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-46.68603397229241,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,69,69,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-53.815982308138615,49.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,69,69,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-64.56166092381221,,,False
+oracle_v1,Oracle v1,oracle_v1,70,70,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.2235551998471,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,70,70,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.04132605673619,65.0,17.0,True
+oracle_v1,Oracle v1,oracle_v1,70,70,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.49004652406418,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,71,71,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-49.31557757926091,25.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,71,71,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-58.55995737768859,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,71,71,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-71.61186043154407,,,False
+oracle_v1,Oracle v1,oracle_v1,72,72,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-34.75803186415496,32.0,8.0,True
+oracle_v1,Oracle v1,oracle_v1,72,72,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-39.629521467006505,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,72,72,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-46.186666850083775,,,False
+oracle_v1,Oracle v1,oracle_v1,73,73,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.981191359013565,74.0,50.0,True
+oracle_v1,Oracle v1,oracle_v1,73,73,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.53908556060206,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,73,73,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.55880480910103,73.0,1.0,True
+oracle_v1,Oracle v1,oracle_v1,74,74,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-19.47217045948674,,,False
+oracle_v1,Oracle v1,oracle_v1,74,74,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-26.925180227948534,50.0,2.0,True
+oracle_v1,Oracle v1,oracle_v1,74,74,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-27.892330583195427,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-26.708427946799965,,,False
+oracle_v3,Oracle v3,oracle_v3,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.686065981959157,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.660731232601314,,,False
+oracle_v3,Oracle v3,oracle_v3,1,1,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.859594130122744,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,1,1,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.47914925932722,,,False
+oracle_v3,Oracle v3,oracle_v3,1,1,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.586228274492086,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,2,2,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.712250396146285,31.0,7.0,True
+oracle_v3,Oracle v3,oracle_v3,2,2,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.129532301793276,58.0,10.0,True
+oracle_v3,Oracle v3,oracle_v3,2,2,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-40.24102285003225,75.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,3,3,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-40.97343534933504,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,3,3,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.5199350895948,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,3,3,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-56.097133588007836,74.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,4,4,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-24.865300441691502,90.0,66.0,True
+oracle_v3,Oracle v3,oracle_v3,4,4,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.506329090303204,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,4,4,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.882475254171375,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,5,5,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.49290285077039,31.0,7.0,True
+oracle_v3,Oracle v3,oracle_v3,5,5,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.66316538847905,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,5,5,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-50.2164271073382,75.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,6,6,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.64724885893613,27.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,6,6,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.666515535205335,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,6,6,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.794283262564186,,,False
+oracle_v3,Oracle v3,oracle_v3,7,7,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.59000843765234,26.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,7,7,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.244743940137994,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,7,7,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.42188384230135,75.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,8,8,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-38.47208679566921,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,8,8,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-47.53048487941781,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,8,8,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-60.99296881214028,,,False
+oracle_v3,Oracle v3,oracle_v3,9,9,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.82218451155253,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,9,9,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.27862516966416,61.0,13.0,True
+oracle_v3,Oracle v3,oracle_v3,9,9,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-59.94530777295118,,,False
+oracle_v3,Oracle v3,oracle_v3,10,10,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.86812531134524,33.0,9.0,True
+oracle_v3,Oracle v3,oracle_v3,10,10,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.15228008240672,53.0,5.0,True
+oracle_v3,Oracle v3,oracle_v3,10,10,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.53822017408379,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,11,11,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-52.31877742582569,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,11,11,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-63.17387164881919,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,11,11,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-80.57767111372318,,,False
+oracle_v3,Oracle v3,oracle_v3,12,12,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.533091583933693,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,12,12,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-25.067800859393582,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,12,12,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-19.599606044420874,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,13,13,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.61456498566858,27.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,13,13,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.209849336930915,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,13,13,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-37.56975853773847,83.0,11.0,True
+oracle_v3,Oracle v3,oracle_v3,14,14,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-27.03976628960539,28.0,4.0,True
+oracle_v3,Oracle v3,oracle_v3,14,14,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.666094442674066,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,14,14,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-39.595716197235284,,,False
+oracle_v3,Oracle v3,oracle_v3,15,15,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-41.23714161259291,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,15,15,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-25.1451332699542,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,15,15,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-22.16045492509378,,,False
+oracle_v3,Oracle v3,oracle_v3,16,16,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-27.964524897441542,29.0,5.0,True
+oracle_v3,Oracle v3,oracle_v3,16,16,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-25.917648387757016,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,16,16,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.331188762775273,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,17,17,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-16.05267748648253,,,False
+oracle_v3,Oracle v3,oracle_v3,17,17,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-30.637410071367746,59.0,11.0,True
+oracle_v3,Oracle v3,oracle_v3,17,17,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-30.859263752034142,84.0,12.0,True
+oracle_v3,Oracle v3,oracle_v3,18,18,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.68967967951469,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,18,18,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-26.374099640026678,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,18,18,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-21.559430109278836,78.0,6.0,True
+oracle_v3,Oracle v3,oracle_v3,19,19,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.1688369694468,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,19,19,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-43.117265846670215,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,19,19,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-41.57867182200618,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,20,20,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-23.689513081464977,37.0,13.0,True
+oracle_v3,Oracle v3,oracle_v3,20,20,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-26.707596861122127,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,20,20,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-28.254271520908848,,,False
+oracle_v3,Oracle v3,oracle_v3,21,21,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.594354333893744,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,21,21,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-30.469520609446324,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,21,21,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.4957800944704,,,False
+oracle_v3,Oracle v3,oracle_v3,22,22,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-25.870735311132886,86.0,62.0,True
+oracle_v3,Oracle v3,oracle_v3,22,22,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.01301880777811,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,22,22,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.118605571884075,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,23,23,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-26.583623672276808,,,False
+oracle_v3,Oracle v3,oracle_v3,23,23,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-27.309175524119997,,,False
+oracle_v3,Oracle v3,oracle_v3,23,23,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-33.3582939436987,,,False
+oracle_v3,Oracle v3,oracle_v3,24,24,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.75535045115937,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,24,24,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-32.97429698475488,52.0,4.0,True
+oracle_v3,Oracle v3,oracle_v3,24,24,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.26902655679909,75.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,25,25,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.321269666153952,30.0,6.0,True
+oracle_v3,Oracle v3,oracle_v3,25,25,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.454173849724,67.0,19.0,True
+oracle_v3,Oracle v3,oracle_v3,25,25,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.410399002760055,78.0,6.0,True
+oracle_v3,Oracle v3,oracle_v3,26,26,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-47.032916302174996,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,26,26,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-52.049761636644085,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,26,26,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-68.84796249158222,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,27,27,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-42.83108065942623,,,False
+oracle_v3,Oracle v3,oracle_v3,27,27,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-53.97332808441798,,,False
+oracle_v3,Oracle v3,oracle_v3,27,27,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-70.45137371957574,,,False
+oracle_v3,Oracle v3,oracle_v3,28,28,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.94100146389081,26.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,28,28,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.983068516689485,53.0,5.0,True
+oracle_v3,Oracle v3,oracle_v3,28,28,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.920154902010008,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,29,29,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-25.63595525044729,,,False
+oracle_v3,Oracle v3,oracle_v3,29,29,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.20995124369853,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,29,29,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-33.29515589960629,74.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,30,30,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.30848079681842,27.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,30,30,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-51.658541853590826,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,30,30,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.11936604898918,,,False
+oracle_v3,Oracle v3,oracle_v3,31,31,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.803094587658766,52.0,28.0,True
+oracle_v3,Oracle v3,oracle_v3,31,31,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.505335197622315,52.0,4.0,True
+oracle_v3,Oracle v3,oracle_v3,31,31,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.84722007749103,83.0,11.0,True
+oracle_v3,Oracle v3,oracle_v3,32,32,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-49.00566464236971,27.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,32,32,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-55.90060290993968,,,False
+oracle_v3,Oracle v3,oracle_v3,32,32,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-77.77426593366495,,,False
+oracle_v3,Oracle v3,oracle_v3,33,33,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-39.04465460688443,31.0,7.0,True
+oracle_v3,Oracle v3,oracle_v3,33,33,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-45.36385562075218,59.0,11.0,True
+oracle_v3,Oracle v3,oracle_v3,33,33,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-56.823230741872806,75.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,34,34,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-28.306071115309564,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,34,34,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.268276388397357,54.0,6.0,True
+oracle_v3,Oracle v3,oracle_v3,34,34,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.85555392645481,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,35,35,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-46.01443319686146,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,35,35,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-52.50500849777067,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,35,35,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-68.45626945118148,,,False
+oracle_v3,Oracle v3,oracle_v3,36,36,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-24.988009274299035,29.0,5.0,True
+oracle_v3,Oracle v3,oracle_v3,36,36,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-24.688209246185384,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,36,36,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-23.87587382784302,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,37,37,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-49.52294049908311,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,37,37,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-51.68490863650106,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,37,37,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-46.940218279519826,79.0,7.0,True
+oracle_v3,Oracle v3,oracle_v3,38,38,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.70334103779819,,,False
+oracle_v3,Oracle v3,oracle_v3,38,38,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-40.05810580363627,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,38,38,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.703727652149894,114.0,42.0,True
+oracle_v3,Oracle v3,oracle_v3,39,39,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-46.50589321059071,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,39,39,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-53.57293347328913,,,False
+oracle_v3,Oracle v3,oracle_v3,39,39,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-83.99372246550553,,,False
+oracle_v3,Oracle v3,oracle_v3,40,40,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-32.430101730891664,27.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,40,40,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.05717606433181,67.0,19.0,True
+oracle_v3,Oracle v3,oracle_v3,40,40,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.75901662706855,79.0,7.0,True
+oracle_v3,Oracle v3,oracle_v3,41,41,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.463881373044646,,,False
+oracle_v3,Oracle v3,oracle_v3,41,41,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.55249669086594,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,41,41,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-49.031998495492225,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,42,42,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.358608638410196,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,42,42,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-30.180636271812553,58.0,10.0,True
+oracle_v3,Oracle v3,oracle_v3,42,42,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.94983501872868,74.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,43,43,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.3067901043691,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,43,43,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-38.834351236789736,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,43,43,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-37.90014698156351,74.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,44,44,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-23.766750669295504,,,False
+oracle_v3,Oracle v3,oracle_v3,44,44,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.9209891047816,52.0,4.0,True
+oracle_v3,Oracle v3,oracle_v3,44,44,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.44853909119698,,,False
+oracle_v3,Oracle v3,oracle_v3,45,45,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.43435075204971,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,45,45,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-25.906874359871154,65.0,17.0,True
+oracle_v3,Oracle v3,oracle_v3,45,45,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-25.014426234469525,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,46,46,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.95326256361983,83.0,59.0,True
+oracle_v3,Oracle v3,oracle_v3,46,46,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.30027210771405,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,46,46,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.749957394629014,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,47,47,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-37.70930174210949,26.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,47,47,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.69237113544877,,,False
+oracle_v3,Oracle v3,oracle_v3,47,47,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-58.873236502614986,,,False
+oracle_v3,Oracle v3,oracle_v3,48,48,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-28.428555560108226,37.0,13.0,True
+oracle_v3,Oracle v3,oracle_v3,48,48,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.103781167055264,54.0,6.0,True
+oracle_v3,Oracle v3,oracle_v3,48,48,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-30.292543063207532,75.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,49,49,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.34011565156089,30.0,6.0,True
+oracle_v3,Oracle v3,oracle_v3,49,49,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.26010625030244,61.0,13.0,True
+oracle_v3,Oracle v3,oracle_v3,49,49,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.531349277930154,76.0,4.0,True
+oracle_v3,Oracle v3,oracle_v3,50,50,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.84687303280187,41.0,17.0,True
+oracle_v3,Oracle v3,oracle_v3,50,50,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-44.8403995863018,,,False
+oracle_v3,Oracle v3,oracle_v3,50,50,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-59.48836622845363,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,51,51,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-32.385045386473976,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,51,51,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-33.56868901949936,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,51,51,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.98786410982879,74.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,52,52,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-37.090640833713756,30.0,6.0,True
+oracle_v3,Oracle v3,oracle_v3,52,52,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.69627559260119,64.0,16.0,True
+oracle_v3,Oracle v3,oracle_v3,52,52,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.547220969618305,76.0,4.0,True
+oracle_v3,Oracle v3,oracle_v3,53,53,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-30.04602226717668,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,53,53,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.76988986096348,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,53,53,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.086157109857034,,,False
+oracle_v3,Oracle v3,oracle_v3,54,54,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-48.166431346144336,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,54,54,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-53.73212659577224,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,54,54,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.4657829857573,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,55,55,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.45150907858795,38.0,14.0,True
+oracle_v3,Oracle v3,oracle_v3,55,55,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-31.374107768473053,60.0,12.0,True
+oracle_v3,Oracle v3,oracle_v3,55,55,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-30.821702996785213,75.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,56,56,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-33.42491069152518,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,56,56,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.6556892074628,,,False
+oracle_v3,Oracle v3,oracle_v3,56,56,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-41.722940240334616,,,False
+oracle_v3,Oracle v3,oracle_v3,57,57,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-50.49242139562041,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,57,57,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-54.76272916069656,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,57,57,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-67.78006222623944,,,False
+oracle_v3,Oracle v3,oracle_v3,58,58,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-40.01896517854194,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,58,58,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-39.41779481939958,53.0,5.0,True
+oracle_v3,Oracle v3,oracle_v3,58,58,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-35.210417048169006,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,59,59,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-27.121481600714674,,,False
+oracle_v3,Oracle v3,oracle_v3,59,59,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.391764428723604,52.0,4.0,True
+oracle_v3,Oracle v3,oracle_v3,59,59,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-32.6898598626369,,,False
+oracle_v3,Oracle v3,oracle_v3,60,60,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-27.464971636513997,46.0,22.0,True
+oracle_v3,Oracle v3,oracle_v3,60,60,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-29.98806917726735,,,False
+oracle_v3,Oracle v3,oracle_v3,60,60,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-33.0441705754352,,,False
+oracle_v3,Oracle v3,oracle_v3,61,61,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-25.923448292182698,43.0,19.0,True
+oracle_v3,Oracle v3,oracle_v3,61,61,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-26.581623829251235,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,61,61,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-23.80357008286742,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,62,62,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-40.78394729430128,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,62,62,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-43.28227911815011,,,False
+oracle_v3,Oracle v3,oracle_v3,62,62,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-49.04470487493972,,,False
+oracle_v3,Oracle v3,oracle_v3,63,63,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-55.05665976238545,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,63,63,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-53.13139515578663,,,False
+oracle_v3,Oracle v3,oracle_v3,63,63,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-58.60774507489771,,,False
+oracle_v3,Oracle v3,oracle_v3,64,64,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.550505071272255,48.0,24.0,True
+oracle_v3,Oracle v3,oracle_v3,64,64,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.50698469820649,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,64,64,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-45.8375391263729,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,65,65,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-25.031032208924564,27.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,65,65,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-36.113472543824585,50.0,2.0,True
+oracle_v3,Oracle v3,oracle_v3,65,65,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-35.28899889036559,,,False
+oracle_v3,Oracle v3,oracle_v3,66,66,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-27.470938085377874,27.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,66,66,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-23.146964877718972,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,66,66,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-26.117396398396725,,,False
+oracle_v3,Oracle v3,oracle_v3,67,67,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-44.01244134677145,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,67,67,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-42.758220085622284,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,67,67,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-41.01901703516754,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,68,68,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-26.385537459288425,,,False
+oracle_v3,Oracle v3,oracle_v3,68,68,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-34.60870351889705,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,68,68,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.46035637833391,,,False
+oracle_v3,Oracle v3,oracle_v3,69,69,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-47.17099831204623,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,69,69,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-54.93847788545163,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,69,69,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-60.980433262407395,,,False
+oracle_v3,Oracle v3,oracle_v3,70,70,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.28612324443188,47.0,23.0,True
+oracle_v3,Oracle v3,oracle_v3,70,70,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-34.21477552148647,53.0,5.0,True
+oracle_v3,Oracle v3,oracle_v3,70,70,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.03528658044191,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,71,71,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-48.76965776115131,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,71,71,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-57.38678444896353,53.0,5.0,True
+oracle_v3,Oracle v3,oracle_v3,71,71,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-71.99650260173554,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,72,72,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.58074010420724,25.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,72,72,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-39.54038384317323,,,False
+oracle_v3,Oracle v3,oracle_v3,72,72,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-51.046481174738076,,,False
+oracle_v3,Oracle v3,oracle_v3,73,73,24,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.14711531835694,74.0,50.0,True
+oracle_v3,Oracle v3,oracle_v3,73,73,48,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-36.81195120541027,49.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,73,73,72,"RATE_HIKE: +400bps, valuation -40%, confidence crash",-33.714215843386086,73.0,1.0,True
+oracle_v3,Oracle v3,oracle_v3,74,74,24,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-20.308719206135514,,,False
+oracle_v3,Oracle v3,oracle_v3,74,74,48,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-28.082938556163647,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,74,74,72,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",-29.750388561806087,73.0,1.0,True
