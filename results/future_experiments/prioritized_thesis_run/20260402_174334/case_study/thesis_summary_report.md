@@ -1,1 +1,0 @@
-# Oracle Thesis Analysis Summary

@@ -1,5 +1,0 @@
-scenario_id,Scenario,Avg Rule-40 Post Shock (25-60),Mean Recovery Time (Mo),Survival %,Avg Final MRR
-oracle_v1_action_modifier,Oracle v1 + ActionModifier,-33.92874568265945,3.6666666666666665,100.0,475371.79601845646
-oracle_v1_weights_only,Oracle v1 Weights Only,-45.86983961632058,5.0,100.0,284409.8856490076
-oracle_v3_full,Oracle v3 Full,-33.386541335092005,1.6666666666666667,100.0,509297.9643410806
-oracle_v3_no_memory,Oracle v3 No Memory,-34.37728115271699,1.6666666666666667,100.0,532072.6995705802

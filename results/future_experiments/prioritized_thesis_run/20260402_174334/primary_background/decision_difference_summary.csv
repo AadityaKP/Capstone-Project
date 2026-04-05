@@ -1,3 +1,0 @@
-scenario_id,scenario_label,decision_difference_rate_pct,avg_marketing_diff_pct,avg_rd_diff_pct,avg_hires_diff
-oracle_v1,Oracle v1,98.51443832415289,213.3852177328887,20.83619732763634,0.1358704723752295
-oracle_v3,Oracle v3,98.81488900016691,211.05123804327656,20.04288503049828,0.12769153730595895

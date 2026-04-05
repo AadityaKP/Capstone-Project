@@ -1,6 +1,0 @@
-scenario_id,scenario_label,episode,outcome_bucket,retrieval_count,episode_total,retrieval_share
-oracle_v3,Oracle v3,0,NEGATIVE,111,330,0.33636363636363636
-oracle_v3,Oracle v3,0,POSITIVE,219,330,0.6636363636363637
-oracle_v3,Oracle v3,1,NEGATIVE,99,360,0.275
-oracle_v3,Oracle v3,1,NEUTRAL,10,360,0.027777777777777776
-oracle_v3,Oracle v3,1,POSITIVE,251,360,0.6972222222222222

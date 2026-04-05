@@ -1,5 +1,0 @@
-metric,U,p_value,significant,n_a,n_b,method,baseline_scenario_id,comparison_scenario_id,comparison_scenario_label
-post_shock_avg_rule40,511.0,3.5601853563433155e-07,True,50,50,scipy_mannwhitneyu,boardroom,oracle_v1,Oracle v1
-final_mrr,969.0,0.05314799708219472,False,50,50,scipy_mannwhitneyu,boardroom,oracle_v1,Oracle v1
-post_shock_avg_rule40,530.0,7.045566667668902e-07,True,50,50,scipy_mannwhitneyu,boardroom,oracle_v3,Oracle v3
-final_mrr,974.0,0.0575319583897078,False,50,50,scipy_mannwhitneyu,boardroom,oracle_v3,Oracle v3

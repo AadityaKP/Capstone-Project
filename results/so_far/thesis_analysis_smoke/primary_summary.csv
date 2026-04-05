@@ -1,4 +1,0 @@
-scenario_id,Scenario,Survival %,Avg Final MRR,Median Final MRR,Avg Rule-40 Post Shock (25-60),Mean Recovery Time (Mo),Median Recovery Time (Mo),Recovered %,Decision Difference vs Boardroom %,Avg LLM Calls,Avg Cache Hits
-boardroom,Boardroom Baseline,100.0,284409.8856490076,284409.8856490076,-45.86983961632058,5.0,3.0,50.0,,0.0,0.0
-oracle_v1,Oracle v1,100.0,485120.623202179,485120.623202179,-36.82829529000937,1.6666666666666667,1.0,50.0,94.16666666666667,32.0,3.0
-oracle_v3,Oracle v3,100.0,580440.2208930613,580440.2208930613,-35.044442595743334,4.0,3.0,50.0,94.16666666666667,34.0,1.5
