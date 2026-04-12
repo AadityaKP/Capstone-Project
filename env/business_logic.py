@@ -1,141 +1,242 @@
-import numpy as np
-from config import sim_config
+import random
+import math
+from env.schemas import EnvState, MarketingAction, ProductAction, PricingAction, HiringAction
 
-# ==========================================
-# Business Logic Layer
-# ==========================================
-# This module contains the "Laws of Physics" for the market.
-# It defines purely functional transitions: Inputs -> Outputs.
-# Ideally, this file should be stateless. All state is held by the Env.
+def interest_rate_shock(state: EnvState, prob: float = 0.1) -> None:
+    if random.random() < prob:
+        state.interest_rate += 1.5  
+        state.valuation_multiple *= 0.85
+        state.churn_smb *= 1.2
 
-def apply_marketing_effect(current_users: int, current_brand: float, spend: float, channel_efficiency: float = 1.0) -> tuple[int, float]:
+def consumer_confidence_shock(state: EnvState, prob: float = 0.1) -> None:
+    if random.random() < prob:
+        state.consumer_confidence -= 20
+        state.unemployment += 1.0
+
+def competitive_entry_shock(state: EnvState, prob: float = 0.1) -> None:
+    market_attractiveness = (state.mrr - 50_000) / 50_000 
+    dynamic_prob = 1 / (1 + math.exp(-market_attractiveness)) 
+    actual_prob = prob * (2 * dynamic_prob)
+
+    if random.random() < actual_prob:
+        state.competitors += 1
+        state.price *= 0.9
+
+
+def inject_hard_shock(state: EnvState, shock_type: str) -> str:
     """
-    Calculates the impact of Marketing Spend on User Acquisition and Brand.
-    
-    The Logic:
-    1. Marketing is NOT linear. Spending $1M is not 10x better than $100k due to saturation.
-    2. We use a Power Law / Diminishing Returns model: (Spend ^ 0.85).
-    3. Brand Strength acts as a Multiplier. A known brand acquires users cheaper.
-    
-    Args:
-        current_users: Existing user count.
-        current_brand: Current brand score (0.0 - 1.0+).
-        spend: Cash spent on marketing this step.
-        channel_efficiency: Multiplier for different channels (default 1.0).
+    Deterministic, hard shocks for controlled experiments.
+    Returns a shock label string for the Oracle prompt.
+    """
+    if shock_type == "competitor_surge":
+        state.competitors += 3
+        state.price *= 0.75
+        state.churn_smb *= 1.5
+        return "COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%"
+    if shock_type == "rate_hike":
+        state.interest_rate += 4.0
+        state.valuation_multiple *= 0.6
+        state.consumer_confidence -= 25
+        return "RATE_HIKE: +400bps, valuation -40%, confidence crash"
+    if shock_type == "recession":
+        state.consumer_confidence = 55
+        state.unemployment += 4.0
+        state.churn_b2c *= 2.0
+        return "RECESSION: confidence=55, unemployment spike, B2C churn doubled"
+    return "NO_SHOCK"
+
+def apply_recession_cascade(state: EnvState) -> None:
+    """
+    Credit-Bankruptcy Loop.
+    If Unemployment High + Rates High -> Confidence Crash.
+    """
+    if state.unemployment > 8.0 and state.interest_rate > 7.0:
+        if random.random() < 0.2: 
+            state.consumer_confidence -= 10
+            state.valuation_multiple *= 0.8
+            state.unemployment += 0.5 
+
+def apply_hysteresis(state: EnvState) -> None:
+    """
+    Growth Hysteresis.
+    Long depressions permanently scar innovation.
+    """
+    if state.consumer_confidence < 50:
+        state.months_in_depression += 1
+    else:
+        state.months_in_depression = max(0, state.months_in_depression - 1)
+
+    if state.months_in_depression >= 6:
+        state.innovation_factor *= 0.95
+
+    state.innovation_factor = max(0.0, min(1.0, state.innovation_factor))
+
+def apply_recovery(state: EnvState) -> None:
+    """
+    Mean-reversion mechanics.
+    """
+    if state.innovation_factor < 1.0:
+        state.innovation_factor += 0.003
+
+    if state.valuation_multiple < 10.0:
+        state.valuation_multiple += 0.05
+    elif state.valuation_multiple > 10.0:
+        state.valuation_multiple -= 0.05
+
+    if state.consumer_confidence < 100 and state.unemployment < 8.0:
+        state.consumer_confidence += 2.0
+
+def hill_response(spend: float, alpha: float, beta: float, gamma: float) -> float:
+    """
+    Hill Function for Marketing Response.
+    alpha: Shape parameter (S-curve steepness)
+    beta: Max potential capacity (Saturation point)
+    gamma: Half-saturation point (Spend needed to reach 50% of beta)
+    """
+    if spend <= 0: return 0.0
+    return beta * (spend ** alpha) / (gamma ** alpha + spend ** alpha)
+
+def compute_new_mrr(state: EnvState, action: MarketingAction) -> float:
+    if action.channel == "ppc":
+        alpha = random.uniform(0.5, 1.0)
+        gamma = random.uniform(15_000, 50_000)
+        beta = random.uniform(10_000, 50_000)
+    else: 
+        alpha = random.uniform(1.5, 3.0)
+        gamma = random.uniform(15_000, 50_000)
+        beta = random.uniform(50_000, 100_000)
+
+    response = hill_response(action.spend, alpha, beta, gamma)
+
+    if state.consumer_confidence < 80:
+        response *= 0.85
+    elif state.consumer_confidence > 120:
+        response *= 1.08
+
+    if state.competitors >= 10:
+        response *= 0.6
+    elif state.competitors >= 4:
+        response *= 0.8
+
+    return response
+
+def compute_churn_rate(state: EnvState) -> float:
+    base = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3
+
+    quality_factor = 1.0 - (state.product_quality * 0.5) 
+
+    macro_multiplier = 1.0
+    if state.consumer_confidence < 80:
+        macro_multiplier *= 1.3
         
-    Returns:
-        (new_total_users, new_brand_strength)
+    avg_tenure_proxy = max(1, state.months_elapsed * 0.4)
+    tenure_decay = math.exp(-0.15 * avg_tenure_proxy)
+    
+    decay_multiplier = max(0.3, tenure_decay)
+
+    return base * quality_factor * macro_multiplier * decay_multiplier
+
+def apply_innovation_investment(state: EnvState, action: ProductAction) -> None:
     """
+    Converts R&D spend into innovation gains (nonlinear, saturating).
+    """
+    spend = action.r_and_d_spend
+
     if spend <= 0:
-        return current_users, current_brand
-    
-    # Brand Multiplier: 
-    # If Brand is 0.0 -> Multiplier is 1.0x (Base efficiency).
-    # If Brand is 1.0 -> Multiplier is 2.0x (Double efficiency).
-    brand_multiplier = 1.0 + current_brand
-    
-    # Effective Spend:
-    # Adjust raw cash by the efficiency of the channel (placeholder for future channel selection).
-    effective_spend = spend * channel_efficiency
-    
-    # User Acquisition Formula:
-    # NewUsers = (EffectiveSpend ^ 0.85) * BrandMult * (10 / BaseCAC)
-    # The power 0.85 ensures diminishing returns.
-    raw_new_users = (effective_spend ** 0.85) * brand_multiplier * (10.0 / sim_config.BASE_CAC)
-    new_users = int(raw_new_users)
-    
-    # Brand Growth:
-    # Brand grows with spend, but very slowly.
-    # It follows a Sigmoid-like saturation via (x / (x + k)).
-    # Spending $50k adds ~0.025 to brand.
-    brand_delta = (spend / (spend + 50000.0)) * 0.05
-    
-    # Cap Brand at 1.0? 
-    # logic below uses min(..., 1.0) but brand can arguably go higher. 
-    # For Phase 2, we cap at 1.0 for simplicity.
-    return current_users + new_users, min(current_brand + brand_delta, 1.0)
+        return
 
-def calculate_churn(product_quality: float, price: float, competition_price: float = 20.0) -> float:
-    """
-    Calculates the % of users leaving the platform this week.
+    # Saturation curve (Hill-type response)
+    scale = 100_000  # tuning parameter
+    gain = (spend / (spend + scale)) * 0.05  # max ~0.05/month
+
+    # Harder to improve when already high
+    gain *= (1.0 - state.innovation_factor)
+
+    state.innovation_factor += gain
+
+    # Ensures innovation -> lower churn (since churn uses product_quality)
+    state.product_quality += gain * 0.5
+    state.product_quality = min(1.0, state.product_quality)
     
-    Drivers:
-    1. Product Quality: Low quality = High Churn.
-    2. Price: Price significantly higher than competition = High Churn.
-    """
-    base_churn = sim_config.MIN_CHURN
+    # Clamp to valid range
+    state.innovation_factor = min(1.0, max(0.0, state.innovation_factor))
+
+
+def compute_expansion_mrr(state: EnvState, action: ProductAction) -> float:
+    effective_rnd = action.r_and_d_spend * state.innovation_factor
+    upsell_factor = 1 + min(effective_rnd / 50_000, 0.5)
+    return state.mrr * 0.02 * upsell_factor
+
+def apply_pricing_effect(state: EnvState, action: PricingAction) -> None:
+    elasticity = random.uniform(-0.9, -0.2)
+    demand_change = elasticity * action.price_change_pct
     
-    # Quality Effect:
-    # If Quality is 0.1 (terrible) -> Penalty is 0.18 (Huge churn increase).
-    # If Quality is 1.0 (perfect) -> Penalty is 0.0.
-    quality_penalty = 0.2 * (1.0 - product_quality)
+    state.price *= (1 + action.price_change_pct)
     
-    # Price Effect (Elasticity):
-    # We compare our Price vs "Market Standard" ($20).
-    # If Price > $20, churn increases linearly with the ratio.
-    price_ratio = price / max(competition_price, 0.01)
-    price_penalty = 0.0
-    if price_ratio > 1.0:
-        # For every 100% price increase over competitor, add 15% churn.
-        price_penalty = 0.15 * (price_ratio - 1.0)
+    state.mrr *= (1 + action.price_change_pct) * (1 + demand_change)
+
+def apply_hiring_cost(state: EnvState, action: HiringAction) -> None:
+    total_cost = action.hires * action.cost_per_employee
+    state.cash -= total_cost
+
+def compute_cac(marketing_spend: float, new_users: float) -> float:
+    if new_users <= 0: return 0.0 
+    raw_cac = marketing_spend / new_users
+    return raw_cac
+
+def scale_cac_by_macro(raw_cac: float, state: EnvState) -> float:
+    modifier = 1.0
+    
+    if state.interest_rate > 5.0:
+        modifier *= 1.2
         
-    raw_churn = base_churn + quality_penalty + price_penalty
-    
-    # Hard Clip: Churn cannot exceed MAX_CHURN (30%) or be negative.
-    return np.clip(raw_churn, 0.0, sim_config.MAX_CHURN)
-
-def apply_product_investment(current_quality: float, spend: float) -> float:
-    """
-    Improves Product Quality based on R&D Spend.
-    
-    Logic:
-    - It is harder to improve a product that is already good (Asymptotic to 1.0).
-    - Improvement = Spend * Efficiency * (1 - Current)
-    - The (1 - Current) term ensures we never exceed 1.0.
-    """
-    if spend <= 0:
-        return current_quality
+    if state.consumer_confidence < 80:
+        modifier *= 1.3
+    elif state.consumer_confidence > 120:
+        modifier *= 0.8
         
-    improvement_potential = 1.0 - current_quality
-    efficiency = 0.000001 # Tuned constant. $10k spend -> ~0.01 gain.
-    
-    delta = spend * efficiency * improvement_potential
-    
-    # "Big Bet" Bonus:
-    # Spending > $20k gets a 1.2x multiplier to simulate economy of scale / breakthrough potential.
-    if spend > 20000:
-        delta *= 1.2
+    if state.competitors > 5:
+        modifier *= 1.15
         
-    return min(current_quality + delta, 1.0)
+    if state.competitors >= 8:
+         modifier *= 1.3
+        
+    return raw_cac * modifier
 
-def calculate_burn(headcount: int, infrastructure_cost: float) -> float:
-    """
-    Calculates total weekly burn rate.
+def compute_ltv(mrr_per_user: float, churn_rate: float, discount_rate: float = 0.0) -> float:
+    if churn_rate <= 0.001: churn_rate = 0.001 
+    return mrr_per_user / churn_rate
+
+def compute_rule_of_40(prev_mrr: float, new_mrr: float, burn: float) -> float:
+    if prev_mrr <= 0: prev_mrr = 1.0 
+    if new_mrr <= 0: new_mrr = 1.0
     
-    Components:
-    1. Salaries: Headcount * Avg Rate ($2k/week).
-    2. Infrastructure: Variable costs (server bills).
-    3. Fixed Overhead: MIN_BURN_RATE (Office, Legal).
-    """
-    salary_burn = headcount * 2000.0 # ~$100k/year per employee
-    return salary_burn + infrastructure_cost + sim_config.MIN_BURN_RATE
+    growth_pct = ((new_mrr - prev_mrr) / prev_mrr) * 100
+    margin_pct = (-burn / new_mrr) * 100
+    return growth_pct + margin_pct
 
-def calculate_revenue(users: int, price: float) -> float:
-    """
-    Simple Revenue = Volume * Price.
-    """
-    return users * price
+def compute_reward(state: EnvState, rule_of_40: float) -> float:
+    reward = state.mrr / 1_000_000 
 
-def apply_stochastic_shock(value: float, volatility: float = sim_config.MARKET_VOLATILITY) -> float:
-    """
-    Simulates Market Randomness.
-    Multiplies the input value by a random factor drawn from a Normal Distribution N(1.0, volatility).
-    
-    This represents:
-    - Unexpected viral growth.
-    - Server outages (negative shock).
-    - Macroeconomic shifts.
-    """
-    if value == 0: return 0.0
-    shock = np.random.normal(1.0, volatility)
-    return value * shock
+    if rule_of_40 < 15:
+        reward -= 2
+    if rule_of_40 < 0:
+        reward -= 5
+
+    if state.cac > 0 and state.ltv > 0:
+        ratio = state.ltv / state.cac
+        if ratio < 3.0:
+            reward -= 5.0 
+            if ratio < 1.0:
+                reward -= 10.0 
+
+    if state.cash <= 0:
+        reward -= 20
+
+    if state.innovation_factor < 0.8:
+        reward -= 5
+
+    if state.valuation_multiple < 5.0:
+        reward -= 2
+
+    return reward

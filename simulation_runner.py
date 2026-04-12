@@ -1,110 +1,291 @@
 import sys
 import os
 import random
+from copy import deepcopy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-# Add project root to python path so imports work
+print("Starting simulation runner...", flush=True)
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from env.startup_env import StartupEnv
 from agents.adapter import ActionAdapter
 from config import sim_config
 
-# ==========================================
-# Simulation Runner & Baseline Agent
-# ==========================================
-# This script is the "Final Exam" for the simulator.
-# It runs many episodes to ensure the system is stable (doesn't crash) 
-# and produces plausible results (e.g., bankruptcy is possible but not guaranteed).
+from agents.baseline_agents import merge_actions
+from oracle.action_modifier import NoOpActionModifier
+from oracle.oracle import Oracle
 
-class RandomAgent:
+class BaselineJointAgent:
     """
-    A 'Dumb' Agent that makes random choices.
-    Used to stress-test the Environment and Adapter.
+    Acts as a container for the C-Suite agents, merging their decisions.
     """
     def get_action(self, state):
-        # Pick a random strategy
-        action_type = random.choice(["marketing", "hiring", "product", "pricing", "skip"])
-        
-        params = {}
-        if action_type == "marketing":
-            # Random spend between $1k and $50k
-            params["amount"] = random.uniform(1000, 50000)
-        elif action_type == "hiring":
-            # Randomly hire 1-3 people
-            params["count"] = random.randint(1, 3)
-        elif action_type == "product":
-            # Random R&D investment
-            params["amount"] = random.uniform(5000, 20000)
-        elif action_type == "pricing":
-            # Random price fluctuation
-            params["price"] = random.uniform(10, 100)
-            
-        return {"type": action_type, "params": params}
+        return merge_actions(state)
 
-def run_simulation(num_episodes=100):
-    print(f"Running {num_episodes} episodes for sanity check...")
+class RandomBundleAgent:
+    """
+    A 'Dumb' Agent that makes random ActionBundles.
+    """
+    def get_action(self, state):
+        return {
+            "marketing": {
+                "spend": random.uniform(1000, 20000),
+                "channel": random.choice(["ppc", "brand"])
+            },
+            "hiring": {
+                "hires": random.randint(0, 2),
+                "cost_per_employee": random.uniform(8000, 12000)
+            },
+            "product": {
+                "r_and_d_spend": random.uniform(1000, 10000)
+            },
+            "pricing": {
+                "price_change_pct": random.uniform(-0.05, 0.05)
+            }
+        }
+
+from boardroom.boardroom import Boardroom
+from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
+
+class BoardroomAgent:
+    def __init__(
+        self,
+        oracle_mode="none",
+        oracle_frequency=3,
+        enable_action_modifier=True,
+        enable_memory_retrieval=True,
+        oracle_instance=None,
+        action_modifier_instance=None,
+    ):
+        self.boardroom = Boardroom([
+            CFOProposalAgent(),
+            CMOProposalAgent(),
+            CPOProposalAgent(),
+        ],
+            use_oracle=(oracle_mode != "none"),
+            oracle_frequency=oracle_frequency,
+            oracle_mode=oracle_mode,
+            oracle_instance=oracle_instance,
+            action_modifier_instance=action_modifier_instance,
+            enable_action_modifier=enable_action_modifier,
+            enable_memory_retrieval=enable_memory_retrieval,
+        )
+
+    def start_episode(self, episode_seed):
+        self.boardroom.start_episode(episode_seed)
+
+    def get_action(self, state):
+        return self.boardroom.decide(state)
+
+    def get_episode_stats(self):
+        return self.boardroom.get_episode_stats()
+
+    def set_shock_label(self, shock_label):
+        self.boardroom.set_shock_label(shock_label)
+
+    def get_last_brief(self):
+        brief = self.boardroom.get_last_brief()
+        return brief.model_dump(mode="json") if brief is not None else None
+
+    def get_last_decision_trace(self):
+        return self.boardroom.get_last_decision_trace()
+
+
+def _default_oracle_stats() -> dict:
+    return {
+        "oracle_refresh_requests": 0,
+        "cadence_refreshes": 0,
+        "event_refreshes": 0,
+        "cache_hits": 0,
+        "llm_calls": 0,
+    }
+
+
+def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides: dict | None = None):
+    oracle_overrides = oracle_overrides or {}
+
+    if policy == "heuristic":
+        return BaselineJointAgent()
+    if policy == "random":
+        return RandomBundleAgent()
+    if policy == "boardroom":
+        return BoardroomAgent(oracle_mode="none")
+    if policy == "boardroom_oracle":
+        return BoardroomAgent(oracle_mode="oracle_v1", oracle_frequency=oracle_frequency, **oracle_overrides)
+    if policy == "oracle_v1_no_modifier":
+        return BoardroomAgent(
+            oracle_mode="oracle_v1",
+            oracle_frequency=oracle_frequency,
+            enable_action_modifier=False,
+            action_modifier_instance=NoOpActionModifier(),
+            **oracle_overrides,
+        )
+    if policy in {"oracle_v1", "oracle_v2", "oracle_v3"}:
+        return BoardroomAgent(oracle_mode=policy, oracle_frequency=oracle_frequency, **oracle_overrides)
+    if policy == "oracle_v3_no_memory":
+        return BoardroomAgent(
+            oracle_mode="oracle_v3",
+            oracle_frequency=oracle_frequency,
+            enable_memory_retrieval=False,
+            oracle_instance=Oracle(mode="oracle_v3", memory_store=None, enable_memory_retrieval=False),
+            **oracle_overrides,
+        )
+    raise ValueError(f"Unknown policy: {policy}")
+
+def run_simulation(
+    policy: str = "heuristic",
+    num_episodes: int = 100,
+    seed_start: int = 0,
+    oracle_frequency: int = 3,
+    oracle_overrides: dict | None = None,
+    return_action_trace: bool = False,
+    return_monthly_trace: bool = False,
+):
+    print(f"Running {num_episodes} episodes with Policy: {policy} (Seeds {seed_start}-{seed_start+num_episodes-1})...")
     
     env = StartupEnv()
-    agent = RandomAgent()
+    agent = _build_agent_for_policy(policy, oracle_frequency, oracle_overrides=oracle_overrides)
     
     results = []
+    action_trace = []
+    monthly_trace = []
     
-    for episode in range(num_episodes):
-        # Start fresh simulation
-        obs, _ = env.reset()
+    for i in range(num_episodes):
+        episode_seed = seed_start + i
+        
+        obs, _ = env.reset(seed=episode_seed)
+        if hasattr(agent, "start_episode"):
+            agent.start_episode(episode_seed)
+        if hasattr(agent, "set_shock_label"):
+            agent.set_shock_label(None)
+        
+        random.seed(episode_seed)
+        np.random.seed(episode_seed)
+        
         terminated = False
         truncated = False
         total_reward = 0
         steps = 0
         
-        # Loop until Bankruptcy or Time Limit
+        rule_40_history = []
+        
         while not (terminated or truncated):
-            # 1. Agent decides action
-            raw_action = agent.get_action(env.current_state)
+            current_month = env.state.months_elapsed
+            raw_action = agent.get_action(env.state)
+            decision_trace = agent.get_last_decision_trace() if hasattr(agent, "get_last_decision_trace") else None
             
-            # 2. Adapter sanitizes action (Crucial Step!)
             clean_action = ActionAdapter.translate_action(raw_action)
+            if return_action_trace:
+                action_trace.append(
+                    {
+                        "episode": i,
+                        "seed": episode_seed,
+                        "policy": policy,
+                        "month": current_month,
+                        "action": deepcopy(clean_action),
+                        "brief": agent.get_last_brief() if hasattr(agent, "get_last_brief") else None,
+                        "decision_trace": deepcopy(decision_trace),
+                    }
+                )
             
-            # 3. Environment executes action
             obs, reward, terminated, truncated, info = env.step(clean_action)
+            if hasattr(agent, "set_shock_label"):
+                agent.set_shock_label(info.get("shock_label"))
+
+            if return_monthly_trace:
+                state_snapshot = info.get("state", {})
+                monthly_trace.append(
+                    {
+                        "episode": i,
+                        "seed": episode_seed,
+                        "policy": policy,
+                        "month": current_month,
+                        "reward": reward,
+                        "rule_of_40": info.get("rule_of_40"),
+                        "shock_label": info.get("shock_label", "NO_SHOCK"),
+                        "terminated": terminated,
+                        "truncated": truncated,
+                        "mrr": state_snapshot.get("mrr"),
+                        "cash": state_snapshot.get("cash"),
+                        "innovation_factor": state_snapshot.get("innovation_factor"),
+                        "unemployment": state_snapshot.get("unemployment"),
+                        "months_in_depression": state_snapshot.get("months_in_depression"),
+                        "brief": agent.get_last_brief() if hasattr(agent, "get_last_brief") else None,
+                        "decision_trace": deepcopy(decision_trace),
+                    }
+                )
             
             total_reward += reward
             steps += 1
+            rule_40_history.append(info.get("rule_of_40", 0))
+
+        if hasattr(agent, "boardroom") and hasattr(agent.boardroom, "oracle"):
+            agent.boardroom.oracle.end_episode()
             
-        # Log episode results
-        state = env.current_state
+        state = env.state
+        
+        avg_rule_40 = np.mean(rule_40_history) if rule_40_history else 0
+        months_above_40 = sum(1 for x in rule_40_history if x >= 40)
+        pct_above_40 = (months_above_40 / len(rule_40_history)) * 100 if rule_40_history else 0
+        
+        ltv_cac = state.ltv / state.cac if state.cac > 0 else 0
+        oracle_stats = _default_oracle_stats()
+        if hasattr(agent, "get_episode_stats"):
+            oracle_stats.update(agent.get_episode_stats())
+        
         result = {
-            "episode": episode,
+            "episode": i,
+            "seed": episode_seed,
+            "policy": policy,
             "steps": steps,
+            "final_mrr": state.mrr,
             "final_cash": state.cash,
-            "final_users": state.users,
-            "final_revenue": state.revenue,
+            "final_cac": state.cac,
+            "final_ltv": state.ltv,
+            "final_ltv_cac": ltv_cac,
+            "final_headcount": state.headcount,
+            "final_valuation_multiple": state.valuation_multiple,
+            "final_unemployment": state.unemployment,
+            "final_innovation_factor": state.innovation_factor,
+            "depression_months": state.months_in_depression,
             "cause": "Bankruptcy" if terminated else "Time Limit",
-            "total_reward": total_reward
+            "total_reward": total_reward,
+            "avg_rule_40": avg_rule_40,
+            "pct_above_40": pct_above_40,
+            **oracle_stats,
         }
         results.append(result)
-        
-        # Print progress every 10 episodes
-        if episode % 10 == 0:
-            print(f"Episode {episode}: {result['cause']} after {steps} weeks. Cash: ${state.cash:,.0f}")
 
-    # --- Analysis & Reporting ---
+        print(
+            "EPISODE_END | "
+            f"policy={policy} | episode={i} | seed={episode_seed} | cause={result['cause']} | "
+            f"months={steps} | final_mrr={state.mrr:,.0f} | final_cash={state.cash:,.0f} | "
+            f"oracle_refreshes={result['oracle_refresh_requests']} | cadence={result['cadence_refreshes']} | "
+            f"events={result['event_refreshes']} | cache_hits={result['cache_hits']} | llm_calls={result['llm_calls']}"
+        )
+
     df = pd.DataFrame(results)
     
-    print("\n--- Simulation Summary ---")
-    print(f"Success Rate (Survived): {(df['cause'] == 'Time Limit').mean():.2%}")
-    print(f"Avg Duration: {df['steps'].mean():.1f} weeks")
-    print(f"Avg Final Cash: ${df['final_cash'].mean():,.2f}")
-    print(f"Avg Final Users: {df['final_users'].mean():.1f}")
+    print(f"\n--- Simulation Summary ({policy}) ---")
+    print(f"Survival Rate: {(df['cause'] == 'Time Limit').mean():.2%}")
+    print(f"Avg Duration: {df['steps'].mean():.1f} months")
+    print(f"Avg Final MRR: ${df['final_mrr'].mean():,.2f}")
+    print(f"Avg Rule of 40: {df['avg_rule_40'].mean():.1f}")
+    print(f"Avg Innovation Factor: {df['final_innovation_factor'].mean():.2f}")
+    print(f"Avg Unemployment: {df['final_unemployment'].mean():.1f}%")
     
-    # Export for further analysis
-    df.to_csv("simulation_results.csv", index=False)
-    print("Results saved to simulation_results.csv")
-    
+    if return_action_trace and return_monthly_trace:
+        return df, {
+            "action_trace": action_trace,
+            "monthly_trace": monthly_trace,
+        }
+    if return_action_trace:
+        return df, action_trace
+    if return_monthly_trace:
+        return df, monthly_trace
     return df
 
 if __name__ == "__main__":
-    run_simulation()
+    run_simulation(policy="oracle_v3", num_episodes=5)
