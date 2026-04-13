@@ -1,11 +1,14 @@
 from oracle.schemas import ExpectedOutcome, OracleBrief, URGENCY_MAPPING
 
+
 class WeightAdapter:
     def adjust_weights(self, base_weights: dict, brief: OracleBrief, oracle_mode: str = "oracle_v1") -> dict:
         """
         Merges base weights with Oracle-driven adjustments.
         Applies exponential smoothing to prevent unstable policy jumps.
         """
+        memory_aware_modes = {"oracle_v3", "oracle_v4", "oracle_v4_causal"}
+
         # Map signals numerically
         innov_signal = URGENCY_MAPPING.get(brief.innovation_urgency.value, 0.5)
         eff_signal = URGENCY_MAPPING.get(brief.efficiency_pressure.value, 0.5)
@@ -13,7 +16,7 @@ class WeightAdapter:
         macro_signal = URGENCY_MAPPING.get(brief.macro_condition.value, 0.5)
         
         # Dampen signal with confidence scalar
-        base_k = 0.3 if oracle_mode == "oracle_v3" else 0.2
+        base_k = 0.3 if oracle_mode in memory_aware_modes else 0.2
         k = base_k * brief.confidence
         
         target_weights = {
@@ -23,7 +26,7 @@ class WeightAdapter:
             "macro": base_weights.get("macro", 0.1) + (k * macro_signal) 
         }
 
-        if oracle_mode == "oracle_v3" and brief.expected_outcome == ExpectedOutcome.DECLINE:
+        if oracle_mode in memory_aware_modes and brief.expected_outcome == ExpectedOutcome.DECLINE:
             target_weights["innovation"] += 0.05
             target_weights["efficiency"] += 0.05
         

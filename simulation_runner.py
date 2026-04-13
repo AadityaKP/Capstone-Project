@@ -103,6 +103,60 @@ def _default_oracle_stats() -> dict:
     }
 
 
+def _is_real_shock(shock_label) -> bool:
+    return bool(shock_label) and shock_label != "NO_SHOCK"
+
+
+def _safe_mean(values):
+    return float(np.mean(values)) if values else np.nan
+
+
+def _safe_median(values):
+    return float(np.median(values)) if values else np.nan
+
+
+def _collect_retrieval_rows(
+    policy: str,
+    episode_index: int,
+    episode_seed: int,
+    month: int,
+    decision_trace: dict | None,
+) -> list[dict]:
+    rows = []
+    trace = decision_trace or {}
+    for retrieval_rank, memory in enumerate(trace.get("retrieved_memories") or [], start=1):
+        metadata = memory.get("metadata") or {}
+        realized_outcome = metadata.get("realized_outcome")
+        if realized_outcome == "GROWTH":
+            outcome_bucket = "POSITIVE"
+        elif realized_outcome == "DECLINE":
+            outcome_bucket = "NEGATIVE"
+        else:
+            outcome_bucket = "NEUTRAL"
+
+        rows.append(
+            {
+                "policy": policy,
+                "episode": episode_index,
+                "seed": episode_seed,
+                "month": month,
+                "refresh_reason": trace.get("refresh_reason"),
+                "brief_source": trace.get("brief_source"),
+                "shock_label": trace.get("shock_label"),
+                "retrieval_rank": retrieval_rank,
+                "document": memory.get("document"),
+                "source_month": metadata.get("source_month"),
+                "stored_global_month": metadata.get("stored_global_month"),
+                "realized_outcome": realized_outcome,
+                "outcome_bucket": outcome_bucket,
+                "memory_weight": memory.get("memory_weight"),
+                "similarity_score": memory.get("similarity_score"),
+                "recency_factor": memory.get("recency_factor"),
+            }
+        )
+    return rows
+
+
 def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides: dict | None = None):
     oracle_overrides = oracle_overrides or {}
 
@@ -132,6 +186,18 @@ def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides
             oracle_instance=Oracle(mode="oracle_v3", memory_store=None, enable_memory_retrieval=False),
             **oracle_overrides,
         )
+    if policy == "oracle_v4":
+        return BoardroomAgent(
+            oracle_mode="oracle_v4",
+            oracle_frequency=oracle_frequency,
+            **oracle_overrides,
+        )
+    if policy == "oracle_v4_causal":
+        return BoardroomAgent(
+            oracle_mode="oracle_v4_causal",
+            oracle_frequency=oracle_frequency,
+            **oracle_overrides,
+        )
     raise ValueError(f"Unknown policy: {policy}")
 
 def run_simulation(
@@ -142,6 +208,7 @@ def run_simulation(
     oracle_overrides: dict | None = None,
     return_action_trace: bool = False,
     return_monthly_trace: bool = False,
+    return_retrieval_trace: bool = False,
 ):
     print(f"Running {num_episodes} episodes with Policy: {policy} (Seeds {seed_start}-{seed_start+num_episodes-1})...")
     
@@ -151,6 +218,7 @@ def run_simulation(
     results = []
     action_trace = []
     monthly_trace = []
+    retrieval_trace = []
     
     for i in range(num_episodes):
         episode_seed = seed_start + i
@@ -170,6 +238,10 @@ def run_simulation(
         steps = 0
         
         rule_40_history = []
+        post_shock_rule40_window = []
+        shock_events = []
+        pending_recoveries = []
+        previous_rule_40 = np.nan
         
         while not (terminated or truncated):
             current_month = env.state.months_elapsed
@@ -189,10 +261,50 @@ def run_simulation(
                         "decision_trace": deepcopy(decision_trace),
                     }
                 )
+
+            if return_retrieval_trace:
+                retrieval_trace.extend(
+                    _collect_retrieval_rows(
+                        policy=policy,
+                        episode_index=i,
+                        episode_seed=episode_seed,
+                        month=current_month,
+                        decision_trace=decision_trace,
+                    )
+                )
             
             obs, reward, terminated, truncated, info = env.step(clean_action)
             if hasattr(agent, "set_shock_label"):
                 agent.set_shock_label(info.get("shock_label"))
+
+            current_rule_40 = info.get("rule_of_40", 0)
+            if 25 <= current_month <= 60:
+                post_shock_rule40_window.append(current_rule_40)
+
+            shock_label = info.get("shock_label", "NO_SHOCK")
+            if _is_real_shock(shock_label):
+                shock_event = {
+                    "shock_month": current_month,
+                    "shock_label": shock_label,
+                    "pre_shock_rule_40": previous_rule_40,
+                    "recovered": False,
+                    "recovery_month": np.nan,
+                    "recovery_time_months": np.nan,
+                }
+                shock_events.append(shock_event)
+                if not np.isnan(previous_rule_40):
+                    pending_recoveries.append(shock_event)
+
+            still_pending = []
+            for pending in pending_recoveries:
+                if current_month > pending["shock_month"] and current_rule_40 >= pending["pre_shock_rule_40"]:
+                    pending["recovered"] = True
+                    pending["recovery_month"] = current_month
+                    pending["recovery_time_months"] = current_month - pending["shock_month"]
+                else:
+                    still_pending.append(pending)
+            pending_recoveries = still_pending
+            previous_rule_40 = current_rule_40
 
             if return_monthly_trace:
                 state_snapshot = info.get("state", {})
@@ -219,16 +331,15 @@ def run_simulation(
             
             total_reward += reward
             steps += 1
-            rule_40_history.append(info.get("rule_of_40", 0))
+            rule_40_history.append(current_rule_40)
 
-        if hasattr(agent, "boardroom") and hasattr(agent.boardroom, "oracle"):
-            agent.boardroom.oracle.end_episode()
-            
         state = env.state
         
         avg_rule_40 = np.mean(rule_40_history) if rule_40_history else 0
         months_above_40 = sum(1 for x in rule_40_history if x >= 40)
         pct_above_40 = (months_above_40 / len(rule_40_history)) * 100 if rule_40_history else 0
+        recovery_times = [event["recovery_time_months"] for event in shock_events if not np.isnan(event["recovery_time_months"])]
+        recovered_shock_count = sum(1 for event in shock_events if event["recovered"])
         
         ltv_cac = state.ltv / state.cac if state.cac > 0 else 0
         oracle_stats = _default_oracle_stats()
@@ -254,8 +365,16 @@ def run_simulation(
             "total_reward": total_reward,
             "avg_rule_40": avg_rule_40,
             "pct_above_40": pct_above_40,
+            "shock_count": len(shock_events),
+            "recovered_shock_count": recovered_shock_count,
+            "recovered_shock_rate_pct": (recovered_shock_count / len(shock_events) * 100.0) if shock_events else np.nan,
+            "mean_recovery_time_months": _safe_mean(recovery_times),
+            "median_recovery_time_months": _safe_median(recovery_times),
+            "post_shock_avg_rule40_25_60": _safe_mean(post_shock_rule40_window),
             **oracle_stats,
         }
+        if hasattr(agent, "boardroom") and hasattr(agent.boardroom, "oracle"):
+            agent.boardroom.oracle.end_episode(episode_metrics=result)
         results.append(result)
 
         print(
@@ -276,15 +395,33 @@ def run_simulation(
     print(f"Avg Innovation Factor: {df['final_innovation_factor'].mean():.2f}")
     print(f"Avg Unemployment: {df['final_unemployment'].mean():.1f}%")
     
+    if return_action_trace and return_monthly_trace and return_retrieval_trace:
+        return df, {
+            "action_trace": action_trace,
+            "monthly_trace": monthly_trace,
+            "retrieval_trace": retrieval_trace,
+        }
     if return_action_trace and return_monthly_trace:
         return df, {
             "action_trace": action_trace,
             "monthly_trace": monthly_trace,
         }
+    if return_action_trace and return_retrieval_trace:
+        return df, {
+            "action_trace": action_trace,
+            "retrieval_trace": retrieval_trace,
+        }
     if return_action_trace:
         return df, action_trace
+    if return_monthly_trace and return_retrieval_trace:
+        return df, {
+            "monthly_trace": monthly_trace,
+            "retrieval_trace": retrieval_trace,
+        }
     if return_monthly_trace:
         return df, monthly_trace
+    if return_retrieval_trace:
+        return df, retrieval_trace
     return df
 
 if __name__ == "__main__":
