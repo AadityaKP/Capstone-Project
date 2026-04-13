@@ -1,4 +1,8 @@
+import os
 import ollama
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class LLMClient:
@@ -30,3 +34,83 @@ class LLMClient:
         if json_mode:
             kwargs["format"] = "json"
         return ollama.chat(**kwargs)
+
+
+class DummyLLMClient:
+    def complete(self, system_prompt: str, user_prompt: str) -> str:
+        print("[WARNING] DummyLLMClient used — no API key or provider error")
+        return ""
+
+
+class OpenAILLMClient:
+    def __init__(self, model: str = "o4-mini"):
+        self.model = model
+        self.api_key = os.environ.get("OPENAI_API_KEY")
+        if self.api_key is None:
+            print("[WARNING] OPENAI_API_KEY not found, OpenAILLMClient is dead")
+            self._dead = True
+        else:
+            self._dead = False
+            from openai import OpenAI
+            self.client = OpenAI(api_key=self.api_key)
+
+    def complete(self, system_prompt: str, user_prompt: str) -> str:
+        if self._dead:
+            return DummyLLMClient().complete(system_prompt, user_prompt)
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"[OpenAILLMClient] API call failed: {e}")
+            return DummyLLMClient().complete(system_prompt, user_prompt)
+
+
+class AnthropicLLMClient:
+    def __init__(self, model: str = "claude-sonnet-4-5-20251001"):
+        self.model = model
+        self.api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if self.api_key is None:
+            print("[WARNING] ANTHROPIC_API_KEY not found, AnthropicLLMClient is dead")
+            self._dead = True
+        else:
+            self._dead = False
+            import anthropic
+            self.client = anthropic.Anthropic(api_key=self.api_key)
+
+    def complete(self, system_prompt: str, user_prompt: str) -> str:
+        if self._dead:
+            return DummyLLMClient().complete(system_prompt, user_prompt)
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=1024,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            return response.content[0].text
+        except Exception as e:
+            print(f"[AnthropicLLMClient] API call failed: {e}")
+            return DummyLLMClient().complete(system_prompt, user_prompt)
+
+
+def create_llm_client(provider: str, model: str | None = None):
+    """
+    provider: "ollama" | "openai" | "anthropic" | "dummy"
+    Returns an object with complete(system_prompt, user_prompt) -> str
+    """
+    if provider == "ollama":
+        return LLMClient(model=model or "llama3.1:8b")
+    elif provider == "openai":
+        return OpenAILLMClient(model=model or "o4-mini")
+    elif provider == "anthropic":
+        return AnthropicLLMClient(model=model or "claude-sonnet-4-5-20251001")
+    elif provider == "dummy":
+        return DummyLLMClient()
+    else:
+        raise ValueError(f"Unknown provider: {provider}")

@@ -14,6 +14,7 @@ from agents.adapter import ActionAdapter
 from config import sim_config
 
 from agents.baseline_agents import merge_actions
+from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
 from oracle.action_modifier import NoOpActionModifier
 from oracle.oracle import Oracle
 
@@ -195,6 +196,28 @@ def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides
     if policy == "oracle_v4_causal":
         return BoardroomAgent(
             oracle_mode="oracle_v4_causal",
+            oracle_frequency=oracle_frequency,
+            **oracle_overrides,
+        )
+    if policy == "oracle_v3_hetero":
+        from agents.llm_client import create_llm_client
+        agents = [
+            CFOProposalAgent(
+                llm_client=create_llm_client("openai", "o4-mini"), use_llm=True
+            ),
+            CMOProposalAgent(
+                llm_client=create_llm_client("anthropic", "claude-sonnet-4-5-20251001"),
+                use_llm=True
+            ),
+            CPOProposalAgent(
+                llm_client=create_llm_client("anthropic", "claude-sonnet-4-5-20251001"),
+                use_llm=True
+            ),
+        ]
+        return Boardroom(
+            agents=agents,
+            use_oracle=True,
+            oracle_mode="oracle_v3",
             oracle_frequency=oracle_frequency,
             **oracle_overrides,
         )
