@@ -23,7 +23,7 @@ class CFOProposalAgent(CFOAgent):
 
         if self.use_llm and self.llm_client is not None:
             try:
-                reasoning = self.llm_client.complete(
+                reasoning = self.llm_client.complete_text(
                     "You are the CFO of a SaaS startup. Be concise.",
                     f"Given this business state: MRR=${state.mrr:.0f}, "
                     f"cash=${state.cash:.0f}, churn={state.churn_smb:.2%}, "
@@ -63,7 +63,7 @@ class CMOProposalAgent(CMOAgent):
 
         if self.use_llm and self.llm_client is not None:
             try:
-                reasoning = self.llm_client.complete(
+                reasoning = self.llm_client.complete_text(
                     "You are the CMO of a SaaS startup. Be concise.",
                     f"Given this business state: MRR=${state.mrr:.0f}, "
                     f"cash=${state.cash:.0f}, churn={state.churn_smb:.2%}, "
@@ -103,7 +103,7 @@ class CPOProposalAgent(CPOAgent):
 
         if self.use_llm and self.llm_client is not None:
             try:
-                reasoning = self.llm_client.complete(
+                reasoning = self.llm_client.complete_text(
                     "You are the CPO of a SaaS startup. Be concise.",
                     f"Given this business state: MRR=${state.mrr:.0f}, "
                     f"cash=${state.cash:.0f}, churn={state.churn_smb:.2%}, "

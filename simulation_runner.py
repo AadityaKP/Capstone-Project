@@ -203,14 +203,14 @@ def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides
         from agents.llm_client import create_llm_client
         agents = [
             CFOProposalAgent(
-                llm_client=create_llm_client("openai", "o4-mini"), use_llm=True
+                llm_client=create_llm_client("ollama", "llama3.1:8b"), use_llm=True
             ),
             CMOProposalAgent(
-                llm_client=create_llm_client("anthropic", "claude-sonnet-4-5-20251001"),
+                llm_client=create_llm_client("ollama", "llama3.1:8b"),
                 use_llm=True
             ),
             CPOProposalAgent(
-                llm_client=create_llm_client("anthropic", "claude-sonnet-4-5-20251001"),
+                llm_client=create_llm_client("ollama", "llama3.1:8b"),
                 use_llm=True
             ),
         ]
