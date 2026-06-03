@@ -16,6 +16,7 @@ class Proposal(BaseModel):
 
     # Evaluation
     expected_impact: str
+    rationale: Optional[str] = None
     risks: List[str]
     confidence: float
 

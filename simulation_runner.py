@@ -48,7 +48,6 @@ class RandomBundleAgent:
         }
 
 from boardroom.boardroom import Boardroom
-from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
 
 class BoardroomAgent:
     def __init__(
@@ -59,12 +58,14 @@ class BoardroomAgent:
         enable_memory_retrieval=True,
         oracle_instance=None,
         action_modifier_instance=None,
+        agents=None,
     ):
-        self.boardroom = Boardroom([
+        proposal_agents = agents or [
             CFOProposalAgent(),
             CMOProposalAgent(),
             CPOProposalAgent(),
-        ],
+        ]
+        self.boardroom = Boardroom(proposal_agents,
             use_oracle=(oracle_mode != "none"),
             oracle_frequency=oracle_frequency,
             oracle_mode=oracle_mode,
@@ -201,24 +202,17 @@ def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides
         )
     if policy == "oracle_v3_hetero":
         from agents.llm_client import create_llm_client
+
+        llm = create_llm_client("ollama", "llama3.1:8b")
         agents = [
-            CFOProposalAgent(
-                llm_client=create_llm_client("ollama", "llama3.1:8b"), use_llm=True
-            ),
-            CMOProposalAgent(
-                llm_client=create_llm_client("ollama", "llama3.1:8b"),
-                use_llm=True
-            ),
-            CPOProposalAgent(
-                llm_client=create_llm_client("ollama", "llama3.1:8b"),
-                use_llm=True
-            ),
+            CFOProposalAgent(llm_client=llm, use_llm=True),
+            CMOProposalAgent(llm_client=llm, use_llm=True),
+            CPOProposalAgent(llm_client=llm, use_llm=True),
         ]
-        return Boardroom(
-            agents=agents,
-            use_oracle=True,
+        return BoardroomAgent(
             oracle_mode="oracle_v3",
             oracle_frequency=oracle_frequency,
+            agents=agents,
             **oracle_overrides,
         )
     raise ValueError(f"Unknown policy: {policy}")

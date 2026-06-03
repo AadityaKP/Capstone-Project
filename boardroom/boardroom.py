@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 import inspect
 import math
@@ -77,7 +78,7 @@ class Boardroom:
         return self.last_decision_trace
 
     def decide(self, state: EnvState) -> dict:
-        proposals = [agent.propose(state) for agent in self.agents]
+        proposals = self._collect_proposals(state)
         
         base_weights = self._compute_weights(state)
         refresh_reason = None
@@ -257,6 +258,17 @@ class Boardroom:
         }
 
         return final_action
+
+    def _collect_proposals(self, state: EnvState) -> list[Proposal]:
+        should_parallelize = (
+            len(self.agents) > 1
+            and any(getattr(agent, "use_llm", False) for agent in self.agents)
+        )
+        if not should_parallelize:
+            return [agent.propose(state) for agent in self.agents]
+
+        with ThreadPoolExecutor(max_workers=min(3, len(self.agents))) as pool:
+            return list(pool.map(lambda agent: agent.propose(state), self.agents))
 
     # -----------------------------
     # Evaluation & Weights

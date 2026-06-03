@@ -54,6 +54,7 @@ def compare_agent(agent_class, agent_name):
     print(f"\n[WITHOUT LLM]")
     print(f"  Objective: {proposal_no_llm.objective}")
     print(f"  Expected Impact: {proposal_no_llm.expected_impact}")
+    print(f"  Rationale: {proposal_no_llm.rationale}")
     print(f"  Risks: {proposal_no_llm.risks}")
     print(f"  Confidence: {proposal_no_llm.confidence}")
     print(f"  Actions Keys: {list(proposal_no_llm.actions.keys())}")
@@ -68,20 +69,20 @@ def compare_agent(agent_class, agent_name):
     )
     proposal_with_llm = agent_with_llm.propose(state)
     
-    print(f"  Expected Impact: {proposal_with_llm.expected_impact}")
+    print(f"  Expected Impact: {proposal_with_llm.expected_impact}  (unchanged)")
+    print(f"  Rationale: {proposal_with_llm.rationale}")
     print(f"  Risks: {proposal_with_llm.risks}  (unchanged)")
     print(f"  Confidence: {proposal_with_llm.confidence}  (unchanged)")
     print(f"  Actions Keys: {list(proposal_with_llm.actions.keys())}  (unchanged)")
     
     print(f"\n[COMPARISON]")
-    impact_changed = proposal_no_llm.expected_impact != proposal_with_llm.expected_impact
-    print(f"  Expected Impact changed: {impact_changed}")
+    rationale_changed = proposal_no_llm.rationale != proposal_with_llm.rationale
+    print(f"  Rationale changed: {rationale_changed}")
     
-    if impact_changed:
-        print(f"\n  Heuristic default ({len(proposal_no_llm.expected_impact)} chars):")
-        print(f"    \"{proposal_no_llm.expected_impact}\"")
-        print(f"\n  LLM refined ({len(proposal_with_llm.expected_impact)} chars):")
-        print(f"    \"{proposal_with_llm.expected_impact}\"")
+    if rationale_changed:
+        print(f"\n  Heuristic rationale: {proposal_no_llm.rationale}")
+        print(f"\n  LLM rationale ({len(proposal_with_llm.rationale or '')} chars):")
+        print(f"    \"{proposal_with_llm.rationale}\"")
     else:
         print(f"  (LLM call returned empty or fell back to heuristic)")
     
@@ -97,6 +98,6 @@ print("KEY OBSERVATIONS")
 print("=" * 80)
 print("✓ Actions (marketing, hiring, product, pricing) remain identical")
 print("✓ Confidence scores remain identical")
-print("✓ Only 'expected_impact' field is LLM-refined")
+print("✓ Only 'rationale' field is LLM-refined")
 print("✓ Each agent uses its assigned provider (CFO→OpenAI, CMO→Anthropic, CPO→Anthropic)")
 print()
