@@ -2,22 +2,37 @@ from collections import deque
 import uuid
 
 from env.schemas import EnvState
-from oracle.context import compute_trend_context, snapshot_state
+from oracle.context import compute_trend_context, get_mrr_tier, snapshot_state
 from oracle.memory import MEMORY_HORIZON_MONTHS, OracleMemoryStore, classify_realized_outcome
 from oracle.prompt_builder import build_prompt
 from oracle.parser import parse_llm_response
-from oracle.schemas import OracleBrief, PendingMemoryEntry, RetrievedMemoryCandidate, TrendContext
+from oracle.schemas import (
+    GraphContext,
+    OracleBrief,
+    PendingMemoryEntry,
+    RetrievedMemoryCandidate,
+    TrendContext,
+)
+
 
 class DummyLLMClient:
     """Fallback structural placeholder until proper LLM is wired."""
+
     def generate(self, prompt: str) -> str:
-        print("[WARNING] DummyLLMClient used! `ollama` package might not be installed, yielding identical metrics.")
-        return '{"risk_level":"MEDIUM","growth_outlook":"STABLE","efficiency_pressure":"MEDIUM","innovation_urgency":"MEDIUM","macro_condition":"NEUTRAL","key_risks":[],"key_opportunities":[],"recommended_focus":[],"confidence":0.5}'
+        print("[WARNING] DummyLLMClient used!")
+        return (
+            '{"risk_level":"MEDIUM","growth_outlook":"STABLE",'
+            '"efficiency_pressure":"MEDIUM","innovation_urgency":"MEDIUM",'
+            '"macro_condition":"NEUTRAL","key_risks":[],"key_opportunities":[],'
+            '"recommended_focus":[],"confidence":0.5}'
+        )
+
 
 try:
     from agents.llm_client import LLMClient
 except ImportError:
     LLMClient = DummyLLMClient
+
 
 class Oracle:
     def __init__(
@@ -25,6 +40,7 @@ class Oracle:
         mode: str = "oracle_v1",
         run_id: str | None = None,
         memory_store: OracleMemoryStore | None = None,
+        graph_store=None,
         llm=None,
         enable_memory_retrieval: bool = True,
     ):
@@ -35,12 +51,28 @@ class Oracle:
         self.state_history = deque(maxlen=5)
         self.pending_memories = deque()
         self.global_month = 0
+        self.episode_global_start = 0
         self.current_episode_seed = None
         self.latest_snapshot = None
         self.latest_trend_context = TrendContext()
-        self.memory_store = memory_store if memory_store is not None else None
-        if self.memory_store is None and self.mode == "oracle_v3" and self.enable_memory_retrieval:
+
+        self.memory_store = memory_store
+        if (
+            self.memory_store is None
+            and self.mode in {"oracle_v3", "oracle_v4", "oracle_v4_causal"}
+            and self.enable_memory_retrieval
+        ):
             self.memory_store = OracleMemoryStore(run_id=self.run_id)
+
+        self.graph_store = graph_store
+        if self.graph_store is None and self.mode == "oracle_v4_causal":
+            try:
+                from oracle.graph_store import CausalGraphStore
+
+                self.graph_store = CausalGraphStore()
+            except Exception as exc:
+                print(f"[Oracle] CausalGraphStore init failed: {exc}")
+                self.graph_store = None
 
     def start_episode(self, episode_seed: int | None = None) -> None:
         self.current_episode_seed = episode_seed
@@ -48,6 +80,7 @@ class Oracle:
         self.pending_memories.clear()
         self.latest_snapshot = None
         self.latest_trend_context = TrendContext()
+        self.episode_global_start = self.global_month
 
     def observe_state(self, state: EnvState, episode_seed: int | None = None) -> None:
         if episode_seed is not None:
@@ -74,44 +107,78 @@ class Oracle:
     def get_context(
         self,
         state: EnvState,
-    ) -> tuple[TrendContext, list[RetrievedMemoryCandidate], int]:
-        trend_context = self.latest_trend_context
-        current_global_month = self.latest_snapshot.global_month if self.latest_snapshot is not None else self.global_month
+        active_shock_label: str | None = None,
+    ) -> tuple[TrendContext, list[RetrievedMemoryCandidate], int, GraphContext]:
+        """
+        Returns (trend_context, memories, current_global_month, graph_context).
+        Graph context is empty unless mode == oracle_v4_causal and a shock is active.
+        """
 
-        if self.latest_snapshot is None or self.latest_snapshot.source_month != state.months_elapsed:
-            temp_snapshot = snapshot_state(state, current_global_month, self.current_episode_seed)
+        trend_context = self.latest_trend_context
+        current_global_month = (
+            self.latest_snapshot.global_month
+            if self.latest_snapshot is not None
+            else self.global_month
+        )
+
+        if (
+            self.latest_snapshot is None
+            or self.latest_snapshot.source_month != state.months_elapsed
+        ):
+            temp_snapshot = snapshot_state(
+                state,
+                current_global_month,
+                self.current_episode_seed,
+            )
             history = list(self.state_history)
             if not history or history[-1].global_month != temp_snapshot.global_month:
                 history.append(temp_snapshot)
             trend_context = compute_trend_context(history)
 
-        memories = []
-        if self.mode == "oracle_v3" and self.enable_memory_retrieval and self.memory_store is not None:
+        memories: list[RetrievedMemoryCandidate] = []
+        if (
+            self.mode in {"oracle_v3", "oracle_v4", "oracle_v4_causal"}
+            and self.enable_memory_retrieval
+            and self.memory_store is not None
+        ):
             memories = self.memory_store.retrieve_similar(
                 state=state,
                 trend_context=trend_context,
                 current_global_month=current_global_month,
+                episode_global_start=self.episode_global_start,
+                mrr_trend=trend_context.mrr_trend,
             )
 
-        return trend_context, memories, current_global_month
-        
+        graph_context = GraphContext()
+        if self.mode == "oracle_v4_causal" and self.graph_store is not None:
+            shock_type = self._parse_shock_type(active_shock_label)
+            mrr_tier = get_mrr_tier(state.mrr)
+            graph_context = self.graph_store.build_graph_context(
+                shock_type=shock_type,
+                mrr_tier=mrr_tier,
+            )
+
+        return trend_context, memories, current_global_month, graph_context
+
     def generate_brief(
         self,
         state: EnvState,
         trend_context: TrendContext | None = None,
         memories: list[RetrievedMemoryCandidate] | None = None,
         shock_label: str | None = None,
+        graph_context: GraphContext | None = None,
     ) -> OracleBrief:
-        """
-        Pure function: interprets state, calls LLM, and parses into OracleBrief.
-        Does NOT store to memory here.
-        """
         if trend_context is None or memories is None:
-            resolved_trend_context, resolved_memories, _ = self.get_context(state)
+            resolved_trend, resolved_memories, _, resolved_graph = self.get_context(
+                state,
+                active_shock_label=shock_label,
+            )
             if trend_context is None:
-                trend_context = resolved_trend_context
+                trend_context = resolved_trend
             if memories is None:
                 memories = resolved_memories
+            if graph_context is None:
+                graph_context = resolved_graph
 
         prompt = build_prompt(
             state,
@@ -119,23 +186,23 @@ class Oracle:
             trend_context=trend_context,
             memories=memories,
             shock_label=shock_label,
+            graph_context=graph_context,
         )
-        
-        # Safely invoke LLM regardless of actual class method structure implementations
-        if hasattr(self.llm, 'complete'):
-            raw_output = self.llm.complete("You are a strategic SaaS oracle. Only output perfect JSON.", prompt)
-        elif hasattr(self.llm, 'generate'):
+
+        if hasattr(self.llm, "complete"):
+            raw_output = self.llm.complete(
+                "You are a strategic SaaS oracle. Only output perfect JSON.",
+                prompt,
+            )
+        elif hasattr(self.llm, "generate"):
             raw_output = self.llm.generate(prompt)
-        elif hasattr(self.llm, 'call'):
-            raw_output = self.llm.call(prompt)
         else:
             raw_output = DummyLLMClient().generate(prompt)
-            
+
         if not raw_output:
-            print("[WARNING] LLMClient returned completely empty output. Ollama might be offline. Using fallback.")
-            
-        brief = parse_llm_response(str(raw_output))
-        return brief
+            print("[WARNING] LLMClient returned empty output. Using fallback.")
+
+        return parse_llm_response(str(raw_output))
 
     def build_cache_key(
         self,
@@ -143,12 +210,8 @@ class Oracle:
         trend_context: TrendContext | None = None,
         memories: list[RetrievedMemoryCandidate] | None = None,
     ) -> tuple[str, ...]:
-        if trend_context is None or memories is None:
-            resolved_trend_context, resolved_memories, _ = self.get_context(state)
-            if trend_context is None:
-                trend_context = resolved_trend_context
-            if memories is None:
-                memories = resolved_memories
+        if trend_context is None:
+            trend_context, _, _, _ = self.get_context(state)
 
         mrr_bracket = int(state.mrr / 50_000)
         runway_bracket = int(self._estimate_runway_months(state) / 3)
@@ -164,27 +227,30 @@ class Oracle:
             str(confidence_bracket),
             trend_context.mrr_trend.value,
             shock_flag,
-            self._build_memory_signature(memories),
         )
 
-    def end_episode(self) -> None:
+    def end_episode(self, episode_metrics: dict | None = None) -> None:
         """
-        Called at the end of each episode to force-mature all remaining memories.
+        Force-mature all remaining pending memories.
+        Also writes Episode node to Neo4j if graph store is active.
         """
-        if self.memory_store is None or self.latest_snapshot is None:
-            return
 
-        while self.pending_memories:
-            entry = self.pending_memories.popleft()
-            realized = classify_realized_outcome(
-                source_mrr=entry.snapshot.mrr,
-                current_mrr=self.latest_snapshot.mrr,
-            )
-            self.memory_store.store_memory(
-                pending_entry=entry,
-                stored_global_month=self.latest_snapshot.global_month,
-                realized_outcome=realized,
-            )
+        if self.latest_snapshot is not None:
+            while self.pending_memories:
+                entry = self.pending_memories.popleft()
+                realized = classify_realized_outcome(
+                    source_mrr=entry.snapshot.mrr,
+                    current_mrr=self.latest_snapshot.mrr,
+                )
+                if self.memory_store is not None:
+                    self.memory_store.store_memory(
+                        pending_entry=entry,
+                        stored_global_month=self.latest_snapshot.global_month,
+                        realized_outcome=realized,
+                    )
+
+        if self.graph_store is not None and episode_metrics:
+            self.graph_store.write_episode(episode_metrics)
 
     def _detect_shock(self, state: EnvState) -> str:
         flags = []
@@ -224,15 +290,8 @@ class Oracle:
         monthly_burn_estimate = max(1.0, float(state.headcount * 8000.0))
         return state.cash / monthly_burn_estimate
 
-    def _build_memory_signature(self, memories: list[RetrievedMemoryCandidate] | None) -> str:
-        if self.mode != "oracle_v3" or not memories:
-            return "none"
-
-        signature_parts = []
-        for memory in memories[:2]:
-            metadata = memory.metadata or {}
-            source_month = metadata.get("source_month", "na")
-            realized_outcome = metadata.get("realized_outcome", "UNKNOWN")
-            signature_parts.append(f"{source_month}:{realized_outcome}")
-
-        return "|".join(signature_parts) if signature_parts else "none"
+    @staticmethod
+    def _parse_shock_type(shock_label: str | None) -> str | None:
+        if not shock_label or shock_label == "NO_SHOCK":
+            return None
+        return shock_label.split(":")[0].strip()

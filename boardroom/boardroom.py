@@ -36,6 +36,7 @@ class Boardroom:
         self.active_shock_label = None
         self.last_context_memories = []
         self.last_decision_trace = None
+        self._pending_outcome_writes: list[dict] = []
         if self.use_oracle:
             self.oracle = oracle_instance or Oracle(
                 mode=self.oracle_mode,
@@ -59,6 +60,7 @@ class Boardroom:
         self.active_shock_label = None
         self.last_context_memories = []
         self.last_decision_trace = None
+        self._pending_outcome_writes = []
 
     def get_episode_stats(self) -> dict:
         return self.episode_oracle_stats.model_dump()
@@ -90,7 +92,10 @@ class Boardroom:
                 refresh_reason = "initial"
 
             if refresh_reason is not None:
-                trend_context, memories, _ = self.oracle.get_context(state)
+                trend_context, memories, _, graph_context = self.oracle.get_context(
+                    state,
+                    active_shock_label=self.active_shock_label,
+                )
                 self._record_refresh_request(refresh_reason)
                 cache_key = self.oracle.build_cache_key(
                     state,
@@ -111,6 +116,7 @@ class Boardroom:
                         state,
                         trend_context=trend_context,
                         memories=memories,
+                        graph_context=graph_context,
                     )
                     self.episode_oracle_stats.llm_calls += 1
                     self._cache_brief(cache_key, self.last_brief)
@@ -177,6 +183,51 @@ class Boardroom:
 
         negotiation.final_action = final_action
         negotiation.consensus_reached = True
+        if (
+            self.use_oracle
+            and self.oracle_mode == "oracle_v4_causal"
+            and hasattr(self.oracle, "graph_store")
+            and self.oracle.graph_store is not None
+            and self.oracle.graph_store.enabled
+        ):
+            current_month = state.months_elapsed
+
+            still_pending = []
+            for pending in self._pending_outcome_writes:
+                if current_month - pending["shock_month"] >= 6:
+                    mrr_at_shock = pending["mrr_at_shock"]
+                    mrr_change_pct = (state.mrr - mrr_at_shock) / max(abs(mrr_at_shock), 1.0)
+                    self.oracle.graph_store.write_outcome(
+                        episode_id=pending["episode_id"],
+                        shock_month=pending["shock_month"],
+                        outcome_metrics={
+                            "mrr_change_pct": mrr_change_pct,
+                            "recovered": state.mrr >= mrr_at_shock,
+                            "recovery_months": current_month - pending["shock_month"],
+                            "post_shock_rule40": 0.0,
+                        },
+                    )
+                else:
+                    still_pending.append(pending)
+            self._pending_outcome_writes = still_pending
+
+            if self.active_shock_label and self.active_shock_label != "NO_SHOCK":
+                if self.oracle.latest_snapshot is not None:
+                    self.oracle.graph_store.write_shock_event(
+                        episode_id=self.oracle.current_episode_seed or 0,
+                        shock_label=self.active_shock_label,
+                        month=current_month,
+                        pre_state=self.oracle.latest_snapshot,
+                        decision=final_action,
+                        brief=self.last_brief,
+                    )
+                    self._pending_outcome_writes.append(
+                        {
+                            "episode_id": self.oracle.current_episode_seed or 0,
+                            "shock_month": current_month,
+                            "mrr_at_shock": state.mrr,
+                        }
+                    )
         self.last_decision_trace = {
             "month": state.months_elapsed,
             "oracle_mode": self.oracle_mode,
@@ -314,7 +365,7 @@ class Boardroom:
         elif refresh_reason == "event":
             self.episode_oracle_stats.event_refreshes += 1
 
-    def _generate_oracle_brief(self, state: EnvState, trend_context, memories):
+    def _generate_oracle_brief(self, state: EnvState, trend_context, memories, graph_context=None):
         signature = inspect.signature(self.oracle.generate_brief)
         kwargs = {
             "trend_context": trend_context,
@@ -322,6 +373,8 @@ class Boardroom:
         }
         if "shock_label" in signature.parameters:
             kwargs["shock_label"] = self.active_shock_label
+        if "graph_context" in signature.parameters and graph_context is not None:
+            kwargs["graph_context"] = graph_context
         return self.oracle.generate_brief(state, **kwargs)
 
     def _get_cached_brief(self, cache_key: tuple[str, ...]):
