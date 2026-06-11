@@ -21,8 +21,10 @@ class StartupEnv(gym.Env):
     
     metadata = {'render_modes': ['human']}
 
-    def __init__(self):
+    def __init__(self, initial_config: Dict[str, Any] | None = None):
         super(StartupEnv, self).__init__()
+        self.initial_config = initial_config or {}
+        self.max_steps = int(self.initial_config.get("max_months", sim_config.MAX_STEPS))
         
         self.action_space = spaces.Dict({
             "marketing": spaces.Dict({
@@ -54,22 +56,23 @@ class StartupEnv(gym.Env):
         self.episode_seed = seed
         
         self.state = EnvState(
-            mrr=50_000,
-            cash=sim_config.INITIAL_CASH,
-            cac=sim_config.BASE_CAC,
-            ltv=7_000,
-            churn_enterprise=0.01,
-            churn_smb=0.03,
-            churn_b2c=0.05,
-            interest_rate=3.0,
-            consumer_confidence=100.0,
-            competitors=5,
-            product_quality=sim_config.INITIAL_PRODUCT_QUALITY,
-            price=50.0, 
+            mrr=float(self.initial_config.get("initial_mrr", 50_000)),
+            cash=float(self.initial_config.get("initial_cash", sim_config.INITIAL_CASH)),
+            cac=float(self.initial_config.get("cac", sim_config.BASE_CAC)),
+            ltv=float(self.initial_config.get("ltv", 7_000)),
+            churn_enterprise=float(self.initial_config.get("churn_enterprise", 0.01)),
+            churn_smb=float(self.initial_config.get("churn_smb", 0.03)),
+            churn_b2c=float(self.initial_config.get("churn_b2c", 0.05)),
+            interest_rate=float(self.initial_config.get("interest_rate", 3.0)),
+            consumer_confidence=float(self.initial_config.get("consumer_confidence", 100.0)),
+            competitors=int(self.initial_config.get("competitors", 5)),
+            product_quality=float(self.initial_config.get("product_quality", sim_config.INITIAL_PRODUCT_QUALITY)),
+            price=float(self.initial_config.get("average_price", 50.0)),
             months_elapsed=0,
-            valuation_multiple=10.0,
-            unemployment=4.0,
-            innovation_factor=1.0,
+            headcount=int(self.initial_config.get("initial_headcount", 1)),
+            valuation_multiple=float(self.initial_config.get("valuation_multiple", 10.0)),
+            unemployment=float(self.initial_config.get("unemployment", 4.0)),
+            innovation_factor=float(self.initial_config.get("innovation_factor", 1.0)),
             months_in_depression=0
         )
         
@@ -156,7 +159,7 @@ class StartupEnv(gym.Env):
         self.state.months_elapsed += 1
 
         terminated = self.state.cash <= 0
-        truncated = self.state.months_elapsed >= 120 
+        truncated = self.state.months_elapsed >= self.max_steps
 
         return self._get_obs(), reward, terminated, truncated, {
             "rule_of_40": rule40,
