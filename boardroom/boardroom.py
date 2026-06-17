@@ -24,11 +24,14 @@ class Boardroom:
         oracle_cache_max_size: int = 5000,
         enable_action_modifier: bool = True,
         enable_memory_retrieval: bool = True,
+        proposal_generator=None,
     ):
         self.agents = agents
+        self.proposal_generator = proposal_generator
         self.oracle_mode = oracle_mode or ("oracle_v1" if use_oracle else "none")
         self.use_oracle = self.oracle_mode != "none"
         self.oracle_frequency = oracle_frequency
+        self.oracle_cache_max_size = oracle_cache_max_size
         self.enable_action_modifier = enable_action_modifier
         self.episode_oracle_stats = OracleEpisodeStats()
         self.last_brief = None
@@ -37,7 +40,14 @@ class Boardroom:
         self.active_shock_label = None
         self.last_context_memories = []
         self.last_decision_trace = None
+        self.last_proposals: list[Proposal] = []
+        self.last_causal_contexts = {}
+        self.last_causal_stress_node = None
+        self.last_stress_node_for_persistence = None
+        self.consecutive_stress_node_months = 0
+        self.last_final_action_snapshot = None
         self._pending_outcome_writes: list[dict] = []
+        self.proposal_cache = OrderedDict()
         if self.use_oracle:
             self.oracle = oracle_instance or Oracle(
                 mode=self.oracle_mode,
@@ -48,20 +58,25 @@ class Boardroom:
             self.action_modifier = action_modifier_instance or ActionModifier()
             self.weight_adapter = WeightAdapter()
             self.oracle_cache = OrderedDict()
-            self.oracle_cache_max_size = oracle_cache_max_size
 
     def start_episode(self, episode_seed: int | None = None) -> None:
         self.episode_oracle_stats = OracleEpisodeStats()
-        if not self.use_oracle:
-            return
-        self.oracle.start_episode(episode_seed=episode_seed)
         self.last_brief = None
         self.last_oracle_state = None
         self.last_refresh_snapshot = None
         self.active_shock_label = None
         self.last_context_memories = []
         self.last_decision_trace = None
+        self.last_proposals = []
+        self.last_causal_contexts = {}
+        self.last_causal_stress_node = None
+        self.last_stress_node_for_persistence = None
+        self.consecutive_stress_node_months = 0
+        self.last_final_action_snapshot = None
         self._pending_outcome_writes = []
+        if not self.use_oracle:
+            return
+        self.oracle.start_episode(episode_seed=episode_seed)
 
     def get_episode_stats(self) -> dict:
         return self.episode_oracle_stats.model_dump()
@@ -78,7 +93,13 @@ class Boardroom:
         return self.last_decision_trace
 
     def decide(self, state: EnvState) -> dict:
-        proposals = self._collect_proposals(state)
+        use_batched_proposals = self.proposal_generator is not None
+        proposals = [] if use_batched_proposals else self._collect_proposals(state)
+        proposal_source = "agents"
+        proposal_error = None
+        causal_contexts = dict(self.last_causal_contexts)
+        causal_stress_node = self.last_causal_stress_node
+        previous_final_action_snapshot = deepcopy(self.last_final_action_snapshot)
         
         base_weights = self._compute_weights(state)
         refresh_reason = None
@@ -131,15 +152,31 @@ class Boardroom:
             weights = self.weight_adapter.adjust_weights(base_weights, self.last_brief, oracle_mode=self.oracle_mode)
         else:
             weights = base_weights
+
+        if use_batched_proposals:
+            (
+                proposals,
+                proposal_source,
+                proposal_error,
+                causal_contexts,
+                causal_stress_node,
+            ) = self._resolve_batched_proposals(
+                state=state,
+                refresh_reason=refresh_reason,
+                cache_key=cache_key,
+            )
         
+        proposal_base_scores = {}
         for p in proposals:
             p.score_vector = self._evaluate_proposal(p, state)
-            p.confidence = (
+            base_score = (
                 p.score_vector.efficiency * weights["efficiency"] +
                 p.score_vector.growth * weights["growth"] +
                 p.score_vector.innovation * weights["innovation"] +
                 p.score_vector.macro * weights["macro"]
             )
+            proposal_base_scores[p.agent] = base_score
+            p.confidence = self._apply_causal_confidence_score(base_score, p)
 
         negotiation = NegotiationState(proposals=proposals, round_number=1)
 
@@ -178,9 +215,17 @@ class Boardroom:
         raw_action = self._apply_sanity_bounds(raw_action, state)
         # Apply strict minimum guarantees
         raw_action = self._apply_dynamic_minimums(raw_action, state, global_innov_score)
+        # Keep v4 causal R&D floors from re-inflating beyond cash-aware safety caps.
+        raw_action = self._apply_v4_causal_rd_cap(raw_action, state)
         # Sequence conflict resolutions
-        final_action = self._resolve_conflicts(raw_action, state, global_innov_score)
+        final_action = self._resolve_conflicts(
+            raw_action,
+            state,
+            global_innov_score,
+            stress_node=causal_stress_node,
+        )
         final_action_snapshot = deepcopy(final_action)
+        self.last_final_action_snapshot = deepcopy(final_action_snapshot)
 
         negotiation.final_action = final_action
         negotiation.consensus_reached = True
@@ -242,6 +287,13 @@ class Boardroom:
             "brief": self._brief_to_dict(self.last_brief),
             "memory_count": len(context_memories),
             "retrieved_memories": self._serialize_memories(context_memories),
+            "proposal_source": proposal_source,
+            "proposal_error": proposal_error,
+            "causal_stress_node": causal_stress_node,
+            "stress_persistence_months": self.consecutive_stress_node_months,
+            "previous_final_action": previous_final_action_snapshot,
+            "causal_contexts": self._serialize_causal_contexts(causal_contexts),
+            "proposals": self._serialize_proposals(proposals, proposal_base_scores),
             "pre_modifier_action": pre_modifier_action,
             "post_modifier_action": post_modifier_action,
             "final_action": final_action_snapshot,
@@ -269,6 +321,151 @@ class Boardroom:
 
         with ThreadPoolExecutor(max_workers=min(3, len(self.agents))) as pool:
             return list(pool.map(lambda agent: agent.propose(state), self.agents))
+
+    def _resolve_batched_proposals(
+        self,
+        state: EnvState,
+        refresh_reason: str | None,
+        cache_key: tuple[str, ...] | None,
+    ) -> tuple[list[Proposal], str, str | None, dict, str | None]:
+        if not self.use_oracle:
+            proposals = self._collect_proposals(state)
+            self.last_proposals = deepcopy(proposals)
+            return proposals, "agents", None, {}, None
+
+        if refresh_reason is not None:
+            if cache_key is not None:
+                cached = self._get_cached_proposals(cache_key)
+                if cached is not None:
+                    proposals, contexts, stress_node = cached
+                    stress_node = self._extract_stress_node(state, contexts) or stress_node
+                    self._update_stress_persistence(stress_node)
+                    self.last_proposals = deepcopy(proposals)
+                    self.last_causal_contexts = dict(contexts)
+                    self.last_causal_stress_node = stress_node
+                    self.episode_oracle_stats.proposal_cache_hits += 1
+                    return proposals, "cache_hit", None, contexts, stress_node
+
+            contexts = self._get_causal_contexts_for_proposals(state)
+            stress_node = self._extract_stress_node(state, contexts)
+            stress_persistence_months = self._update_stress_persistence(stress_node)
+            before_calls = getattr(self.proposal_generator, "llm_calls", 0)
+            proposals = self._call_proposal_generator(
+                state,
+                contexts,
+                stress_persistence_months=stress_persistence_months,
+                recent_action_pattern=self.last_final_action_snapshot,
+            )
+            after_calls = getattr(self.proposal_generator, "llm_calls", before_calls)
+            self.episode_oracle_stats.proposal_llm_calls += max(0, after_calls - before_calls)
+
+            source = getattr(self.proposal_generator, "last_source", "llm")
+            error = getattr(self.proposal_generator, "last_error", None)
+            if source.startswith("fallback"):
+                self.episode_oracle_stats.proposal_fallbacks += 1
+
+            self.last_proposals = deepcopy(proposals)
+            self.last_causal_contexts = dict(contexts)
+            self.last_causal_stress_node = stress_node
+            if cache_key is not None and source == "llm":
+                self._cache_proposals(cache_key, proposals, contexts, stress_node)
+            return proposals, source, error, contexts, stress_node
+
+        if self.last_proposals:
+            stress_node = self._extract_stress_node(state, {}) or self.last_causal_stress_node
+            self._update_stress_persistence(stress_node)
+            self.last_causal_stress_node = stress_node
+            return (
+                deepcopy(self.last_proposals),
+                "reuse",
+                None,
+                dict(self.last_causal_contexts),
+                stress_node,
+            )
+
+        proposals = self._collect_proposals(state)
+        stress_node = self._extract_stress_node(state, {})
+        self._update_stress_persistence(stress_node)
+        self.last_causal_stress_node = stress_node
+        self.last_proposals = deepcopy(proposals)
+        return proposals, "fallback_no_cached_proposals", None, {}, stress_node
+
+    def _call_proposal_generator(
+        self,
+        state: EnvState,
+        contexts: dict,
+        stress_persistence_months: int,
+        recent_action_pattern: dict | None,
+    ) -> list[Proposal]:
+        signature = inspect.signature(self.proposal_generator.propose_all)
+        kwargs = {}
+        if "stress_persistence_months" in signature.parameters:
+            kwargs["stress_persistence_months"] = stress_persistence_months
+        if "recent_action_pattern" in signature.parameters:
+            kwargs["recent_action_pattern"] = deepcopy(recent_action_pattern)
+        return self.proposal_generator.propose_all(state, contexts, **kwargs)
+
+    def _update_stress_persistence(self, stress_node: str | None) -> int:
+        if not stress_node:
+            self.last_stress_node_for_persistence = None
+            self.consecutive_stress_node_months = 0
+            return self.consecutive_stress_node_months
+
+        if stress_node == self.last_stress_node_for_persistence:
+            self.consecutive_stress_node_months += 1
+        else:
+            self.last_stress_node_for_persistence = stress_node
+            self.consecutive_stress_node_months = 1
+        return self.consecutive_stress_node_months
+
+    def _get_causal_contexts_for_proposals(self, state: EnvState) -> dict:
+        if not hasattr(self.oracle, "get_causal_graph_context"):
+            return {}
+        return self.oracle.get_causal_graph_context(state)
+
+    def _extract_stress_node(self, state: EnvState, contexts: dict) -> str | None:
+        for context in contexts.values():
+            stress_node = getattr(context, "stress_node", None)
+            if stress_node:
+                return stress_node
+        if hasattr(self.oracle, "_identify_stress_node"):
+            return self.oracle._identify_stress_node(state)
+        return None
+
+    def _get_cached_proposals(self, cache_key: tuple[str, ...]):
+        entry = self.proposal_cache.get(cache_key)
+        if entry is None:
+            return None
+        return (
+            deepcopy(entry["proposals"]),
+            deepcopy(entry.get("contexts", {})),
+            entry.get("stress_node"),
+        )
+
+    def _cache_proposals(
+        self,
+        cache_key: tuple[str, ...],
+        proposals: list[Proposal],
+        contexts: dict,
+        stress_node: str | None,
+    ) -> None:
+        self.proposal_cache[cache_key] = {
+            "proposals": deepcopy(proposals),
+            "contexts": deepcopy(contexts),
+            "stress_node": stress_node,
+        }
+        while len(self.proposal_cache) > self.oracle_cache_max_size:
+            self.proposal_cache.popitem(last=False)
+
+    def _apply_causal_confidence_score(self, base_score: float, proposal: Proposal) -> float:
+        final_score = base_score
+        if (
+            self.oracle_mode.startswith("oracle_v4")
+            and proposal.causal_confidence is not None
+        ):
+            causal_boost = 0.85 + (proposal.causal_confidence * 0.30)
+            final_score = base_score * causal_boost
+        return max(0.0, min(1.0, final_score))
 
     # -----------------------------
     # Evaluation & Weights
@@ -442,6 +639,49 @@ class Boardroom:
                 )
         return serialized
 
+    @staticmethod
+    def _serialize_causal_contexts(contexts) -> dict:
+        serialized = {}
+        for role, context in (contexts or {}).items():
+            if hasattr(context, "model_dump"):
+                serialized[role] = context.model_dump(mode="json")
+            else:
+                serialized[role] = {
+                    "role": getattr(context, "role", role),
+                    "stress_node": getattr(context, "stress_node", None),
+                    "chain_summary": getattr(context, "chain_summary", None),
+                    "root_cause_node": getattr(context, "root_cause_node", None),
+                    "confidence": getattr(context, "confidence", None),
+                    "raw_triples": getattr(context, "raw_triples", []),
+                }
+        return serialized
+
+    @staticmethod
+    def _serialize_proposals(
+        proposals: list[Proposal],
+        proposal_base_scores: dict[str, float],
+    ) -> list[dict]:
+        serialized = []
+        for proposal in proposals:
+            score_vector = proposal.score_vector
+            if hasattr(score_vector, "model_dump"):
+                score_vector = score_vector.model_dump(mode="json")
+            serialized.append(
+                {
+                    "agent": proposal.agent,
+                    "objective": proposal.objective,
+                    "actions": deepcopy(proposal.actions),
+                    "expected_impact": proposal.expected_impact,
+                    "risks": list(proposal.risks),
+                    "rationale": proposal.rationale,
+                    "causal_confidence": proposal.causal_confidence,
+                    "base_score": proposal_base_scores.get(proposal.agent),
+                    "final_confidence": proposal.confidence,
+                    "score_vector": score_vector,
+                }
+            )
+        return serialized
+
     # -----------------------------
     # Safeguards & Conflicts
     # -----------------------------
@@ -449,6 +689,16 @@ class Boardroom:
         max_mkt = max(state.cash * 0.3, 20000)
         action["marketing"]["spend"] = min(action["marketing"].get("spend", 0), max_mkt)
         action["hiring"]["hires"] = min(action["hiring"].get("hires", 0), 10)
+        action = self._apply_v4_causal_rd_cap(action, state)
+        return action
+
+    def _apply_v4_causal_rd_cap(self, action: dict, state: EnvState) -> dict:
+        if self.oracle_mode != "oracle_v4_causal":
+            return action
+        action.setdefault("product", {})
+        rd_spend = max(0.0, float(action["product"].get("r_and_d_spend", 0.0)))
+        rd_cap = max(float(state.cash) * 0.25, 30_000.0)
+        action["product"]["r_and_d_spend"] = min(rd_spend, rd_cap)
         return action
 
     def _apply_dynamic_minimums(self, action: dict, state: EnvState, innov_score: float) -> dict:
@@ -470,7 +720,13 @@ class Boardroom:
             
         return action
 
-    def _resolve_conflicts(self, action: dict, state: EnvState, innov_score: float) -> dict:
+    def _resolve_conflicts(
+        self,
+        action: dict,
+        state: EnvState,
+        innov_score: float,
+        stress_node: str | None = None,
+    ) -> dict:
         mkt_spend = action["marketing"].get("spend", 0)
         rd_spend = action["product"].get("r_and_d_spend", 0)
         cost_per_employee = max(1.0, action["hiring"].get("cost_per_employee", 10000))
@@ -487,6 +743,8 @@ class Boardroom:
         rd_protection_ratio = 1.0  # Under typical scenario, can cut down to 0
         if innov_score > 0.6:
             rd_protection_ratio = 0.2  # Max allowable cut is 20% of proposed R&D spend ensuring 80% survival capability
+        if self.oracle_mode == "oracle_v4_causal" and stress_node == "Cash_Shortage":
+            rd_protection_ratio = 1.0
             
         # 1. Cut Marketing
         mkt_cut = min(mkt_spend, shortfall)

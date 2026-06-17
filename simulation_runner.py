@@ -59,6 +59,7 @@ class BoardroomAgent:
         oracle_instance=None,
         action_modifier_instance=None,
         agents=None,
+        proposal_generator=None,
     ):
         proposal_agents = agents or [
             CFOProposalAgent(),
@@ -73,6 +74,7 @@ class BoardroomAgent:
             action_modifier_instance=action_modifier_instance,
             enable_action_modifier=enable_action_modifier,
             enable_memory_retrieval=enable_memory_retrieval,
+            proposal_generator=proposal_generator,
         )
 
     def start_episode(self, episode_seed):
@@ -102,6 +104,9 @@ def _default_oracle_stats() -> dict:
         "event_refreshes": 0,
         "cache_hits": 0,
         "llm_calls": 0,
+        "proposal_llm_calls": 0,
+        "proposal_cache_hits": 0,
+        "proposal_fallbacks": 0,
     }
 
 
@@ -115,6 +120,56 @@ def _safe_mean(values):
 
 def _safe_median(values):
     return float(np.median(values)) if values else np.nan
+
+
+def _average_churn_from_state(state) -> float:
+    return (
+        state.churn_enterprise + state.churn_smb + state.churn_b2c
+    ) / 3.0
+
+
+def _capture_causal_metrics(state, agent=None) -> dict:
+    oracle = getattr(getattr(agent, "boardroom", None), "oracle", None)
+    stress_node = None
+    if oracle is not None and hasattr(oracle, "_identify_stress_node"):
+        stress_node = oracle._identify_stress_node(state)
+    return {
+        "mrr": float(state.mrr),
+        "cash": float(state.cash),
+        "avg_churn": _average_churn_from_state(state),
+        "innovation": float(state.innovation_factor),
+        "stress_node": stress_node,
+    }
+
+
+def _write_causal_step_outcome(
+    agent,
+    clean_action: dict,
+    before_metrics: dict | None,
+    after_state,
+    episode_seed: int,
+    month: int,
+) -> None:
+    if before_metrics is None:
+        return
+    oracle = getattr(getattr(agent, "boardroom", None), "oracle", None)
+    if oracle is None or not hasattr(oracle, "write_causal_outcome"):
+        return
+
+    kpi_delta = {
+        "mrr_delta": float(after_state.mrr) - before_metrics["mrr"],
+        "cash_delta": float(after_state.cash) - before_metrics["cash"],
+        "churn_delta": _average_churn_from_state(after_state) - before_metrics["avg_churn"],
+        "innovation_delta": float(after_state.innovation_factor) - before_metrics["innovation"],
+    }
+    oracle.write_causal_outcome(
+        action=clean_action,
+        kpi_delta=kpi_delta,
+        confidence=0.6,
+        stress_node=before_metrics.get("stress_node"),
+        episode_id=episode_seed,
+        month=month,
+    )
 
 
 def _collect_retrieval_rows(
@@ -160,7 +215,7 @@ def _collect_retrieval_rows(
 
 
 def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides: dict | None = None):
-    oracle_overrides = oracle_overrides or {}
+    oracle_overrides = dict(oracle_overrides or {})
 
     if policy == "heuristic":
         return BaselineJointAgent()
@@ -198,6 +253,25 @@ def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides
         return BoardroomAgent(
             oracle_mode="oracle_v4_causal",
             oracle_frequency=oracle_frequency,
+            **oracle_overrides,
+        )
+    if policy == "oracle_v4_causal_hetero":
+        from agents.causal_proposal_agents import BatchedCausalProposalGenerator
+        from agents.llm_client import create_llm_client
+
+        if "oracle_instance" in oracle_overrides:
+            oracle_instance = oracle_overrides.pop("oracle_instance")
+        else:
+            oracle_instance = Oracle(mode="oracle_v4_causal", enable_memory_retrieval=True)
+        proposal_generator = oracle_overrides.pop("proposal_generator", None)
+        if proposal_generator is None:
+            llm = create_llm_client("ollama", "llama3.1:8b")
+            proposal_generator = BatchedCausalProposalGenerator(llm)
+        return BoardroomAgent(
+            oracle_mode="oracle_v4_causal",
+            oracle_frequency=oracle_frequency,
+            oracle_instance=oracle_instance,
+            proposal_generator=proposal_generator,
             **oracle_overrides,
         )
     if policy == "oracle_v3_hetero":
@@ -266,6 +340,10 @@ def run_simulation(
             decision_trace = agent.get_last_decision_trace() if hasattr(agent, "get_last_decision_trace") else None
             
             clean_action = ActionAdapter.translate_action(raw_action)
+            pre_step_causal_metrics = None
+            if policy == "oracle_v4_causal_hetero":
+                pre_step_causal_metrics = _capture_causal_metrics(env.state, agent)
+
             if return_action_trace:
                 action_trace.append(
                     {
@@ -291,6 +369,15 @@ def run_simulation(
                 )
             
             obs, reward, terminated, truncated, info = env.step(clean_action)
+            if policy == "oracle_v4_causal_hetero":
+                _write_causal_step_outcome(
+                    agent=agent,
+                    clean_action=clean_action,
+                    before_metrics=pre_step_causal_metrics,
+                    after_state=env.state,
+                    episode_seed=episode_seed,
+                    month=current_month,
+                )
             if hasattr(agent, "set_shock_label"):
                 agent.set_shock_label(info.get("shock_label"))
 
@@ -399,7 +486,8 @@ def run_simulation(
             f"policy={policy} | episode={i} | seed={episode_seed} | cause={result['cause']} | "
             f"months={steps} | final_mrr={state.mrr:,.0f} | final_cash={state.cash:,.0f} | "
             f"oracle_refreshes={result['oracle_refresh_requests']} | cadence={result['cadence_refreshes']} | "
-            f"events={result['event_refreshes']} | cache_hits={result['cache_hits']} | llm_calls={result['llm_calls']}"
+            f"events={result['event_refreshes']} | cache_hits={result['cache_hits']} | llm_calls={result['llm_calls']} | "
+            f"proposal_llm_calls={result['proposal_llm_calls']}"
         )
 
     df = pd.DataFrame(results)

@@ -7,6 +7,7 @@ from oracle.memory import MEMORY_HORIZON_MONTHS, OracleMemoryStore, classify_rea
 from oracle.prompt_builder import build_prompt
 from oracle.parser import parse_llm_response
 from oracle.schemas import (
+    CausalGraphContext,
     GraphContext,
     OracleBrief,
     PendingMemoryEntry,
@@ -160,6 +161,66 @@ class Oracle:
 
         return trend_context, memories, current_global_month, graph_context
 
+    def get_causal_graph_context(
+        self,
+        state: EnvState,
+    ) -> dict[str, CausalGraphContext]:
+        """Return role-specific causal evidence for v4 proposal grounding."""
+
+        if not self.mode.startswith("oracle_v4"):
+            return {}
+        if (
+            self.graph_store is None
+            or not getattr(self.graph_store, "enabled", False)
+            or not hasattr(self.graph_store, "query_role_causal_context")
+        ):
+            return {}
+
+        stress_node = self._identify_stress_node(state)
+        contexts: dict[str, CausalGraphContext] = {}
+        for role in ("CFO", "CMO", "CPO"):
+            try:
+                context = self.graph_store.query_role_causal_context(
+                    stress_node=stress_node,
+                    role=role,
+                    limit=3,
+                )
+            except Exception as exc:
+                print(f"[Oracle] Causal graph context query failed for {role}: {exc}")
+                continue
+            if context and context.raw_triples:
+                contexts[role] = context
+        return contexts
+
+    def write_causal_outcome(
+        self,
+        action: dict,
+        kpi_delta: dict[str, float],
+        confidence: float = 0.6,
+        stress_node: str | None = None,
+        episode_id: int | None = None,
+        month: int | None = None,
+    ) -> None:
+        """Persist action-to-KPI evidence when causal graph storage is active."""
+
+        if (
+            self.graph_store is None
+            or not getattr(self.graph_store, "enabled", False)
+            or not hasattr(self.graph_store, "write_action_outcome")
+        ):
+            return
+        try:
+            self.graph_store.write_action_outcome(
+                action=action,
+                kpi_delta=kpi_delta,
+                confidence=confidence,
+                stress_node=stress_node,
+                episode_id=episode_id,
+                month=month,
+            )
+        except Exception as exc:
+            print(f"[Oracle] Causal outcome write failed: {exc}")
+
     def generate_brief(
         self,
         state: EnvState,
@@ -289,6 +350,23 @@ class Oracle:
     def _estimate_runway_months(state: EnvState) -> float:
         monthly_burn_estimate = max(1.0, float(state.headcount * 8000.0))
         return state.cash / monthly_burn_estimate
+
+    def _identify_stress_node(self, state: EnvState) -> str:
+        avg_churn = (
+            state.churn_enterprise + state.churn_smb + state.churn_b2c
+        ) / 3.0
+        runway = self._estimate_runway_months(state)
+        ltv_cac = state.ltv / max(state.cac, 1.0)
+
+        if runway < 6.0:
+            return "Cash_Shortage"
+        if avg_churn > 0.04:
+            return "Churn_Spike"
+        if ltv_cac < 3.0:
+            return "CAC_Pressure"
+        if state.mrr < 50_000:
+            return "Growth_Stall"
+        return "Steady_State"
 
     @staticmethod
     def _parse_shock_type(shock_label: str | None) -> str | None:
