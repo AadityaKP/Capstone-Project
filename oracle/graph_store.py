@@ -558,6 +558,48 @@ class CausalGraphStore:
                 "confidence": 0.70,
                 "description": "Steady state is a good time to invest in product quality and reduce future churn risk.",
             },
+            {
+                "stress_name": "CAC_Pressure",
+                "lever_name": "Pricing_Power_Assessment",
+                "role": "CFO",
+                "confidence": 0.72,
+                "description": "High CAC pressure calls for a pricing review to improve unit economics.",
+            },
+            {
+                "stress_name": "CAC_Pressure",
+                "lever_name": "CAC_Reduction_Campaign",
+                "role": "CMO",
+                "confidence": 0.65,
+                "description": "CAC pressure requires shifting acquisition mix toward higher-ROI channels.",
+            },
+            {
+                "stress_name": "CAC_Pressure",
+                "lever_name": "Product_Retention_Investment",
+                "role": "CPO",
+                "confidence": 0.58,
+                "description": "Improving product retention raises LTV and offsets a high CAC.",
+            },
+            {
+                "stress_name": "Growth_Stall",
+                "lever_name": "Growth_Acceleration_Push",
+                "role": "CMO",
+                "confidence": 0.72,
+                "description": "Growth stall demands an aggressive acquisition and MRR expansion push.",
+            },
+            {
+                "stress_name": "Growth_Stall",
+                "lever_name": "Innovation_Pipeline_Build",
+                "role": "CPO",
+                "confidence": 0.65,
+                "description": "Growth stall calls for investing in the product innovation pipeline.",
+            },
+            {
+                "stress_name": "Growth_Stall",
+                "lever_name": "Burn_Rate_Reduction",
+                "role": "CFO",
+                "confidence": 0.58,
+                "description": "Growth stall requires burn discipline to extend runway while growth recovers.",
+            },
         ]
         cypher = """
         UNWIND $edges AS edge

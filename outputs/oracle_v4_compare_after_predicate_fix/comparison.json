@@ -1,0 +1,61 @@
+{
+  "oracle_v4_causal_hetero": {
+    "episodes": 2,
+    "survival_rate": 0.5,
+    "avg_duration": 116.0,
+    "avg_rule_40": -155.98833256354393,
+    "avg_final_mrr": 518958.77157310484,
+    "avg_final_cash": 12849790.935149224,
+    "avg_llm_calls": 51.0,
+    "avg_proposal_llm_calls": 51.0,
+    "avg_proposal_cache_hits": 15.5,
+    "avg_proposal_fallbacks": 0.0,
+    "causes": [
+      "Bankruptcy",
+      "Time Limit"
+    ],
+    "per_episode": [
+      {
+        "seed": 0,
+        "cause": "Bankruptcy",
+        "steps": 112,
+        "final_mrr": 25544.61699806019,
+        "final_cash": -678292.2310137319,
+        "avg_rule_40": -239.14366522907312,
+        "llm_calls": 54,
+        "proposal_llm_calls": 54,
+        "proposal_cache_hits": 17,
+        "proposal_fallbacks": 0
+      },
+      {
+        "seed": 1,
+        "cause": "Time Limit",
+        "steps": 120,
+        "final_mrr": 1012372.9261481495,
+        "final_cash": 26377874.10131218,
+        "avg_rule_40": -72.83299989801476,
+        "llm_calls": 48,
+        "proposal_llm_calls": 48,
+        "proposal_cache_hits": 14,
+        "proposal_fallbacks": 0
+      }
+    ],
+    "avg_causal_confidence": 0.550962643678161,
+    "causal_confidence_count": 696,
+    "avg_causal_confidence_by_agent": {
+      "CFO": 0.5398275862068965,
+      "CMO": 0.5424676724137931,
+      "CPO": 0.5705926724137931
+    },
+    "proposal_sources": {
+      "llm": 102,
+      "reuse": 99,
+      "cache_hit": 31
+    },
+    "stress_nodes": {
+      "Steady_State": 42,
+      "Churn_Spike": 184,
+      "Cash_Shortage": 6
+    }
+  }
+}

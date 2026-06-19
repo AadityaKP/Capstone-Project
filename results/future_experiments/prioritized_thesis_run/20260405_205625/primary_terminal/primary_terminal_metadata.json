@@ -1,0 +1,9 @@
+{
+  "kind": "primary_terminal_run",
+  "output_dir": "results\\future_experiments\\prioritized_thesis_run\\20260405_205625\\primary_terminal",
+  "num_episodes": 1,
+  "oracle_frequency": 10,
+  "seed_start": 0,
+  "started_at": "2026-04-05T20:56:25",
+  "completed_at": "2026-04-05T21:01:11"
+}

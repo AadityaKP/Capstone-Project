@@ -1,0 +1,10 @@
+scenario_id,scenario_label,policy,episode,seed,shock_month,shock_label,pre_shock_rule_40,recovery_month,recovery_time_months,recovered
+boardroom,Boardroom Baseline,boardroom,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-38.61556600390571,,,False
+boardroom,Boardroom Baseline,boardroom,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-47.55437214084422,51.0,3.0,True
+boardroom,Boardroom Baseline,boardroom,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-55.23703519973766,,,False
+oracle_v1,Oracle v1,oracle_v1,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-26.708427946799965,,,False
+oracle_v1,Oracle v1,oracle_v1,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-31.30209442264914,51.0,3.0,True
+oracle_v1,Oracle v1,oracle_v1,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-35.5657214861391,,,False
+oracle_v3,Oracle v3,oracle_v3,0,0,24,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-32.23363409247323,,,False
+oracle_v3,Oracle v3,oracle_v3,0,0,48,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-37.75489665554122,51.0,3.0,True
+oracle_v3,Oracle v3,oracle_v3,0,0,72,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",-42.40169767719601,,,False
