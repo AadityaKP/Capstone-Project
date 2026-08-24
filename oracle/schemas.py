@@ -131,6 +131,9 @@ class OracleEpisodeStats(BaseModel):
     event_refreshes: int = 0
     cache_hits: int = 0
     llm_calls: int = 0
+    proposal_llm_calls: int = 0
+    proposal_cache_hits: int = 0
+    proposal_fallbacks: int = 0
 
 
 class OracleRefreshSnapshot(BaseModel):
@@ -143,6 +146,17 @@ class OracleRefreshSnapshot(BaseModel):
 
 
 # Graph context schemas
+
+
+class CausalGraphContext(BaseModel):
+    """Role-specific causal chain extracted for proposal grounding."""
+
+    role: str
+    stress_node: str
+    chain_summary: str
+    root_cause_node: Optional[str] = None
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    raw_triples: List[List[str]] = Field(default_factory=list)
 
 
 class GraphShockRecord(BaseModel):

@@ -8,14 +8,14 @@ from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOPropos
 
 # Mock LLM client that simulates successful API responses
 class MockOpenAIClient:
-    def complete(self, system_prompt: str, user_prompt: str) -> str:
+    def complete_text(self, system_prompt: str, user_prompt: str) -> str:
         return (
             "As CFO, I'd prioritize extending runway by 3+ months. Cut discretionary "
             "spending 20%, defer non-critical hires, and secure a bridge loan if needed."
         )
 
 class MockAnthropicClient:
-    def complete(self, system_prompt: str, user_prompt: str) -> str:
+    def complete_text(self, system_prompt: str, user_prompt: str) -> str:
         role = "CMO" if "CMO" in system_prompt else "CPO"
         if role == "CMO":
             return (
@@ -70,12 +70,14 @@ for role, AgentClass, mock_llm in agents:
     prop_no_llm = agent_no_llm.propose(state)
     print(f"\nHeuristic (use_llm=False):")
     print(f"  Expected Impact: \"{prop_no_llm.expected_impact}\"")
+    print(f"  Rationale: {prop_no_llm.rationale}")
     
     # With LLM
     agent_with_llm = AgentClass(llm_client=mock_llm, use_llm=True)
     prop_with_llm = agent_with_llm.propose(state)
     print(f"\nLLM-Refined (use_llm=True):")
     print(f"  Expected Impact: \"{prop_with_llm.expected_impact}\"")
+    print(f"  Rationale: \"{prop_with_llm.rationale}\"")
     
     # Show what stayed the same
     print(f"\n✓ Unchanged:")
@@ -89,15 +91,16 @@ print("SUMMARY")
 print("=" * 90)
 print("""
 With LLM refinement ENABLED:
-  • Expected Impact = richer strategic reasoning from LLM
+  • Rationale = richer strategic reasoning from LLM
   • More nuanced, context-aware, specific to current conditions
   • Explains the "why" behind decisions
 
 Without LLM (heuristic only):
   • Expected Impact = generic default strings
+  • Rationale = empty / None
   • Actions still computed by heuristic logic
   • Lightweight, no API latency
 
-KEY POINT: Actions/confidence/risks never change. Only the DESCRIPTION improves.
+KEY POINT: Actions/confidence/risks never change. Only the rationale text improves.
 This means existing simulation logic is unaffected—only richer outputs for analysis.
 """)

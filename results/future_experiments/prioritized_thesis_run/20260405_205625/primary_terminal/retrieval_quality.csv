@@ -1,0 +1,3 @@
+scenario_id,scenario_label,episode,outcome_bucket,retrieval_count,episode_total,retrieval_share
+oracle_v3,Oracle v3,0,NEGATIVE,110,330,0.3333333333333333
+oracle_v3,Oracle v3,0,POSITIVE,220,330,0.6666666666666666

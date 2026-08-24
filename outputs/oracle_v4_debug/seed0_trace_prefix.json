@@ -1,0 +1,1465 @@
+{
+  "results": [
+    {
+      "episode": 0,
+      "seed": 0,
+      "policy": "oracle_v4_causal_hetero",
+      "steps": 15,
+      "final_mrr": 133160.02787440582,
+      "final_cash": -18696.069912386796,
+      "final_cac": 0.0,
+      "final_ltv": 1765.0534641025329,
+      "final_ltv_cac": 0,
+      "final_headcount": 25,
+      "final_valuation_multiple": 9.000000000000007,
+      "final_unemployment": 4.0,
+      "final_innovation_factor": 1.0,
+      "depression_months": 0,
+      "cause": "Bankruptcy",
+      "total_reward": -123.3151876424628,
+      "avg_rule_40": -156.11037195976408,
+      "pct_above_40": 0.0,
+      "shock_count": 0,
+      "recovered_shock_count": 0,
+      "recovered_shock_rate_pct": NaN,
+      "mean_recovery_time_months": NaN,
+      "median_recovery_time_months": NaN,
+      "post_shock_avg_rule40_25_60": NaN,
+      "oracle_refresh_requests": 12,
+      "cadence_refreshes": 2,
+      "event_refreshes": 9,
+      "cache_hits": 6,
+      "llm_calls": 6,
+      "proposal_llm_calls": 6,
+      "proposal_cache_hits": 6,
+      "proposal_fallbacks": 0
+    }
+  ],
+  "trace": [
+    {
+      "month": 0,
+      "cash_before": 1000000.0,
+      "cash_after": 969877.5394445008,
+      "proposal_source": "llm",
+      "causal_stress_node": "Steady_State",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 15000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 17700.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 15000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 15000.0
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        }
+      ]
+    },
+    {
+      "month": 1,
+      "cash_before": 969877.5394445008,
+      "cash_after": 929190.0905540856,
+      "proposal_source": "reuse",
+      "causal_stress_node": "Steady_State",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 15000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 17700.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 15000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 15000.0
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        }
+      ]
+    },
+    {
+      "month": 2,
+      "cash_before": 929190.0905540856,
+      "cash_after": 883641.741827928,
+      "proposal_source": "reuse",
+      "causal_stress_node": "Steady_State",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 15000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 17700.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 15000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 15000.0
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        }
+      ]
+    },
+    {
+      "month": 3,
+      "cash_before": 883641.741827928,
+      "cash_after": 833024.4034575949,
+      "proposal_source": "reuse",
+      "causal_stress_node": "Steady_State",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 15000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 17700.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 23400.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22302.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 15000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 15000.0
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.6364128828074095,
+          "final_confidence": 0.6879623263148096
+        }
+      ]
+    },
+    {
+      "month": 4,
+      "cash_before": 833024.4034575949,
+      "cash_after": 709856.9329684468,
+      "proposal_source": "llm",
+      "causal_stress_node": "Steady_State",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 50000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 59000.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 78000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 47790.0
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 78000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 47790.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.5894132046697809,
+          "final_confidence": 0.6371556742480331
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 50000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.5894132046697809,
+          "final_confidence": 0.6371556742480331
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 50000.0
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.5894132046697809,
+          "final_confidence": 0.6371556742480331
+        }
+      ]
+    },
+    {
+      "month": 5,
+      "cash_before": 709856.9329684468,
+      "cash_after": 661104.5338686322,
+      "proposal_source": "llm",
+      "causal_stress_node": "Steady_State",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 10000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 11800.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 9558.0
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 20000.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.5217870087044524,
+          "final_confidence": 0.564051756409513
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 10000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.5217870087044524,
+          "final_confidence": 0.564051756409513
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 10000.0
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.5217870087044524,
+          "final_confidence": 0.564051756409513
+        }
+      ]
+    },
+    {
+      "month": 6,
+      "cash_before": 661104.5338686322,
+      "cash_after": 605545.0607923742,
+      "proposal_source": "cache_hit",
+      "causal_stress_node": "Steady_State",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 10000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 11920.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 9655.2
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 20000.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.4909365578966491,
+          "final_confidence": 0.5307024190862777
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 10000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.4909365578966491,
+          "final_confidence": 0.5307024190862777
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 10000.0
+            }
+          },
+          "causal_confidence": 0.77,
+          "base_score": 0.4909365578966491,
+          "final_confidence": 0.5307024190862777
+        }
+      ]
+    },
+    {
+      "month": 7,
+      "cash_before": 605545.0607923742,
+      "cash_after": 543551.1287634907,
+      "proposal_source": "llm",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 10000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 11920.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 15019.2
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 20000.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.45181564324982426,
+          "final_confidence": 0.45181564324982426
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 10000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.45181564324982426,
+          "final_confidence": 0.45181564324982426
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 10000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.45181564324982426,
+          "final_confidence": 0.45181564324982426
+        }
+      ]
+    },
+    {
+      "month": 8,
+      "cash_before": 543551.1287634907,
+      "cash_after": 469618.1355978267,
+      "proposal_source": "cache_hit",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 10000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 11920.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 15019.2
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 20000.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4321108924647606,
+          "final_confidence": 0.4321108924647606
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 10000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4321108924647606,
+          "final_confidence": 0.4321108924647606
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 10000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4321108924647606,
+          "final_confidence": 0.4321108924647606
+        }
+      ]
+    },
+    {
+      "month": 9,
+      "cash_before": 469618.1355978267,
+      "cash_after": 385851.2477413829,
+      "proposal_source": "cache_hit",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 10000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 11920.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 15019.2
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 15600.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 20000.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4150797846739571,
+          "final_confidence": 0.4150797846739571
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 10000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4150797846739571,
+          "final_confidence": 0.4150797846739571
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 10000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4150797846739571,
+          "final_confidence": 0.4150797846739571
+        }
+      ]
+    },
+    {
+      "month": 10,
+      "cash_before": 385851.2477413829,
+      "cash_after": 272689.481901047,
+      "proposal_source": "llm",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 20000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 17880.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 31200.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22528.8
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 31200.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22528.8
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4001936892970907,
+          "final_confidence": 0.4001936892970907
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 20000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4001936892970907,
+          "final_confidence": 0.4001936892970907
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 15000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.4001936892970907,
+          "final_confidence": 0.4001936892970907
+        }
+      ]
+    },
+    {
+      "month": 11,
+      "cash_before": 272689.481901047,
+      "cash_after": 171851.74832433026,
+      "proposal_source": "cache_hit",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 20000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 17880.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 31200.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22528.8
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 160.68190104700625,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22528.8
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.38489705189142626,
+          "final_confidence": 0.38489705189142626
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 20000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.38489705189142626,
+          "final_confidence": 0.38489705189142626
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 15000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.38489705189142626,
+          "final_confidence": 0.38489705189142626
+        }
+      ]
+    },
+    {
+      "month": 12,
+      "cash_before": 171851.74832433026,
+      "cash_after": 111552.55990886316,
+      "proposal_source": "cache_hit",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 20000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 17880.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 31200.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 22528.8
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 0.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 0,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 0.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.3732048074748739,
+          "final_confidence": 0.3732048074748739
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 20000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.3732048074748739,
+          "final_confidence": 0.3732048074748739
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 15000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.3732048074748739,
+          "final_confidence": 0.3732048074748739
+        }
+      ]
+    },
+    {
+      "month": 13,
+      "cash_before": 111552.55990886316,
+      "cash_after": 46643.146120663965,
+      "proposal_source": "llm",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 10000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 11920.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 12000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 15019.2
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 0.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 0,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 0.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.14660909432300623,
+          "final_confidence": 0.14660909432300623
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 10000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.14660909432300623,
+          "final_confidence": 0.14660909432300623
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 10000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.14660909432300623,
+          "final_confidence": 0.14660909432300623
+        }
+      ]
+    },
+    {
+      "month": 14,
+      "cash_before": 46643.146120663965,
+      "cash_after": -18696.069912386796,
+      "proposal_source": "cache_hit",
+      "causal_stress_node": "Cash_Shortage",
+      "pre_modifier_action": {
+        "marketing": {
+          "spend": 10000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 3,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 11920.0
+        }
+      },
+      "post_modifier_action": {
+        "marketing": {
+          "spend": 12000.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 2,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 15019.2
+        }
+      },
+      "final_action": {
+        "marketing": {
+          "spend": 0.0,
+          "channel": "ppc"
+        },
+        "hiring": {
+          "hires": 0,
+          "cost_per_employee": 10000.0
+        },
+        "pricing": {
+          "price_change_pct": -0.05
+        },
+        "product": {
+          "r_and_d_spend": 0.0
+        }
+      },
+      "proposals": [
+        {
+          "agent": "CFO",
+          "actions": {
+            "hiring": {
+              "hires": 3,
+              "cost_per_employee": 10000.0
+            },
+            "pricing": {
+              "price_change_pct": -0.05
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.1403163792976712,
+          "final_confidence": 0.1403163792976712
+        },
+        {
+          "agent": "CMO",
+          "actions": {
+            "marketing": {
+              "spend": 10000.0,
+              "channel": "ppc"
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.1403163792976712,
+          "final_confidence": 0.1403163792976712
+        },
+        {
+          "agent": "CPO",
+          "actions": {
+            "product": {
+              "r_and_d_spend": 10000.0
+            }
+          },
+          "causal_confidence": 0.5,
+          "base_score": 0.1403163792976712,
+          "final_confidence": 0.1403163792976712
+        }
+      ]
+    }
+  ]
+}

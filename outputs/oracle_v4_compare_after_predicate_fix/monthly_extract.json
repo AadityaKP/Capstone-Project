@@ -1,0 +1,2090 @@
+[
+  {
+    "episode": 0,
+    "month": 0,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 1,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 7500.0
+  },
+  {
+    "episode": 0,
+    "month": 1,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 2,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 7500.0
+  },
+  {
+    "episode": 0,
+    "month": 2,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 3,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 7500.0
+  },
+  {
+    "episode": 0,
+    "month": 3,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 4,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 7500.0
+  },
+  {
+    "episode": 0,
+    "month": 4,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 5,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 7500.0
+  },
+  {
+    "episode": 0,
+    "month": 5,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 6,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 6,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 7,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 7,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 8,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 8,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 9,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 9,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 10,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 10,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 11,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 11,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 12,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 12,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 13,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 13,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 14,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 14,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 15,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 0,
+    "month": 15,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 16,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 0,
+    "month": 16,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 17,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 0,
+    "month": 17,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 18,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 0,
+    "month": 18,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 19,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 19,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 20,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 20,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 21,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 21,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 22,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 22,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 23,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 23,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 24,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 24,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 25,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 25,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 1,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 26,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 2,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 27,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 3,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 28,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 4,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 29,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 5,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 30,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 6,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 31,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 7,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 32,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 8,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 40000.0
+  },
+  {
+    "episode": 0,
+    "month": 33,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 9,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 34,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 10,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 35,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 11,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 36,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 12,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 0,
+    "month": 37,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 13,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 0,
+    "month": 38,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 14,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 0,
+    "month": 39,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 15,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 40,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 16,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 41,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 17,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 42,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 18,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 43,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 19,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 44,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 20,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 45,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 21,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 46,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 22,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 47,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 23,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 48,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 24,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 49,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 25,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 50,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 26,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 51,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 27,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 52,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 28,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 53,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 29,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 54,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 30,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 55,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 31,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 56,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 32,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 57,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 33,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 58,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 34,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 59,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 35,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 60,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 36,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 61,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 37,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 62,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 38,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 63,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 39,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 64,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 40,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 65,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 41,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 66,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 42,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 67,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 43,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 68,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 44,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 69,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 45,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 70,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 46,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 71,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 47,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 72,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 48,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 73,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 49,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 74,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 50,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 75,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 51,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 76,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 52,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 77,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 53,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 78,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 54,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 79,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 55,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 80,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 56,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 81,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 57,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 82,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 58,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 83,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 59,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 84,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 60,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 0,
+    "month": 85,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 61,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 86,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 62,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 87,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 63,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 88,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 64,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 0,
+    "month": 89,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 65,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 0,
+    "month": 90,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 66,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 0,
+    "month": 91,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 67,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 0,
+    "month": 92,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 68,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 93,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 69,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 94,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 70,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 95,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 71,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 96,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 72,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 0,
+    "month": 97,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 73,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 98,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 74,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 99,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 75,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 100,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 76,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 0,
+    "month": 101,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 77,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 0,
+    "month": 102,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 78,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 2000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 103,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 79,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 2000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 104,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 80,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 105,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 81,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 2000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 106,
+    "causal_stress_node": "Cash_Shortage",
+    "stress_persistence_months": 1,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 107,
+    "causal_stress_node": "Cash_Shortage",
+    "stress_persistence_months": 2,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 108,
+    "causal_stress_node": "Cash_Shortage",
+    "stress_persistence_months": 3,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 0,
+    "month": 109,
+    "causal_stress_node": "Cash_Shortage",
+    "stress_persistence_months": 4,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 5000.0,
+    "cpo_rd_spend": 5000.0
+  },
+  {
+    "episode": 0,
+    "month": 110,
+    "causal_stress_node": "Cash_Shortage",
+    "stress_persistence_months": 5,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 2000.0,
+    "cpo_rd_spend": 6792.783107020006
+  },
+  {
+    "episode": 0,
+    "month": 111,
+    "causal_stress_node": "Cash_Shortage",
+    "stress_persistence_months": 6,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 2000.0,
+    "cpo_rd_spend": 6792.783107020006
+  },
+  {
+    "episode": 1,
+    "month": 0,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 1,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 7500.0
+  },
+  {
+    "episode": 1,
+    "month": 1,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 2,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 7500.0
+  },
+  {
+    "episode": 1,
+    "month": 2,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 3,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 3,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 4,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 4,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 5,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 5,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 6,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 6,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 7,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 7,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 8,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 8,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 9,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 9,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 10,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 10000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 10,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 11,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 1,
+    "month": 11,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 12,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 1,
+    "month": 12,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 13,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 1,
+    "month": 13,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 14,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 14,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 15,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 15,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 16,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 15000.0
+  },
+  {
+    "episode": 1,
+    "month": 16,
+    "causal_stress_node": "Steady_State",
+    "stress_persistence_months": 17,
+    "cfo_price_change_pct": 0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 17,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 1,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 18,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 2,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 19,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 3,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 20,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 4,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 21,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 5,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 22,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 6,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 23,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 7,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 24,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 8,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 25,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 9,
+    "cfo_price_change_pct": -0.01,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 26,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 10,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 27,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 11,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 28,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 12,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 29,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 13,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 30,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 14,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 31,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 15,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 1,
+    "month": 32,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 16,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 20000.0
+  },
+  {
+    "episode": 1,
+    "month": 33,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 17,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 1,
+    "month": 34,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 18,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 1,
+    "month": 35,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 19,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 30000.0
+  },
+  {
+    "episode": 1,
+    "month": 36,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 20,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 37,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 21,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 1,
+    "month": 38,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 22,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 39,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 23,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 40,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 24,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 1,
+    "month": 41,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 25,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 1,
+    "month": 42,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 26,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 1,
+    "month": 43,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 27,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 50000.0
+  },
+  {
+    "episode": 1,
+    "month": 44,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 28,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 45,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 29,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 46,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 30,
+    "cfo_price_change_pct": 0.02,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 47,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 31,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 48,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 32,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 49,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 33,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 50,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 34,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 51,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 35,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 52,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 36,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 53,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 37,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 54,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 38,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 55,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 39,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 56,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 40,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 57,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 41,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 58,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 42,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 59,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 43,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 60,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 44,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 61,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 45,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 62,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 46,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 63,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 47,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 64,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 48,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 65,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 49,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 66,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 50,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 67,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 51,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 68,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 52,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 69,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 53,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 70,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 54,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 71,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 55,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 72,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 56,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 73,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 57,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 74,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 58,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 75,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 59,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 76,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 60,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 77,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 61,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 78,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 62,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 79,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 63,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 80,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 64,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 81,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 65,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 82,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 66,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 83,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 67,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 84,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 68,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 85,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 69,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 86,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 70,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 87,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 71,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 88,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 72,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 89,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 73,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 90,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 74,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 91,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 75,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 92,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 76,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 93,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 77,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 94,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 78,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 95,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 79,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 96,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 80,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 97,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 81,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 98,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 82,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 99,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 83,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 100,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 84,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 101,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 85,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 102,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 86,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 103,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 87,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 104,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 88,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 105,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 89,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 106,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 90,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 107,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 91,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 108,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 92,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 109,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 93,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 110,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 94,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 111,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 95,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 112,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 96,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 113,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 97,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 114,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 98,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 115,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 99,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 116,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 100,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 117,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 101,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 118,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 102,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  },
+  {
+    "episode": 1,
+    "month": 119,
+    "causal_stress_node": "Churn_Spike",
+    "stress_persistence_months": 103,
+    "cfo_price_change_pct": 0.04,
+    "cmo_marketing_spend": 20000.0,
+    "cpo_rd_spend": 10000.0
+  }
+]

@@ -1,0 +1,97 @@
+{
+  "oracle_v3": {
+    "episodes": 2,
+    "survival_rate": 1.0,
+    "avg_duration": 120.0,
+    "avg_rule_40": -151.91798562886441,
+    "avg_final_mrr": 611404.5369569031,
+    "avg_llm_calls": 40.0,
+    "avg_proposal_llm_calls": 0.0,
+    "avg_proposal_cache_hits": 0.0,
+    "avg_proposal_fallbacks": 0.0,
+    "causes": [
+      "Time Limit",
+      "Time Limit"
+    ],
+    "per_episode": [
+      {
+        "seed": 0,
+        "cause": "Time Limit",
+        "steps": 120,
+        "final_mrr": 16878.385706188885,
+        "avg_rule_40": -262.4729023166559,
+        "llm_calls": 44,
+        "proposal_llm_calls": 0,
+        "proposal_cache_hits": 0,
+        "proposal_fallbacks": 0
+      },
+      {
+        "seed": 1,
+        "cause": "Time Limit",
+        "steps": 120,
+        "final_mrr": 1205930.6882076173,
+        "avg_rule_40": -41.36306894107291,
+        "llm_calls": 36,
+        "proposal_llm_calls": 0,
+        "proposal_cache_hits": 0,
+        "proposal_fallbacks": 0
+      }
+    ],
+    "avg_causal_confidence": null,
+    "causal_confidence_count": 0,
+    "proposal_sources": {
+      "agents": 240
+    },
+    "stress_nodes": {}
+  },
+  "oracle_v4_causal_hetero": {
+    "episodes": 2,
+    "survival_rate": 0.0,
+    "avg_duration": 15.5,
+    "avg_rule_40": -154.33324243958583,
+    "avg_final_mrr": 134932.1610634901,
+    "avg_llm_calls": 8.0,
+    "avg_proposal_llm_calls": 8.0,
+    "avg_proposal_cache_hits": 5.0,
+    "avg_proposal_fallbacks": 0.0,
+    "causes": [
+      "Bankruptcy",
+      "Bankruptcy"
+    ],
+    "per_episode": [
+      {
+        "seed": 0,
+        "cause": "Bankruptcy",
+        "steps": 15,
+        "final_mrr": 133160.02787440582,
+        "avg_rule_40": -156.11037195976408,
+        "llm_calls": 6,
+        "proposal_llm_calls": 6,
+        "proposal_cache_hits": 6,
+        "proposal_fallbacks": 0
+      },
+      {
+        "seed": 1,
+        "cause": "Bankruptcy",
+        "steps": 16,
+        "final_mrr": 136704.29425257436,
+        "avg_rule_40": -152.5561129194076,
+        "llm_calls": 10,
+        "proposal_llm_calls": 10,
+        "proposal_cache_hits": 4,
+        "proposal_fallbacks": 0
+      }
+    ],
+    "avg_causal_confidence": 0.6219354838709678,
+    "causal_confidence_count": 93,
+    "proposal_sources": {
+      "llm": 16,
+      "reuse": 5,
+      "cache_hit": 10
+    },
+    "stress_nodes": {
+      "Steady_State": 14,
+      "Cash_Shortage": 17
+    }
+  }
+}

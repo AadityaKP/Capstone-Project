@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 
 from oracle.schemas import (
     CausalChainSummary,
+    CausalGraphContext,
     GraphContext,
     GraphShockRecord,
     OracleBrief,
@@ -54,6 +55,7 @@ class CausalGraphStore:
             self.driver = GraphDatabase.driver(uri, auth=(user, password))
             self.driver.verify_connectivity()
             self._ensure_indexes()
+            self._ensure_seed_edges()
             self.enabled = True
             print("[CausalGraphStore] Connected to Neo4j.")
         except Exception as exc:
@@ -324,18 +326,399 @@ class CausalGraphStore:
             active_shock_type=shock_type,
         )
 
+    def query_role_causal_context(
+        self,
+        stress_node: str,
+        role: str,
+        limit: int = 3,
+    ) -> CausalGraphContext:
+        """Return a concise role-filtered causal chain around a stress node."""
+
+        empty_context = CausalGraphContext(
+            role=role,
+            stress_node=stress_node,
+            chain_summary="",
+            confidence=0.0,
+        )
+        if not self.enabled:
+            return empty_context
+
+        query_limit = max(limit * 6, limit)
+        cypher = """
+        MATCH (root)
+        WHERE root.name = $stress_node
+        MATCH p = (root)-[*1..3]-(target)
+        UNWIND relationships(p) AS rel
+        WITH startNode(rel) AS s, rel, endNode(rel) AS o, min(length(p)) AS distance
+        WITH
+            coalesce(s.name, s.id, labels(s)[0]) AS subject,
+            type(rel) AS predicate,
+            coalesce(o.name, o.id, labels(o)[0]) AS object,
+            coalesce(rel.confidence, 0.5) AS confidence,
+            distance
+        RETURN subject, predicate, object, confidence
+        ORDER BY distance ASC, confidence DESC, subject, predicate, object
+        LIMIT $query_limit
+        """
+        rows = self._query(
+            cypher,
+            {"stress_node": stress_node, "query_limit": query_limit},
+        )
+
+        triples_with_confidence: list[tuple[list[str], float]] = []
+        for row in rows:
+            subject = str(row.get("subject") or "")
+            predicate = str(row.get("predicate") or "")
+            obj = str(row.get("object") or "")
+            if not subject or not predicate or not obj:
+                continue
+            confidence = float(row.get("confidence") or 0.5)
+            triples_with_confidence.append(([subject, predicate, obj], confidence))
+
+        selected = self._select_role_triples(role, triples_with_confidence, limit)
+        if not selected:
+            selected = triples_with_confidence[:limit]
+        if not selected:
+            return empty_context
+
+        raw_triples = [triple for triple, _ in selected]
+        confidence = sum(score for _, score in selected) / len(selected)
+        chain_summary = "; ".join(
+            f"{subj} -{pred}-> {obj}" for subj, pred, obj in raw_triples
+        )
+        root_cause_node = raw_triples[0][2] if raw_triples else None
+
+        return CausalGraphContext(
+            role=role,
+            stress_node=stress_node,
+            chain_summary=chain_summary,
+            root_cause_node=root_cause_node,
+            confidence=max(0.0, min(1.0, confidence)),
+            raw_triples=raw_triples,
+        )
+
+    def write_action_outcome(
+        self,
+        action: Dict[str, Any],
+        kpi_delta: Dict[str, float],
+        confidence: float = 0.6,
+        stress_node: Optional[str] = None,
+        episode_id: Optional[int] = None,
+        month: Optional[int] = None,
+    ) -> None:
+        """Write closed-loop action-to-KPI evidence for causal proposal learning."""
+
+        if not self.enabled:
+            return
+
+        action_name = self._action_pattern_name(action)
+        stress_name = stress_node or "Steady_State"
+        for metric, delta in kpi_delta.items():
+            if delta is None:
+                continue
+            delta_value = float(delta)
+            delta_name = self._kpi_delta_name(metric, delta_value)
+            positive = 1 if self._is_positive_delta(metric, delta_value) else 0
+            confidence_increment = 0.05 if positive else -0.03
+
+            cypher = """
+            MERGE (s:Stress {name: $stress_name})
+            MERGE (a:ActionPattern {name: $action_name})
+            SET a.last_episode_id = $episode_id,
+                a.last_month = $month
+            MERGE (k:KPIDelta {name: $delta_name})
+            SET k.metric = $metric
+            MERGE (s)-[:OBSERVED_WITH]->(a)
+            MERGE (a)-[r:MAY_CAUSE]->(k)
+            SET r.observations = coalesce(r.observations, 0) + 1,
+                r.positive_observations = coalesce(r.positive_observations, 0) + $positive,
+                r.last_delta = $delta_value,
+                r.last_episode_id = $episode_id,
+                r.last_month = $month,
+                r.confidence = CASE
+                    WHEN coalesce(r.confidence, $base_confidence) + $confidence_increment > 0.95 THEN 0.95
+                    WHEN coalesce(r.confidence, $base_confidence) + $confidence_increment < 0.05 THEN 0.05
+                    ELSE coalesce(r.confidence, $base_confidence) + $confidence_increment
+                END
+            """
+            params = {
+                "stress_name": stress_name,
+                "action_name": action_name,
+                "delta_name": delta_name,
+                "metric": metric,
+                "delta_value": delta_value,
+                "positive": positive,
+                "base_confidence": float(confidence),
+                "confidence_increment": confidence_increment,
+                "episode_id": int(episode_id or 0),
+                "month": int(month or 0),
+            }
+            self._run(cypher, params)
+
+            promote_cypher = """
+            MATCH (a:ActionPattern {name: $action_name})-[r:MAY_CAUSE]->(k:KPIDelta {name: $delta_name})
+            WHERE r.confidence >= 0.85 AND r.positive_observations >= 3
+            MERGE (a)-[c:CONFIRMED_CAUSE]->(k)
+            SET c.confidence = r.confidence,
+                c.observations = r.observations,
+                c.positive_observations = r.positive_observations,
+                c.last_episode_id = $episode_id,
+                c.last_month = $month
+            """
+            self._run(promote_cypher, params)
+
     def _ensure_indexes(self) -> None:
         indexes = [
             "CREATE INDEX shock_type_idx IF NOT EXISTS FOR (s:Shock) ON (s.shock_type)",
             "CREATE INDEX shock_mrr_tier_idx IF NOT EXISTS FOR (s:Shock) ON (s.mrr_tier)",
             "CREATE INDEX episode_policy_idx IF NOT EXISTS FOR (e:Episode) ON (e.policy)",
             "CREATE INDEX outcome_episode_idx IF NOT EXISTS FOR (o:Outcome) ON (o.episode_id)",
+            "CREATE INDEX stress_name_idx IF NOT EXISTS FOR (s:Stress) ON (s.name)",
+            "CREATE INDEX action_pattern_name_idx IF NOT EXISTS FOR (a:ActionPattern) ON (a.name)",
+            "CREATE INDEX kpi_delta_name_idx IF NOT EXISTS FOR (k:KPIDelta) ON (k.name)",
+            "CREATE INDEX causal_lever_name_idx IF NOT EXISTS FOR (c:CausalLever) ON (c.name)",
         ]
         for index in indexes:
             try:
                 self._run(index, {})
             except Exception:
                 pass
+
+    def _ensure_seed_edges(self) -> None:
+        """Seed sparse causal coverage for stress states before live evidence exists."""
+
+        seed_edges = [
+            {
+                "stress_name": "Cash_Shortage",
+                "lever_name": "Runway_Depletion",
+                "role": "CFO",
+                "confidence": 0.82,
+                "description": "Cash shortage raises runway risk and requires cash discipline.",
+            },
+            {
+                "stress_name": "Cash_Shortage",
+                "lever_name": "Hiring_Freeze_Recommended",
+                "role": "CFO",
+                "confidence": 0.76,
+                "description": "Cash shortage should limit new hiring costs.",
+            },
+            {
+                "stress_name": "Cash_Shortage",
+                "lever_name": "Marketing_Spend_Cut",
+                "role": "CMO",
+                "confidence": 0.68,
+                "description": "Cash shortage should reduce discretionary marketing spend.",
+            },
+            {
+                "stress_name": "Cash_Shortage",
+                "lever_name": "Product_Investment_Delay",
+                "role": "CPO",
+                "confidence": 0.60,
+                "description": "Cash shortage can require delaying product investment.",
+            },
+            {
+                "stress_name": "Churn_Spike",
+                "lever_name": "Tech_Debt_Remediation",
+                "role": "CPO",
+                "confidence": 0.72,
+                "description": "Churn spikes often trace back to product quality and tech debt issues.",
+            },
+            {
+                "stress_name": "Churn_Spike",
+                "lever_name": "Acquisition_Channel_Reallocation",
+                "role": "CMO",
+                "confidence": 0.62,
+                "description": "Churn spikes call for reallocating acquisition spend toward better-fit channels.",
+            },
+            {
+                "stress_name": "Churn_Spike",
+                "lever_name": "Cost_Structure_Review",
+                "role": "CFO",
+                "confidence": 0.58,
+                "description": "Churn spikes erode revenue and warrant a review of the cost structure.",
+            },
+            {
+                "stress_name": "Steady_State",
+                "lever_name": "Margin_Optimization_Review",
+                "role": "CFO",
+                "confidence": 0.60,
+                "description": "Steady state is a good time to tighten margins and cost discipline.",
+            },
+            {
+                "stress_name": "Steady_State",
+                "lever_name": "Growth_Channel_Diversification",
+                "role": "CMO",
+                "confidence": 0.65,
+                "description": "Steady state allows experimentation with new acquisition channels.",
+            },
+            {
+                "stress_name": "Steady_State",
+                "lever_name": "Product_Quality_Investment",
+                "role": "CPO",
+                "confidence": 0.70,
+                "description": "Steady state is a good time to invest in product quality and reduce future churn risk.",
+            },
+            {
+                "stress_name": "CAC_Pressure",
+                "lever_name": "Pricing_Power_Assessment",
+                "role": "CFO",
+                "confidence": 0.72,
+                "description": "High CAC pressure calls for a pricing review to improve unit economics.",
+            },
+            {
+                "stress_name": "CAC_Pressure",
+                "lever_name": "CAC_Reduction_Campaign",
+                "role": "CMO",
+                "confidence": 0.65,
+                "description": "CAC pressure requires shifting acquisition mix toward higher-ROI channels.",
+            },
+            {
+                "stress_name": "CAC_Pressure",
+                "lever_name": "Product_Retention_Investment",
+                "role": "CPO",
+                "confidence": 0.58,
+                "description": "Improving product retention raises LTV and offsets a high CAC.",
+            },
+            {
+                "stress_name": "Growth_Stall",
+                "lever_name": "Growth_Acceleration_Push",
+                "role": "CMO",
+                "confidence": 0.72,
+                "description": "Growth stall demands an aggressive acquisition and MRR expansion push.",
+            },
+            {
+                "stress_name": "Growth_Stall",
+                "lever_name": "Innovation_Pipeline_Build",
+                "role": "CPO",
+                "confidence": 0.65,
+                "description": "Growth stall calls for investing in the product innovation pipeline.",
+            },
+            {
+                "stress_name": "Growth_Stall",
+                "lever_name": "Burn_Rate_Reduction",
+                "role": "CFO",
+                "confidence": 0.58,
+                "description": "Growth stall requires burn discipline to extend runway while growth recovers.",
+            },
+        ]
+        cypher = """
+        UNWIND $edges AS edge
+        MERGE (s:Stress {name: edge.stress_name})
+        MERGE (l:CausalLever {name: edge.lever_name})
+        SET l.role = edge.role,
+            l.description = edge.description
+        MERGE (s)-[r:MAY_CAUSE]->(l)
+        ON CREATE SET
+            r.confidence = edge.confidence,
+            r.seed = true,
+            r.observations = 0
+        ON MATCH SET
+            r.seed = coalesce(r.seed, true),
+            r.confidence = CASE
+                WHEN coalesce(r.observations, 0) = 0 THEN edge.confidence
+                ELSE coalesce(r.confidence, edge.confidence)
+            END
+        """
+        try:
+            self._run(cypher, {"edges": seed_edges})
+        except Exception as exc:
+            print(f"[CausalGraphStore] Seed edge setup failed: {exc}")
+
+    @staticmethod
+    def _select_role_triples(
+        role: str,
+        triples_with_confidence: list[tuple[list[str], float]],
+        limit: int,
+    ) -> list[tuple[list[str], float]]:
+        keywords_by_role = {
+            "CFO": {
+                "cash",
+                "runway",
+                "burn",
+                "cost",
+                "hiring",
+                "price",
+                "pricing",
+                "capital",
+                "margin",
+            },
+            "CMO": {
+                "cac",
+                "marketing",
+                "ad",
+                "roi",
+                "growth",
+                "mrr",
+                "acquisition",
+                "channel",
+                "lead",
+            },
+            "CPO": {
+                "churn",
+                "retention",
+                "product",
+                "quality",
+                "innovation",
+                "tech",
+                "debt",
+                "nrr",
+                "r_and_d",
+                "rd",
+            },
+        }
+        keywords = keywords_by_role.get(role, set())
+        selected: list[tuple[list[str], float]] = []
+        for triple, confidence in triples_with_confidence:
+            # Skip the subject: it's the query's anchor (the stress node, for
+            # distance-1 triples) and identical across every candidate, so
+            # matching it tells us nothing about which role the triple
+            # belongs to - it only causes spurious matches when the stress
+            # node's name happens to share a substring with a role keyword
+            # (e.g. "cac_pressure" -> CMO's "cac", "steady_state" -> CMO's "ad").
+            text = " ".join(triple[1:]).lower()
+            if any(keyword in text for keyword in keywords):
+                selected.append((triple, confidence))
+            if len(selected) >= limit:
+                break
+        return selected
+
+    @staticmethod
+    def _action_pattern_name(action: Dict[str, Any]) -> str:
+        marketing = action.get("marketing", {})
+        hiring = action.get("hiring", {})
+        product = action.get("product", {})
+        pricing = action.get("pricing", {})
+
+        marketing_spend = float(marketing.get("spend", 0.0) or 0.0)
+        rd_spend = float(product.get("r_and_d_spend", 0.0) or 0.0)
+        hires = int(hiring.get("hires", 0) or 0)
+        price_change = float(pricing.get("price_change_pct", 0.0) or 0.0)
+
+        spend_bucket = "high" if marketing_spend >= 20_000 else "mid" if marketing_spend >= 5_000 else "low"
+        rd_bucket = "high" if rd_spend >= 20_000 else "mid" if rd_spend >= 5_000 else "low"
+        price_bucket = "up" if price_change > 0.01 else "down" if price_change < -0.01 else "flat"
+
+        return (
+            f"marketing_{spend_bucket}|rd_{rd_bucket}|"
+            f"hires_{hires}|price_{price_bucket}"
+        )
+
+    @staticmethod
+    def _kpi_delta_name(metric: str, delta_value: float) -> str:
+        if abs(delta_value) < 1e-9:
+            direction = "Flat"
+        elif delta_value > 0:
+            direction = "Up"
+        else:
+            direction = "Down"
+        return f"{metric}_{direction}"
+
+    @staticmethod
+    def _is_positive_delta(metric: str, delta_value: float) -> bool:
+        metric_lower = metric.lower()
+        if "churn" in metric_lower:
+            return delta_value < 0
+        return delta_value > 0
 
     def _run(self, cypher: str, params: Dict[str, Any]) -> None:
         if not self.driver:
