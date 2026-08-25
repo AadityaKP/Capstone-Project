@@ -18,3 +18,5 @@ data/
 chroma_db_founder/
 backups/
 audit_*.json
+*.pdf
+calibration/sources/

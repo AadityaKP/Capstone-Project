@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "notes": [
+    "Every value is either printed in a cited source (confidence 'observed') or absent (null).",
+    "Nothing here is interpolated or assumed yet. When a value is filled by inference rather than",
+    "read from a page, its confidence must say so, and the UI must render it differently - the same",
+    "rule already applied to MAY_CAUSE edges in the causal graph.",
+    "Spend benchmarks are company-level, not ARPA-banded: SaaS Capital segments by funding type and",
+    "ARR, not by ARPA. They are kept in their own object rather than forced into the ARPA bands, so",
+    "no value is attributed to a segmentation its source never used.",
+    "Percent-of-ARR converts directly to percent-of-MRR for a monthly figure: annual spend of",
+    "0.08 * ARR = 0.08 * 12 * MRR, so monthly spend is 0.08 * MRR."
+  ],
+
+  "spend_benchmarks": {
+    "total_spend_pct_of_arr": {
+      "bootstrapped": {"p50": 96},
+      "equity_backed": {"p50": 101},
+      "confidence": "observed",
+      "source": {
+        "publisher": "SaaS Capital",
+        "report": "2026 Spending Benchmarks for Private B2B SaaS Companies (15th annual survey)",
+        "year": 2026,
+        "page_or_figure": "How Much Do Private SaaS Companies Spend?",
+        "n": 1000
+      }
+    },
+    "by_department_pct_of_arr": {
+      "sales": {"p50": 15},
+      "marketing": {"p50": 8},
+      "customer_support_success": {"p50": 9},
+      "rnd": {"p50": 22},
+      "g_and_a": {"p50": 15},
+      "hosting": {"p50": 5},
+      "devops": {"p50": 4},
+      "pro_services_cogs": {"p50": 5},
+      "other_cogs": {"p50": 3},
+      "confidence": "observed",
+      "source": {
+        "publisher": "SaaS Capital",
+        "report": "2026 Spending Benchmarks for Private B2B SaaS Companies",
+        "year": 2026,
+        "page_or_figure": "Private SaaS Company Spending by Department",
+        "n": 1000
+      }
+    },
+    "by_arr_band": [
+      {
+        "arr_min_usd": 3000000,
+        "arr_max_usd": 5000000,
+        "selling_pct_of_arr": {"p50": 12},
+        "marketing_pct_of_arr": {"p50": 8},
+        "rnd_pct_of_arr": {"p50": 24},
+        "g_and_a_pct_of_arr": {"p50": 15},
+        "confidence": "observed",
+        "source": {
+          "publisher": "SaaS Capital",
+          "report": "2026 Spending Benchmarks for Private B2B SaaS Companies",
+          "year": 2026,
+          "page_or_figure": "SaaS Spending by ARR Levels",
+          "n": 1000
+        }
+      }
+    ]
+  },
+
+  "bands": [
+    {
+      "band_id": "arpa_lt_25",
+      "arpa_min_usd": 0,
+      "arpa_max_usd": 25,
+      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_expansion_mrr_pct": {"p50": null},
+      "cac_payback_months": {"p50": null},
+      "gross_margin_pct": {"p50": null},
+      "marketing_spend_pct_of_arr": {"p50": null},
+      "total_spend_pct_of_arr": {"p50": null},
+      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
+      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
+      "confidence": "assumed"
+    },
+    {
+      "band_id": "arpa_25_100",
+      "arpa_min_usd": 25,
+      "arpa_max_usd": 100,
+      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_expansion_mrr_pct": {"p50": null},
+      "cac_payback_months": {"p50": null},
+      "gross_margin_pct": {"p50": null},
+      "marketing_spend_pct_of_arr": {"p50": null},
+      "total_spend_pct_of_arr": {"p50": null},
+      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
+      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
+      "confidence": "assumed"
+    },
+    {
+      "band_id": "arpa_100_250",
+      "arpa_min_usd": 100,
+      "arpa_max_usd": 250,
+      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_expansion_mrr_pct": {"p50": null},
+      "cac_payback_months": {"p50": null},
+      "gross_margin_pct": {"p50": null},
+      "marketing_spend_pct_of_arr": {"p50": null},
+      "total_spend_pct_of_arr": {"p50": null},
+      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
+      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
+      "confidence": "assumed"
+    },
+    {
+      "band_id": "arpa_250_1000",
+      "arpa_min_usd": 250,
+      "arpa_max_usd": 1000,
+      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_expansion_mrr_pct": {"p50": null},
+      "cac_payback_months": {"p50": null},
+      "gross_margin_pct": {"p50": null},
+      "marketing_spend_pct_of_arr": {"p50": null},
+      "total_spend_pct_of_arr": {"p50": null},
+      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
+      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
+      "confidence": "assumed"
+    },
+    {
+      "band_id": "arpa_gt_1000",
+      "arpa_min_usd": 1000,
+      "arpa_max_usd": null,
+      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
+      "monthly_expansion_mrr_pct": {"p50": null},
+      "cac_payback_months": {"p50": null},
+      "gross_margin_pct": {"p50": null},
+      "marketing_spend_pct_of_arr": {"p50": null},
+      "total_spend_pct_of_arr": {"p50": null},
+      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
+      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
+      "confidence": "assumed"
+    }
+  ],
+
+  "unidentified": {
+    "price_elasticity": {
+      "value": null,
+      "reason": "No public SaaS price-elasticity dataset exists. The -0.9..-0.2 range currently in apply_pricing_effect is folk knowledge, not measurement. Only first-party A/B price tests identify it; until the decisions table carries price-change events with before/after conversion, this lever must be reported as unidentified rather than as a point estimate.",
+      "unblocked_by": "first-party price-change records (G2 decisions table)"
+    },
+    "marketing_saturation_absolute": {
+      "value": null,
+      "reason": "No public SaaS marketing-saturation dataset exists; open MMM datasets are synthetic and retail-shaped. Not a data gap - a dimensional error. gamma was a bare spend level with no reference to who is being bought. Reparameterised as customers_at_half_saturation * CAC so it scales with the company.",
+      "unblocked_by": "cac_payback_months + arpa + gross_margin_pct per band (already in schema)"
+    }
+  }
+}

@@ -25,6 +25,12 @@ class StartupEnv(gym.Env):
         super(StartupEnv, self).__init__()
         self.initial_config = initial_config or {}
         self.max_steps = int(self.initial_config.get("max_months", sim_config.MAX_STEPS))
+        # Opt-in: marketing response anchored to the company's own customers and
+        # CAC rather than to absolute dollar constants. Off by default so
+        # existing runs reproduce exactly (see business_logic.compute_new_mrr).
+        self.scale_aware_marketing = bool(
+            self.initial_config.get("scale_aware_marketing", False)
+        )
         
         self.action_space = spaces.Dict({
             "marketing": spaces.Dict({
@@ -115,7 +121,11 @@ class StartupEnv(gym.Env):
 
         business_logic.apply_recovery(self.state)
 
-        new_mrr = business_logic.compute_new_mrr(self.state, action.marketing)
+        new_mrr = business_logic.compute_new_mrr(
+            self.state,
+            action.marketing,
+            scale_aware=self.scale_aware_marketing,
+        )
 
         expansion = business_logic.compute_expansion_mrr(self.state, action.product)
         

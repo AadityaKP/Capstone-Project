@@ -32,6 +32,7 @@ from oracle.memory import OracleMemoryStore
 from oracle.oracle import Oracle
 
 from backend.database import connect, utc_now
+import calibration as cal
 
 # The founder product runs oracle_v4_causal with batched causal proposals.
 #
@@ -64,6 +65,12 @@ CALIBRATION_MRR = 50_000.0
 # CFOAgent's own rule: no hiring under 24 months of runway. Enforced on the
 # final action because an LLM proposal generator does not inherit it.
 HIRING_RUNWAY_GUARD_MONTHS = 24.0
+
+# How far above the published median a plan's discretionary spend may sit before
+# it stops being advice and starts being a way to run out of money. The median
+# itself comes from SaaS Capital's 2026 survey (n>1000) via calibration/bands.json;
+# this multiple is a product judgement, not a measurement, and is stated as such.
+DISCRETIONARY_SPEND_MEDIAN_MULTIPLE = 2.0
 
 
 def absolute_scale(mrr: float) -> float:
@@ -138,6 +145,38 @@ def _replay_history(boardroom: Boardroom, state: EnvState, history: list[dict]) 
     return seen
 
 
+def _apply_spend_ceiling(action: dict[str, Any], state: EnvState) -> dict[str, Any] | None:
+    """Cap marketing + product spend against the published median.
+
+    The audit's remaining pre-revenue violation was a plan spending 125% of MRR.
+    Median private B2B SaaS spends 8% of ARR on marketing and 22% on R&D, which
+    for a monthly figure is 8% and 22% of MRR - so a sane ceiling exists in
+    published data rather than having to be invented. Returns the applied
+    ceiling for the trace, or None when the benchmark is absent (in which case
+    nothing is capped, because an uncalibrated guard is worse than no guard).
+    """
+    benchmark = cal.discretionary_spend_pct_of_mrr()
+    if not benchmark.is_observed or state.mrr <= 0:
+        return None
+
+    ceiling = state.mrr * (float(benchmark.value) / 100.0) * DISCRETIONARY_SPEND_MEDIAN_MULTIPLE
+    marketing = float((action.get("marketing") or {}).get("spend", 0.0) or 0.0)
+    rnd = float((action.get("product") or {}).get("r_and_d_spend", 0.0) or 0.0)
+    total = marketing + rnd
+    if total <= ceiling:
+        return {"ceiling_usd": round(ceiling), "applied": False,
+                "median_pct_of_mrr": benchmark.value, "source": benchmark.citation()}
+
+    # Scale both down proportionally rather than picking a winner: the board's
+    # judgement about the product/marketing balance is preserved, only the
+    # magnitude is corrected.
+    factor = ceiling / total
+    action.setdefault("marketing", {})["spend"] = marketing * factor
+    action.setdefault("product", {})["r_and_d_spend"] = rnd * factor
+    return {"ceiling_usd": round(ceiling), "applied": True, "scaled_by": round(factor, 3),
+            "median_pct_of_mrr": benchmark.value, "source": benchmark.citation()}
+
+
 def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     """One analysis. Returns brief, decision trace and an honest llm_ok flag."""
     state = build_env_state(payload)
@@ -190,11 +229,12 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     llm_ok = bool(brief.get("parse_ok", False))
 
     trace = dict(trace)
+    final_action = trace.get("final_action") or action
+    trace["spend_ceiling"] = _apply_spend_ceiling(final_action, state)
+    trace["final_action"] = final_action
     trace["history_months_replayed"] = months_replayed
     trace["absolute_scale"] = scale
     trace["graph_summary"] = _graph_summary(trace)
-    trace["final_action"] = trace.get("final_action") or action
-
     return {
         "brief": brief,
         "trace": trace,

@@ -96,8 +96,54 @@ def hill_response(spend: float, alpha: float, beta: float, gamma: float) -> floa
     if spend <= 0: return 0.0
     return beta * (spend ** alpha) / (gamma ** alpha + spend ** alpha)
 
-def compute_new_mrr(state: EnvState, action: MarketingAction) -> float:
-    if action.channel == "ppc":
+# Share of its existing customer base a company could plausibly add in one month
+# at full marketing saturation. This is the one free parameter left in the
+# scale-aware curve below, and no public dataset fixes it - it is ASSUMED, and
+# must be reported as such wherever the calibration provenance is surfaced.
+SATURATION_ACQUISITION_RATE = 0.20
+
+
+def marketing_curve_params(state: EnvState, channel: str) -> tuple[float, float, float]:
+    """Hill parameters expressed in customers, not bare dollars.
+
+    The original constants were dimensionally wrong: gamma is a spend level, but
+    it was drawn from uniform(15_000, 50_000) with no reference to who was being
+    bought. A $12k-MRR company spending $3k therefore sat at ~1% of potential on
+    the brand curve, so every policy above the physics correctly concluded that
+    small companies should spend far more than they earn.
+
+    Reparameterised so both anchors scale with the company:
+
+        acquirable = current_customers * SATURATION_ACQUISITION_RATE
+        beta       = acquirable * price          # max new MRR per month
+        gamma      = (acquirable / 2) * CAC      # spend that buys half of them
+
+    gamma is now "what it costs to acquire half the customers you could plausibly
+    win this month", which is a quantity with units that make sense. alpha (curve
+    shape) is unchanged - it is a shape parameter, not a scale one.
+    """
+    current_customers = state.mrr / max(1.0, state.price)
+    acquirable = max(1.0, current_customers * SATURATION_ACQUISITION_RATE)
+    cac = max(1.0, state.cac)
+
+    beta = acquirable * max(1.0, state.price)
+    gamma = max(1.0, (acquirable / 2.0) * cac)
+
+    if channel == "ppc":
+        alpha = random.uniform(0.5, 1.0)
+    else:
+        # Brand converts more slowly at low spend and compounds harder at high
+        # spend; it also reaches further than performance at saturation.
+        alpha = random.uniform(1.5, 3.0)
+        beta *= 1.5
+
+    return alpha, beta, gamma
+
+
+def compute_new_mrr(state: EnvState, action: MarketingAction, scale_aware: bool = False) -> float:
+    if scale_aware:
+        alpha, beta, gamma = marketing_curve_params(state, action.channel)
+    elif action.channel == "ppc":
         alpha = random.uniform(0.5, 1.0)
         gamma = random.uniform(15_000, 50_000)
         beta = random.uniform(10_000, 50_000)
