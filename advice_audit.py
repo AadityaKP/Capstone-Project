@@ -79,9 +79,7 @@ def check(case: dict, result: dict) -> list[str]:
     hires = int((action.get("hiring") or {}).get("hires", 0) or 0)
     spend = marketing + rd
 
-    # Runway the founder actually faces, and the one the engine reasons with.
     real_runway = runway_months(case["cash"], case["costs"], mrr)
-    engine_runway = case["cash"] / max(1.0, case["headcount"] * SALARY_SLOT)
     post_plan_runway = runway_months(case["cash"], case["costs"] + spend, mrr)
 
     risk = str(brief.get("risk_level", ""))
@@ -91,9 +89,12 @@ def check(case: dict, result: dict) -> list[str]:
         violations.append(
             f"discretionary spend ${spend:,.0f} exceeds MRR ${mrr:,.0f} ({spend/mrr:.0%})"
         )
-    if hires > 0 and engine_runway < 12:
+    # Judge hiring on runway that counts revenue. The engine's own
+    # _estimate_runway_months ignores MRR and reads 8.9 months for a company
+    # with 100, which would flag healthy companies as violations.
+    if hires > 0 and real_runway < 24:
         violations.append(
-            f"recommends {hires} hire(s) at {engine_runway:.1f}mo runway (guard is 24mo)"
+            f"recommends {hires} hire(s) at {real_runway:.1f}mo runway (guard is 24mo)"
         )
     if risk in ("LOW",) and real_runway < 6:
         violations.append(f"risk={risk} but runway is {real_runway:.1f}mo")
@@ -106,7 +107,7 @@ def check(case: dict, result: dict) -> list[str]:
 
     # The plan contradicting the evidence rendered beside it.
     graph = result["trace"].get("graph_summary") or {}
-    effects = set(graph.get("effects") or [])
+    effects = set(graph.get("observed") or []) | set(graph.get("expected") or [])
     if hires > 0 and "Hiring_Freeze_Recommended" in effects:
         violations.append("recommends hiring while evidence says hiring was frozen")
     if marketing > mrr * 0.5 and "Marketing_Spend_Cut" in effects:
