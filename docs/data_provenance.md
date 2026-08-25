@@ -279,7 +279,24 @@ and the inverse distortion (small-company ppc paying 51.7% of MRR at $7,500) fel
 | Oracle prompt carries burn/runway | 6 |
 | Hiring guard on final action | 2 |
 | Sourced spend ceiling | 1 |
-| Churn benchmark in prompt | see §5.4 |
+| **Churn benchmark in prompt** | **0** |
+
+The published churn benchmark closed the final violation without a hard-coded rule. The
+planned fix had been a risk floor ("under 6 months runway cannot be LOW"); given the
+company's churn *and* what companies at its price point actually achieve, the model
+reaches the right read unaided.
+
+Risk now discriminates, which it did not at the start of this work:
+
+| Profile | Runway | Risk before | Risk after |
+|---|---|---|---|
+| cash_crisis | 1.1 mo | LOW | **HIGH** |
+| pre_revenue | 4.0 mo | LOW | **MEDIUM** |
+| small_struggling | 7.5 mo | LOW | **MEDIUM** |
+| small_healthy | 50 mo | LOW | LOW |
+| scaling | 100 mo | LOW | LOW |
+
+Every profile returned `LOW` before, including the company with 1.1 months of cash.
 
 ### 5.3 What the data revealed about the engine
 
@@ -287,11 +304,39 @@ Before the ceiling, the board recommended 26% of MRR on marketing and 40% on R&D
 against a 32% published median**. The ceiling binds on most profiles, which is evidence the
 over-spending tendency is being *clamped*, not *cured*.
 
-### 5.4 Confidence limits
+### 5.4 Reproducibility — measured, not assumed
 
-- Audit figures are **one run per profile**; `advice_audit.py --repeat N` has not been run.
-  Direction established, magnitudes provisional.
-- §5.1 figures are seeded and reproducible exactly.
+`advice_audit.py --repeat` was run after the calibration work: **5 repeats of
+`small_struggling` and 4 of `cash_crisis`, nine runs total.**
+
+| Profile | n | risk | marketing % | R&D % | hires |
+|---|---|---|---|---|---|
+| small_struggling | 5 | {MEDIUM} | {15} | {40} | {0} |
+| cash_crisis | 4 | {HIGH} | {0} | {0} | {0} |
+
+Every field collapses to a single value. The Oracle runs at `temperature: 0` and retrieval
+is deterministic, so identical inputs produce identical advice. **The audit magnitudes are
+reproducible, not indicative** — an earlier caveat in this document said otherwise and is
+withdrawn.
+
+Scope of the claim: determinism was measured within one process against one Ollama
+instance. It is not a guarantee across model reloads or a different Ollama build.
+
+§5.1 marketing figures are seeded and reproducible exactly.
+
+### 5.5 Test coverage
+
+The calibration store and the founder guards had no tests while already gating
+founder-facing advice. 48 were added (suite 36 → **84**), all deterministic, running in
+about 1.3s:
+
+- the annual→monthly conversion pinned against the naive division, plus a round-trip check
+  that surviving 12 months of the derived rate reproduces the published annual figure
+- a **monotonicity check across the six ARPA bands**, which would catch a mis-transcribed
+  row in the source table
+- every fails-safe path: absent values return `None`, half a benchmark is withheld,
+  extrapolation outside the printed ARR band is flagged, and the withdrawn department
+  table is asserted to stay withdrawn
 
 ---
 
@@ -358,7 +403,11 @@ Source PDFs are gitignored; re-verification requires the files from the project 
 | CAC payback, gross margin | not printed in any supplied source | CAC still comes from founder input only |
 | Real founder-scale rows | Flippa ToS decision | memory corpus stays simulator-derived |
 | Price elasticity | first-party A/B tests | lever unidentified; must not be presented as estimated |
-| Audit variance | `--repeat N` run | magnitudes provisional |
 
-Two of these will not close by acquiring anything: price elasticity requires running
-experiments, and audit variance requires spending compute.
+Price elasticity will not close by acquiring anything — it requires running experiments.
+
+Audit variance has since been **closed by measurement**: see §5.4. Nine runs, zero
+variation.
+
+**None of these gaps blocks the current build.** They gate two future pieces of work:
+a trustworthy price lever, and regeneration of the memory corpus at founder scale.
