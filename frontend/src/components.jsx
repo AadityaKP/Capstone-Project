@@ -13,7 +13,7 @@ import {
 import {
   RISK, OUTCOME, FOCUS_LABELS, CHANNEL_COPY, DOMAIN_META,
   confidenceBand, refreshReasonCopy, briefSourceCopy, scaleWord,
-  guardBullets, rewriteMemory, SIMULATED_PREFIX
+  guardBullets, rewriteMemory, SIMULATED_PREFIX, causalEvidenceCopy
 } from "./copy.js";
 
 // ---- small primitives ----
@@ -266,8 +266,8 @@ export function FocusBar({ weights }) {
 
 export function EvidenceList({ analysis }) {
   const memories = analysis?.trace?.retrieved_memories || [];
-  const graph = analysis?.trace?.graph_summary || null;
-  if (!memories.length && !graph) {
+  const graphSentence = causalEvidenceCopy(analysis?.trace?.graph_summary);
+  if (!memories.length && !graphSentence) {
     return <p className="empty-copy">No similar simulated situations yet — evidence builds up as analyses run.</p>;
   }
   return (
@@ -282,10 +282,10 @@ export function EvidenceList({ analysis }) {
           </div>
         );
       })}
-      {graph && (
+      {graphSentence && (
         <div className="evidence-card">
           <span className="outcome-dot blue">◆</span>
-          <p>{graph}</p>
+          <p>{graphSentence}</p>
         </div>
       )}
     </div>

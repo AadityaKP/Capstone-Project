@@ -22,6 +22,8 @@ FOUNDER_CHROMA_PATH = os.environ.get(
     "FOUNDER_CHROMA_PATH", os.path.join(ROOT_DIR, "chroma_db_founder")
 )
 
+from agents.causal_proposal_agents import BatchedCausalProposalGenerator
+from agents.llm_client import create_llm_client
 from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
 from boardroom.boardroom import Boardroom
 from env import business_logic
@@ -31,10 +33,21 @@ from oracle.oracle import Oracle
 
 from backend.database import connect, utc_now
 
-# The founder product runs oracle_v4: v4 reasoning without the causal graph
-# store, which only oracle_v4_causal instantiates. Keeping it off means founder
-# analyses write nothing to the shared Neo4j graph.
-ORACLE_MODE = os.getenv("FOUNDER_ORACLE_MODE", "oracle_v4")
+# The founder product runs oracle_v4_causal with batched causal proposals.
+#
+# Mode choice matters here. Plain oracle_v4_causal reads the graph only through
+# build_graph_context(), which returns empty without an active shock - and a
+# founder's monthly review has no shock - so the graph would contribute nothing.
+# The batched causal generator instead queries role-specific evidence keyed on a
+# stress node derived from the founder's own numbers (Cash_Shortage,
+# Churn_Spike, CAC_Pressure...), which needs no shock and grounds every
+# analysis.
+#
+# This path is read-only against Neo4j: graph writes require an active shock
+# label or Oracle.end_episode(), and one Boardroom.decide() triggers neither.
+# Set FOUNDER_ORACLE_MODE=oracle_v4 to run without Neo4j entirely.
+ORACLE_MODE = os.getenv("FOUNDER_ORACLE_MODE", "oracle_v4_causal")
+USE_CAUSAL_PROPOSALS = ORACLE_MODE == "oracle_v4_causal"
 
 # One analysis per request, so the Oracle must refresh on every call rather
 # than on its usual multi-month cadence.
@@ -138,6 +151,13 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         ),
     )
 
+    proposal_generator = None
+    if USE_CAUSAL_PROPOSALS:
+        proposal_generator = BatchedCausalProposalGenerator(
+            create_llm_client("ollama", "llama3.1:8b"),
+            scale=scale,
+        )
+
     boardroom = Boardroom(
         [
             CFOProposalAgent(scale=scale),
@@ -148,6 +168,7 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         oracle_mode=ORACLE_MODE,
         oracle_frequency=ORACLE_FREQUENCY,
         oracle_instance=oracle,
+        proposal_generator=proposal_generator,
         scale_absolutes=scale,
     )
     boardroom.start_episode(episode_seed=None)
@@ -165,6 +186,7 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     trace = dict(trace)
     trace["history_months_replayed"] = months_replayed
     trace["absolute_scale"] = scale
+    trace["graph_summary"] = _graph_summary(trace)
     trace["final_action"] = trace.get("final_action") or action
 
     return {
@@ -173,6 +195,47 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         "llm_ok": llm_ok,
         "oracle_mode": ORACLE_MODE,
         "created_at": utc_now(),
+    }
+
+
+# Only causal edges belong in founder-facing evidence. OBSERVED_WITH links a
+# stress node to raw action-pattern names ("marketing_high|rd_high|hires_0"),
+# which is co-occurrence, not causation, and unreadable besides.
+CAUSAL_PREDICATES = {"MAY_CAUSE", "CONFIRMED_CAUSE"}
+
+
+def _graph_summary(trace: dict[str, Any]) -> dict[str, Any] | None:
+    """Causal evidence behind this analysis, as engine vocabulary.
+
+    Deliberately structured rather than prose: the enum-to-copy tables in
+    frontend/src/copy.js are the only sanctioned path from engine terms to the
+    screen (spec section 26), so this ships node names and lets the client
+    translate them.
+    """
+    contexts = trace.get("causal_contexts") or {}
+    if not contexts:
+        return None
+
+    effects: list[str] = []
+    confidences: list[float] = []
+    for context in contexts.values():
+        context = context or {}
+        confidence = context.get("confidence")
+        if confidence is not None:
+            confidences.append(float(confidence))
+        for triple in context.get("raw_triples") or []:
+            if len(triple) >= 3 and triple[1] in CAUSAL_PREDICATES:
+                if triple[2] not in effects:
+                    effects.append(triple[2])
+
+    if not effects:
+        return None
+
+    return {
+        "stress_node": trace.get("causal_stress_node"),
+        "effects": effects,
+        "confidence": (sum(confidences) / len(confidences)) if confidences else None,
+        "episodes": len(contexts),
     }
 
 

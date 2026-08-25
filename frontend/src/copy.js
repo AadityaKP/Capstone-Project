@@ -151,3 +151,54 @@ export const DOMAIN_META = {
 };
 
 export const CHANNEL_COPY = { ppc: "performance channels", brand: "brand building" };
+
+
+// Causal-graph vocabulary → founder copy (§26). The engine's Neo4j graph names
+// stress states and levers in its own terms; these are the only renderings of
+// them permitted on screen.
+export const CAUSAL_STRESS = {
+  Steady_State: "conditions were steady",
+  Cash_Shortage: "cash ran tight",
+  Churn_Spike: "churn spiked",
+  CAC_Pressure: "acquisition costs climbed",
+  Growth_Stall: "growth stalled"
+};
+
+export const CAUSAL_EFFECT = {
+  Runway_Depletion: "runway shortened",
+  Hiring_Freeze_Recommended: "hiring was frozen",
+  Marketing_Spend_Cut: "marketing spend was cut",
+  Product_Investment_Delay: "product investment was delayed",
+  Burn_Rate_Reduction: "burn was brought down",
+  Cost_Structure_Review: "costs were reviewed",
+  Margin_Optimization_Review: "margins were reworked",
+  CAC_Reduction_Campaign: "acquisition costs were attacked directly",
+  Acquisition_Channel_Reallocation: "spend moved between channels",
+  Growth_Channel_Diversification: "new channels were opened",
+  Growth_Acceleration_Push: "growth spend was pushed harder",
+  Pricing_Power_Assessment: "pricing was re-examined",
+  Product_Quality_Investment: "product quality was invested in",
+  Product_Retention_Investment: "retention work was funded",
+  Innovation_Pipeline_Build: "the product pipeline was built out",
+  Tech_Debt_Remediation: "technical debt was paid down"
+};
+
+// One sentence from the causal graph, or null when there is nothing to say.
+// Never renders a raw node name: an unmapped term is dropped rather than shown.
+export function causalEvidenceCopy(graph) {
+  if (!graph || !graph.stress_node) return null;
+  const stress = CAUSAL_STRESS[graph.stress_node];
+  if (!stress) return null;
+
+  const effects = (graph.effects || [])
+    .map((name) => CAUSAL_EFFECT[name])
+    .filter(Boolean)
+    .slice(0, 3);
+  if (!effects.length) return null;
+
+  const list = effects.length === 1
+    ? effects[0]
+    : `${effects.slice(0, -1).join(", ")} and ${effects[effects.length - 1]}`;
+
+  return `In past simulated runs where ${stress}, what most often followed was: ${list}.`;
+}

@@ -16,12 +16,18 @@ Three processes, two of which you start:
 | Frontend | Vite dev server (React) | 5173 | Yes |
 | Backend | FastAPI + SQLite | 8000 | Yes |
 | Ollama | Local LLM (`llama3.1:8b`) | 11434 | Runs as a service |
+| Neo4j | Causal graph | 7687 | Runs as a service |
 
-The frontend proxies `/api` to the backend. The backend calls Ollama for the one
-Oracle reasoning call per analysis.
+The frontend proxies `/api` to the backend. The backend calls Ollama for Oracle reasoning
+and batched causal proposals, and reads the Neo4j causal graph for evidence.
 
-**Neo4j is not required.** The founder product runs `oracle_v4`, which builds no causal
-graph store — only `oracle_v4_causal` does. You can leave Neo4j stopped.
+**Neo4j is read-only here.** Graph writes require an active shock label or
+`Oracle.end_episode()`, and one `Boardroom.decide()` triggers neither — verified by
+comparing node counts before and after a run (Part 0.5). Your research graph is safe, but
+back it up anyway.
+
+To run without Neo4j entirely, set `FOUNDER_ORACLE_MODE=oracle_v4`. You lose causal
+evidence; everything else works.
 
 ---
 
@@ -69,6 +75,23 @@ cp -r chroma_db chroma_db_founder
 If you have no `chroma_db` either, skip this — an empty store is created automatically and
 everything still runs, just without retrieved memories.
 
+### 0.5 Back up the causal graph
+
+The founder path only reads Neo4j, but the research graph is not reproducible:
+
+```bash
+venv\Scripts\python.exe neo4j_backup.py dump
+```
+
+Writes a timestamped JSON to `backups/`. After any test run, prove nothing changed:
+
+```bash
+venv\Scripts\python.exe neo4j_backup.py verify
+```
+
+Expected: `UNCHANGED - the graph was not written to.` To roll back,
+`neo4j_backup.py restore backups/<file>.json`.
+
 ---
 
 ## Part 1 — Start the stack
@@ -99,7 +122,7 @@ Expected:
 status             : ok
 database           : sqlite
 simulation_engine  : ready
-advisor_mode       : oracle_v4
+advisor_mode       : oracle_v4_causal
 ```
 
 Then check the proxy path the browser actually uses:
@@ -193,11 +216,20 @@ You land on **Advice**. Values will be close to these but may shift slightly bet
 
 - Position: **Low risk**, growth is accelerating, **High confidence**
 - Provenance line: *your first analysis · numbers from <today> · 1 estimated input*
-- **Product & retention** — invest ≈$6.0k (≈49% of MRR), marked *Priority*
-- **Marketing & growth** — ≈$7.5k on brand building (≈62% of MRR), *up from the ≈$3.0k you reported*
-- **Hiring** — wait on hiring
+- **Product & retention** — invest ≈$5.0k (≈40% of MRR), marked *Priority*
+- **Marketing & growth** — ≈$3.0k (≈26% of MRR)
 - **Pricing** — hold pricing
 - Watch-outs and opportunities written by the strategist (these vary run to run)
+
+Open **Evidence — what this is based on**. Under the *From simulations, not real companies*
+tag you should see a sentence drawn from the Neo4j causal graph:
+
+> In past simulated runs where cash ran tight, what most often followed was: runway
+> shortened, hiring was frozen and marketing spend was cut.
+
+That line is the proof Neo4j is contributing. If it is missing, the graph query returned
+nothing — check `neo4j_backup.py verify` shows a populated graph, and that
+`advisor_mode` reads `oracle_v4_causal`.
 
 Then check **Home** — same plan, plus runway (~8 mo), MRR $12k, churn 5.0%/mo, growth
 efficiency *Healthy* at ≈8.8×.
@@ -212,7 +244,7 @@ absolute dollars do not.
 venv\Scripts\python.exe -c "import sqlite3,json; c=sqlite3.connect('data/startup_society.db'); c.row_factory=sqlite3.Row; r=c.execute('SELECT id,llm_ok,oracle_mode FROM analyses ORDER BY created_at DESC LIMIT 1').fetchone(); print(dict(r))"
 ```
 
-Expect `llm_ok: 1` and `oracle_mode: oracle_v4`. `llm_ok: 0` means the strategist call
+Expect `llm_ok: 1` and `oracle_mode: oracle_v4_causal`. `llm_ok: 0` means the strategist call
 failed and you are looking at rules-only output (see 4.2).
 
 ---
@@ -294,6 +326,8 @@ it again from `chroma_db/`.
 | `llm_ok: 0` unexpectedly | Ollama down or model missing | `ollama list`, then `ollama serve` |
 | Acquisition cost shows `$0` | Currency formatter regression | Check the sub-$1k branch in `money()` in `frontend/src/derive.js` |
 | Advice recommends more than MRR | Calibration scaling not applied | Check `absolute_scale()` in `backend/advise_service.py` |
+| No causal sentence in Evidence | Neo4j down, or graph empty | `neo4j_backup.py verify`; check `advisor_mode` is `oracle_v4_causal` |
+| `[CausalGraphStore] Neo4j unavailable` in backend log | Neo4j not running | Start Neo4j, or set `FOUNDER_ORACLE_MODE=oracle_v4` |
 | Clicks do nothing after a branch switch | Vite hot-reload got stuck mid-merge | Hard-reload the page |
 | Blank page, console shows duplicate `createRoot` | Dev-only HMR artifact | Harmless; hard-reload clears it |
 
@@ -313,5 +347,10 @@ judge a result.
 - **Macro assumptions can surface as findings.** Watch-outs like "Low Unemployment Rate"
   derive from system defaults the founder never supplied. The screen labels the count as
   *estimated input*, but the item still reads as a finding about their business.
+- **The plan can contradict its own evidence.** On the reference run above, the board
+  recommended *adding* payroll while the Evidence panel said hiring was frozen — for a
+  company it had itself scored as `Cash_Shortage` with ~4 months runway by its own estimate.
+  The deterministic CFO guard (no hires under 24 months runway) returns zero here; the LLM
+  proposal generator overrode it. Worth watching on every run.
 - **Months are local-first.** Monthly snapshots live in browser localStorage; only analyses
   reach the server. Clearing browser data loses history that the database does not hold.

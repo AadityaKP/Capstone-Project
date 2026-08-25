@@ -12,12 +12,16 @@ class BatchedCausalProposalGenerator:
 
     ROLES = ("CFO", "CMO", "CPO")
 
-    def __init__(self, llm_client):
+    def __init__(self, llm_client, scale: float = 1.0):
         self.llm_client = llm_client
+        # scale carries the G11 calibration factor into the fallback path, so a
+        # dropped LLM call degrades to correctly-sized advice rather than to
+        # constants tuned for a ~$50k-MRR company.
+        self.scale = scale
         self.fallback_agents = {
-            "CFO": CFOProposalAgent(),
-            "CMO": CMOProposalAgent(),
-            "CPO": CPOProposalAgent(),
+            "CFO": CFOProposalAgent(scale=scale),
+            "CMO": CMOProposalAgent(scale=scale),
+            "CPO": CPOProposalAgent(scale=scale),
         }
         self.llm_calls = 0
         self.last_source = "none"
