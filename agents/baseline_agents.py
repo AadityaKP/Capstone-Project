@@ -4,7 +4,15 @@ from env.schemas import EnvState
 class BaseAgent:
     """
     Abstract interface for all C-suite agents.
+
+    `scale` scales the absolute dollar amounts these agents propose (spec G11).
+    They are tuned for a ~$50k-MRR company; a founder running at $12k MRR would
+    otherwise be told to spend more than the company earns. Product surfaces
+    pass mrr/50k; research runs leave it at 1.0 and are unaffected.
     """
+    def __init__(self, scale: float = 1.0):
+        self.scale = max(0.01, float(scale))
+
     def act(self, state: EnvState) -> Dict[str, Any]:
         """
         Given the current environment state, return a partial action dictionary.
@@ -32,7 +40,7 @@ class CFOAgent(BaseAgent):
             price_change = 0.05
 
         return {
-            "hiring": {"hires": hires, "cost_per_employee": 10000},
+            "hiring": {"hires": hires, "cost_per_employee": 10000 * self.scale},
             "pricing": {"price_change_pct": price_change}
         }
 
@@ -44,11 +52,11 @@ class CMOAgent(BaseAgent):
         ratio = state.ltv / max(state.cac, 1)
 
         if ratio > 4:
-            spend = 20000 
+            spend = 20000 * self.scale
         elif ratio > 2:
-            spend = 10000 
+            spend = 10000 * self.scale
         else:
-            spend = 2000  
+            spend = 2000 * self.scale
 
         channel = "ppc" if state.consumer_confidence < 90 else "brand"
 
@@ -64,13 +72,13 @@ class CPOAgent(BaseAgent):
         avg_churn = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
 
         if avg_churn > 0.04:
-            r_and_d = 15000 
+            r_and_d = 15000 * self.scale
         elif avg_churn > 0.02:
-            r_and_d = 8000  
+            r_and_d = 8000 * self.scale
         else:
-            r_and_d = 3000  
+            r_and_d = 3000 * self.scale
 
-        if state.cash < 200000:
+        if state.cash < 200000 * self.scale:
             r_and_d *= 0.5
 
         return {

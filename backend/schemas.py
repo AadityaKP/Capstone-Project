@@ -38,3 +38,38 @@ class SimulationCreate(BaseModel):
     episodes: int = Field(default=1, ge=1, le=25)
     seed_start: int = Field(default=0, ge=0)
     oracle_frequency: int = Field(default=5, ge=1, le=120)
+
+
+# Founder product (spec G1/G2). Fields mirror the client's buildAdvisePayload;
+# every one is optional-with-default because onboarding deliberately asks for a
+# minimum set and enriches later.
+class FounderConfig(BaseModel):
+    company_name: str = "My company"
+    initial_mrr: float = Field(default=0, ge=0)
+    initial_cash: float = Field(default=0, ge=0)
+    average_price: float = Field(default=50, gt=0)
+    cac: float | None = Field(default=None, ge=0)
+    ltv: float | None = Field(default=None, ge=0)
+    churn_enterprise: float = Field(default=0.01, ge=0, le=1)
+    churn_smb: float = Field(default=0.03, ge=0, le=1)
+    churn_b2c: float = Field(default=0.05, ge=0, le=1)
+    competitors: int = Field(default=5, ge=0)
+    product_quality: float = Field(default=0.5, ge=0, le=1)
+    initial_headcount: int = Field(default=1, ge=1, le=10000)
+    monthly_burn_override: float | None = Field(default=None, ge=0)
+    interest_rate: float | None = Field(default=None, ge=0, le=100)
+    consumer_confidence: float | None = Field(default=None, ge=0, le=200)
+
+
+class FounderHistoryEntry(BaseModel):
+    mrr: float | None = None
+    churn: float | None = None
+    entered_at: str | None = None
+
+
+class AdviseRequest(BaseModel):
+    company_id: str
+    company_age_months: int = Field(default=0, ge=0)
+    month_index: int = Field(default=0, ge=0)
+    config: FounderConfig
+    history: list[FounderHistoryEntry] = Field(default_factory=list)

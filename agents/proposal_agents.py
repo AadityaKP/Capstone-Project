@@ -55,8 +55,8 @@ class _LLMRationaleSupport:
 
 
 class CFOProposalAgent(CFOAgent, _LLMRationaleSupport):
-    def __init__(self, llm_client=None, use_llm: bool = False):
-        super().__init__()
+    def __init__(self, llm_client=None, use_llm: bool = False, scale: float = 1.0):
+        super().__init__(scale=scale)
         self._init_llm_support(llm_client=llm_client, use_llm=use_llm)
 
     def propose(self, state: EnvState) -> Proposal:
@@ -89,8 +89,8 @@ class CFOProposalAgent(CFOAgent, _LLMRationaleSupport):
 
 
 class CMOProposalAgent(CMOAgent, _LLMRationaleSupport):
-    def __init__(self, llm_client=None, use_llm: bool = False):
-        super().__init__()
+    def __init__(self, llm_client=None, use_llm: bool = False, scale: float = 1.0):
+        super().__init__(scale=scale)
         self._init_llm_support(llm_client=llm_client, use_llm=use_llm)
 
     def propose(self, state: EnvState) -> Proposal:
@@ -123,8 +123,8 @@ class CMOProposalAgent(CMOAgent, _LLMRationaleSupport):
 
 
 class CPOProposalAgent(CPOAgent, _LLMRationaleSupport):
-    def __init__(self, llm_client=None, use_llm: bool = False):
-        super().__init__()
+    def __init__(self, llm_client=None, use_llm: bool = False, scale: float = 1.0):
+        super().__init__(scale=scale)
         self._init_llm_support(llm_client=llm_client, use_llm=use_llm)
 
     def propose(self, state: EnvState) -> Proposal:

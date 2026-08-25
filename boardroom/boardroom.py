@@ -25,7 +25,13 @@ class Boardroom:
         enable_action_modifier: bool = True,
         enable_memory_retrieval: bool = True,
         proposal_generator=None,
+        scale_absolutes: float = 1.0,
     ):
+        # Spec G11. The absolute spend floors below are calibrated for a ~$50k
+        # MRR company; applied unscaled to a $12k-MRR founder they demand more
+        # than the company earns. Product surfaces pass mrr/50k here; research
+        # runs leave it at 1.0, which reproduces the original constants exactly.
+        self.scale_absolutes = max(0.01, float(scale_absolutes))
         self.agents = agents
         self.proposal_generator = proposal_generator
         self.oracle_mode = oracle_mode or ("oracle_v1" if use_oracle else "none")
@@ -686,7 +692,7 @@ class Boardroom:
     # Safeguards & Conflicts
     # -----------------------------
     def _apply_sanity_bounds(self, action: dict, state: EnvState) -> dict:
-        max_mkt = max(state.cash * 0.3, 20000)
+        max_mkt = max(state.cash * 0.3, 20000 * self.scale_absolutes)
         action["marketing"]["spend"] = min(action["marketing"].get("spend", 0), max_mkt)
         action["hiring"]["hires"] = min(action["hiring"].get("hires", 0), 10)
         action = self._apply_v4_causal_rd_cap(action, state)
@@ -697,7 +703,7 @@ class Boardroom:
             return action
         action.setdefault("product", {})
         rd_spend = max(0.0, float(action["product"].get("r_and_d_spend", 0.0)))
-        rd_cap = max(float(state.cash) * 0.25, 30_000.0)
+        rd_cap = max(float(state.cash) * 0.25, 30_000.0 * self.scale_absolutes)
         action["product"]["r_and_d_spend"] = min(rd_spend, rd_cap)
         return action
 
@@ -707,14 +713,14 @@ class Boardroom:
         # Dynamic R&D floor: strictly tied to % of MRR + deficit scaling
         # E.g. up to 10% of MRR floor when innovation deficit is huge
         rd_floor_mrr = state.mrr * (innovation_deficit * 0.10)
-        rd_floor_abs = 20000 + (innovation_deficit * 50000)
+        rd_floor_abs = (20000 + (innovation_deficit * 50000)) * self.scale_absolutes
         rd_floor = max(rd_floor_mrr, rd_floor_abs)
         
         # Ensure we always hit the floor minimum
         if action["product"].get("r_and_d_spend", 0) < rd_floor:
             action["product"]["r_and_d_spend"] = rd_floor
             
-        mkt_floor = max(5000.0, state.mrr * 0.02)
+        mkt_floor = max(5000.0 * self.scale_absolutes, state.mrr * 0.02)
         if action["marketing"].get("spend", 0) < mkt_floor:
             action["marketing"]["spend"] = mkt_floor
             

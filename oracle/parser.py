@@ -106,7 +106,8 @@ def _normalize_payload(data: dict) -> dict:
 
 
 def parse_llm_response(raw_text: str) -> OracleBrief:
-    """Parses LLM JSON out. Fallbacks to neutral brief on failure."""
+    """Parses LLM JSON out. Falls back to a neutral brief on failure, flagged
+    parse_ok=False so callers can tell a real read from a safe default (G3)."""
     try:
         text = _strip_markdown(raw_text)
         try:
@@ -120,4 +121,4 @@ def parse_llm_response(raw_text: str) -> OracleBrief:
         return OracleBrief(**_normalize_payload(data))
     except Exception as e:
         print(f"Oracle parsing failed: {e}. Falling back to default.")
-        return default_neutral_brief()
+        return default_neutral_brief(parse_ok=False)

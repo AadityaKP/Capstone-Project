@@ -91,8 +91,51 @@ def initialize_database() -> None:
                 FOREIGN KEY (run_id) REFERENCES simulation_runs(id) ON DELETE CASCADE
             );
 
+            -- Founder product tables (spec G2). Companies and their monthly
+            -- snapshots are the founder's own record; analyses store one
+            -- Boardroom.decide() result per snapshot.
+            CREATE TABLE IF NOT EXISTS companies (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                what_you_sell TEXT,
+                age_months INTEGER NOT NULL DEFAULT 0,
+                crowdedness TEXT,
+                maturity TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS company_months (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                company_id TEXT NOT NULL,
+                month_index INTEGER NOT NULL,
+                values_json TEXT NOT NULL,
+                entered_at TEXT NOT NULL,
+                UNIQUE (company_id, month_index),
+                FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS analyses (
+                id TEXT PRIMARY KEY,
+                company_id TEXT NOT NULL,
+                month_index INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                brief_json TEXT,
+                trace_json TEXT,
+                llm_ok INTEGER,
+                oracle_mode TEXT,
+                error TEXT,
+                created_at TEXT NOT NULL,
+                completed_at TEXT,
+                FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+            );
+
             CREATE INDEX IF NOT EXISTS idx_runs_created_at
                 ON simulation_runs(created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_months_company
+                ON company_months(company_id, month_index DESC);
+            CREATE INDEX IF NOT EXISTS idx_analyses_company
+                ON analyses(company_id, created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_monthly_run_episode
                 ON monthly_traces(run_id, episode, month);
             """

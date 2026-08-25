@@ -70,9 +70,20 @@ class OracleBrief(BaseModel):
     key_opportunities: List[str] = Field(default_factory=list)
     recommended_focus: List[str] = Field(default_factory=list)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    parse_ok: bool = Field(
+        default=True,
+        description=(
+            "False when this brief is the neutral fallback rather than parsed LLM "
+            "output (spec G3). Consumers must not present a parse_ok=False brief "
+            "as analysis - it carries no signal, only safe defaults."
+        ),
+    )
 
 
-def default_neutral_brief() -> OracleBrief:
+def default_neutral_brief(parse_ok: bool = False) -> OracleBrief:
+    """The safe fallback brief. parse_ok defaults to False because every current
+    caller reaches this on an LLM/parse failure; pass True only for a brief that
+    is genuinely neutral rather than unavailable."""
     return OracleBrief(
         risk_level=RiskLevel.MEDIUM,
         growth_outlook=GrowthOutlook.STABLE,
@@ -80,6 +91,7 @@ def default_neutral_brief() -> OracleBrief:
         innovation_urgency=RiskLevel.MEDIUM,
         macro_condition=MacroCondition.NEUTRAL,
         confidence=0.5,
+        parse_ok=parse_ok,
     )
 
 

@@ -10,7 +10,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.database import connect, initialize_database, parse_json_fields, row_to_dict, utc_now
-from backend.schemas import ScenarioCreate, SimulationCreate
+from backend.schemas import AdviseRequest, ScenarioCreate, SimulationCreate
+from backend.advise_service import ORACLE_MODE, run_analysis, store_analysis
 from backend.simulation_service import (
     SUPPORTED_POLICIES,
     create_run,
@@ -46,7 +47,12 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "database": "sqlite", "simulation_engine": "ready"}
+    return {
+        "status": "ok",
+        "database": "sqlite",
+        "simulation_engine": "ready",
+        "advisor_mode": ORACLE_MODE,
+    }
 
 
 @app.get("/api/config")
@@ -62,6 +68,61 @@ def config() -> dict:
             "oracle_v4_causal",
         ],
     }
+
+
+@app.post("/api/advise")
+def advise(payload: AdviseRequest) -> dict:
+    """One board analysis of a founder's current numbers (G1).
+
+    Runs synchronously: a single Boardroom.decide() with one Oracle call takes
+    roughly 20-90s on the local model, inside the client's 120s budget. The
+    client renders an honest failure state on timeout rather than a fake brief.
+    """
+    now = utc_now()
+    with connect() as connection:
+        connection.execute(
+            """
+            INSERT INTO companies (id, name, age_months, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                name = excluded.name,
+                age_months = excluded.age_months,
+                updated_at = excluded.updated_at
+            """,
+            (
+                payload.company_id,
+                payload.config.company_name,
+                payload.company_age_months,
+                now,
+                now,
+            ),
+        )
+
+    try:
+        result = run_analysis(payload.model_dump())
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Analysis engine unavailable: {exc}",
+        ) from exc
+
+    analysis_id = store_analysis(payload.company_id, payload.month_index, result)
+    return {"analysis": {**result, "id": analysis_id}}
+
+
+@app.get("/api/companies/{company_id}/analyses")
+def company_analyses(company_id: str, limit: int = Query(default=20, ge=1, le=100)) -> list[dict]:
+    with connect() as connection:
+        rows = connection.execute(
+            """
+            SELECT * FROM analyses WHERE company_id = ?
+            ORDER BY created_at DESC LIMIT ?
+            """,
+            (company_id, limit),
+        ).fetchall()
+    return [
+        parse_json_fields(dict(row), "brief_json", "trace_json") for row in rows
+    ]
 
 
 @app.get("/api/scenarios")
