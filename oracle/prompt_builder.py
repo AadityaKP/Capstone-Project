@@ -2,6 +2,17 @@ from env.schemas import EnvState
 from oracle.schemas import GraphContext, RetrievedMemoryCandidate, TrendContext
 
 
+def _runway_months(state: EnvState) -> str:
+    """Months of cash left at the engine's own burn convention (headcount slots
+    of $8k). Matches Boardroom._estimate_runway_months so prompt and guards
+    reason about the same number."""
+    burn = max(1.0, state.headcount * 8000.0)
+    net_burn = burn - state.mrr
+    if net_burn <= 0:
+        return "cash-flow positive"
+    return f"{state.cash / net_burn:.1f}"
+
+
 def build_prompt(
     state: EnvState,
     mode: str = "oracle_v1",
@@ -9,6 +20,7 @@ def build_prompt(
     memories: list[RetrievedMemoryCandidate] | None = None,
     shock_label: str | None = None,
     graph_context: GraphContext | None = None,
+    include_burn_context: bool = False,
 ) -> str:
     avg_churn = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
     previous_mrr = (
@@ -53,6 +65,18 @@ def build_prompt(
         "Current State:",
         f"- MRR: {state.mrr:,.0f}",
         f"- Cash: {state.cash:,.0f}",
+        # Without burn the model cannot derive runway, and cash alone reads as
+        # healthy at any size: $45k looks fine until you see $70k/month of costs.
+        # Off by default so research prompts stay byte-identical.
+        *(
+            [
+                f"- Monthly burn: {state.headcount * 8000.0:,.0f}",
+                f"- Runway: {_runway_months(state)} months of cash at the current burn",
+                f"- Company age: {state.months_elapsed} months",
+            ]
+            if include_burn_context
+            else []
+        ),
         f"- CAC: {state.cac:.1f}",
         f"- LTV: {state.ltv:,.0f}",
         f"- Churn (Avg): {avg_churn:.3f}",

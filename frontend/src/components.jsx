@@ -266,8 +266,8 @@ export function FocusBar({ weights }) {
 
 export function EvidenceList({ analysis }) {
   const memories = analysis?.trace?.retrieved_memories || [];
-  const graphSentence = causalEvidenceCopy(analysis?.trace?.graph_summary);
-  if (!memories.length && !graphSentence) {
+  const graphLines = causalEvidenceCopy(analysis?.trace?.graph_summary);
+  if (!memories.length && !graphLines.length) {
     return <p className="empty-copy">No similar simulated situations yet — evidence builds up as analyses run.</p>;
   }
   return (
@@ -282,12 +282,14 @@ export function EvidenceList({ analysis }) {
           </div>
         );
       })}
-      {graphSentence && (
-        <div className="evidence-card">
-          <span className="outcome-dot blue">◆</span>
-          <p>{graphSentence}</p>
+      {graphLines.map((line) => (
+        <div className={`evidence-card ${line.kind}`} key={line.kind}>
+          <span className={`outcome-dot ${line.kind === "observed" ? "blue" : "grey"}`}>
+            {line.kind === "observed" ? "◆" : "◇"}
+          </span>
+          <p>{line.text}</p>
         </div>
-      )}
+      ))}
     </div>
   );
 }

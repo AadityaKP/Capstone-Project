@@ -26,12 +26,19 @@ class Boardroom:
         enable_memory_retrieval: bool = True,
         proposal_generator=None,
         scale_absolutes: float = 1.0,
+        hiring_runway_guard_months: float | None = None,
     ):
         # Spec G11. The absolute spend floors below are calibrated for a ~$50k
         # MRR company; applied unscaled to a $12k-MRR founder they demand more
         # than the company earns. Product surfaces pass mrr/50k here; research
         # runs leave it at 1.0, which reproduces the original constants exactly.
         self.scale_absolutes = max(0.01, float(scale_absolutes))
+        # CFOAgent refuses to hire under 24 months of runway, but that guard
+        # lives in the proposal and an LLM proposal generator can simply not
+        # apply it. Set this (product surfaces do) to re-assert the rule on the
+        # final action, after every proposal and modifier has had its say.
+        # None keeps research behaviour untouched.
+        self.hiring_runway_guard_months = hiring_runway_guard_months
         self.agents = agents
         self.proposal_generator = proposal_generator
         self.oracle_mode = oracle_mode or ("oracle_v1" if use_oracle else "none")
@@ -559,6 +566,23 @@ class Boardroom:
         return (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
 
     @staticmethod
+    def _net_runway_months(state: EnvState) -> float:
+        """Runway against NET burn, so revenue counts.
+
+        _estimate_runway_months divides cash by gross salary burn and ignores
+        MRR entirely: a company earning $200k against $220k of costs reads as
+        8.9 months there when it actually has 100. That understatement is
+        tolerable for a refresh trigger but not for a guard that blocks hiring,
+        so the guard uses this instead. Left separate rather than fixing the
+        original, which research runs depend on.
+        """
+        burn = max(1.0, state.headcount * 8000.0)
+        net_burn = burn - state.mrr
+        if net_burn <= 0:
+            return float("inf")
+        return state.cash / net_burn
+
+    @staticmethod
     def _estimate_runway_months(state: EnvState) -> float:
         monthly_burn_estimate = max(1.0, float(state.headcount * 8000.0))
         return state.cash / monthly_burn_estimate
@@ -695,6 +719,12 @@ class Boardroom:
         max_mkt = max(state.cash * 0.3, 20000 * self.scale_absolutes)
         action["marketing"]["spend"] = min(action["marketing"].get("spend", 0), max_mkt)
         action["hiring"]["hires"] = min(action["hiring"].get("hires", 0), 10)
+        if (
+            self.hiring_runway_guard_months is not None
+            and action["hiring"].get("hires", 0) > 0
+            and self._net_runway_months(state) < self.hiring_runway_guard_months
+        ):
+            action["hiring"]["hires"] = 0
         action = self._apply_v4_causal_rd_cap(action, state)
         return action
 

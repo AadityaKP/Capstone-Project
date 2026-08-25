@@ -61,6 +61,10 @@ DEFAULT_CONSUMER_CONFIDENCE = 100.0
 # The boardroom's absolute spend floors are calibrated at this MRR (spec G11).
 CALIBRATION_MRR = 50_000.0
 
+# CFOAgent's own rule: no hiring under 24 months of runway. Enforced on the
+# final action because an LLM proposal generator does not inherit it.
+HIRING_RUNWAY_GUARD_MONTHS = 24.0
+
 
 def absolute_scale(mrr: float) -> float:
     """Scale factor for the boardroom's absolute floors (G11).
@@ -149,6 +153,7 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
             run_id=str(uuid.uuid4()),
             chroma_path=FOUNDER_CHROMA_PATH,
         ),
+        include_burn_context=True,
     )
 
     proposal_generator = None
@@ -170,6 +175,7 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         oracle_instance=oracle,
         proposal_generator=proposal_generator,
         scale_absolutes=scale,
+        hiring_runway_guard_months=HIRING_RUNWAY_GUARD_MONTHS,
     )
     boardroom.start_episode(episode_seed=None)
 
@@ -201,7 +207,15 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
 # Only causal edges belong in founder-facing evidence. OBSERVED_WITH links a
 # stress node to raw action-pattern names ("marketing_high|rd_high|hires_0"),
 # which is co-occurrence, not causation, and unreadable besides.
-CAUSAL_PREDICATES = {"MAY_CAUSE", "CONFIRMED_CAUSE"}
+#
+# The two causal predicates are NOT interchangeable and must not be presented
+# as one thing. CONFIRMED_CAUSE is written from observed run outcomes.
+# MAY_CAUSE is largely seeded by CausalGraphStore._ensure_seed_edges() -- a
+# hand-authored prior with hand-assigned confidences, created "before live
+# evidence exists". Rendering a seeded prior as something that happened in past
+# runs would be a fabricated claim, so they travel separately.
+CONFIRMED_PREDICATE = "CONFIRMED_CAUSE"
+HYPOTHESIS_PREDICATE = "MAY_CAUSE"
 
 
 def _graph_summary(trace: dict[str, Any]) -> dict[str, Any] | None:
@@ -216,7 +230,8 @@ def _graph_summary(trace: dict[str, Any]) -> dict[str, Any] | None:
     if not contexts:
         return None
 
-    effects: list[str] = []
+    observed: list[str] = []
+    expected: list[str] = []
     confidences: list[float] = []
     for context in contexts.values():
         context = context or {}
@@ -224,18 +239,23 @@ def _graph_summary(trace: dict[str, Any]) -> dict[str, Any] | None:
         if confidence is not None:
             confidences.append(float(confidence))
         for triple in context.get("raw_triples") or []:
-            if len(triple) >= 3 and triple[1] in CAUSAL_PREDICATES:
-                if triple[2] not in effects:
-                    effects.append(triple[2])
+            if len(triple) < 3:
+                continue
+            subject, predicate, obj = triple[0], triple[1], triple[2]
+            if predicate == CONFIRMED_PREDICATE and obj not in observed:
+                observed.append(obj)
+            elif predicate == HYPOTHESIS_PREDICATE and obj not in expected:
+                expected.append(obj)
 
-    if not effects:
+    if not observed and not expected:
         return None
 
     return {
         "stress_node": trace.get("causal_stress_node"),
-        "effects": effects,
+        "observed": observed,
+        "expected": expected,
         "confidence": (sum(confidences) / len(confidences)) if confidences else None,
-        "episodes": len(contexts),
+        "roles": len(contexts),
     }
 
 

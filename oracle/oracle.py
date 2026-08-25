@@ -44,11 +44,15 @@ class Oracle:
         graph_store=None,
         llm=None,
         enable_memory_retrieval: bool = True,
+        include_burn_context: bool = False,
     ):
         self.mode = mode
         self.run_id = run_id or str(uuid.uuid4())
         self.llm = llm or LLMClient()
         self.enable_memory_retrieval = enable_memory_retrieval
+        # Product surfaces set this so the brief can reason about runway; the
+        # research prompt stays unchanged by default (see prompt_builder).
+        self.include_burn_context = include_burn_context
         self.state_history = deque(maxlen=5)
         self.pending_memories = deque()
         self.global_month = 0
@@ -248,6 +252,7 @@ class Oracle:
             memories=memories,
             shock_label=shock_label,
             graph_context=graph_context,
+            include_burn_context=self.include_burn_context,
         )
 
         if hasattr(self.llm, "complete"):

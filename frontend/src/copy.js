@@ -183,22 +183,44 @@ export const CAUSAL_EFFECT = {
   Tech_Debt_Remediation: "technical debt was paid down"
 };
 
-// One sentence from the causal graph, or null when there is nothing to say.
+function joinPhrases(items) {
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+function translate(names) {
+  return (names || []).map((name) => CAUSAL_EFFECT[name]).filter(Boolean).slice(0, 3);
+}
+
+// Sentences from the causal graph, or [] when there is nothing honest to say.
+//
+// Observed and expected links are worded differently on purpose. The graph's
+// CONFIRMED_CAUSE edges come from what actually happened in past simulated
+// runs; its MAY_CAUSE edges are largely a hand-authored prior seeded before any
+// evidence existed. Wording both as "what happened in past runs" would dress a
+// built-in assumption up as a finding.
+//
 // Never renders a raw node name: an unmapped term is dropped rather than shown.
 export function causalEvidenceCopy(graph) {
-  if (!graph || !graph.stress_node) return null;
+  if (!graph || !graph.stress_node) return [];
   const stress = CAUSAL_STRESS[graph.stress_node];
-  if (!stress) return null;
+  if (!stress) return [];
 
-  const effects = (graph.effects || [])
-    .map((name) => CAUSAL_EFFECT[name])
-    .filter(Boolean)
-    .slice(0, 3);
-  if (!effects.length) return null;
+  const lines = [];
+  const observed = translate(graph.observed);
+  const expected = translate(graph.expected);
 
-  const list = effects.length === 1
-    ? effects[0]
-    : `${effects.slice(0, -1).join(", ")} and ${effects[effects.length - 1]}`;
-
-  return `In past simulated runs where ${stress}, what most often followed was: ${list}.`;
+  if (observed.length) {
+    lines.push({
+      kind: "observed",
+      text: `In past simulated runs where ${stress}, what followed was: ${joinPhrases(observed)}.`
+    });
+  }
+  if (expected.length) {
+    lines.push({
+      kind: "expected",
+      text: `The board's working assumption when ${stress}: ${joinPhrases(expected)}. This is a built-in prior, not something measured in past runs.`
+    });
+  }
+  return lines;
 }
