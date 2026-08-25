@@ -300,10 +300,11 @@ def run_simulation(
     return_action_trace: bool = False,
     return_monthly_trace: bool = False,
     return_retrieval_trace: bool = False,
+    environment_config: dict | None = None,
 ):
     print(f"Running {num_episodes} episodes with Policy: {policy} (Seeds {seed_start}-{seed_start+num_episodes-1})...")
     
-    env = StartupEnv()
+    env = StartupEnv(initial_config=environment_config)
     agent = _build_agent_for_policy(policy, oracle_frequency, oracle_overrides=oracle_overrides)
     
     results = []
