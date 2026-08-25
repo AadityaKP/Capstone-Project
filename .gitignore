@@ -20,3 +20,4 @@ backups/
 audit_*.json
 *.pdf
 calibration/sources/
+variance_*.json
