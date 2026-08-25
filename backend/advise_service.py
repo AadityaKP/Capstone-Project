@@ -160,12 +160,18 @@ def _apply_spend_ceiling(action: dict[str, Any], state: EnvState) -> dict[str, A
         return None
 
     ceiling = state.mrr * (float(benchmark.value) / 100.0) * DISCRETIONARY_SPEND_MEDIAN_MULTIPLE
+    # The only spend breakdown that survived verification is printed for the
+    # $3-5M ARR band. Applying it to a founder two orders of magnitude smaller
+    # is extrapolation, and the trace has to say so rather than let the citation
+    # imply the figure was published for this company's size.
+    extrapolated = not cal.spend_band_applies_to(state.mrr * 12.0)
     marketing = float((action.get("marketing") or {}).get("spend", 0.0) or 0.0)
     rnd = float((action.get("product") or {}).get("r_and_d_spend", 0.0) or 0.0)
     total = marketing + rnd
     if total <= ceiling:
         return {"ceiling_usd": round(ceiling), "applied": False,
-                "median_pct_of_mrr": benchmark.value, "source": benchmark.citation()}
+                "median_pct_of_mrr": benchmark.value, "source": benchmark.citation(),
+                "source_band": "$3-5M ARR", "extrapolated": extrapolated}
 
     # Scale both down proportionally rather than picking a winner: the board's
     # judgement about the product/marketing balance is preserved, only the
@@ -174,7 +180,8 @@ def _apply_spend_ceiling(action: dict[str, Any], state: EnvState) -> dict[str, A
     action.setdefault("marketing", {})["spend"] = marketing * factor
     action.setdefault("product", {})["r_and_d_spend"] = rnd * factor
     return {"ceiling_usd": round(ceiling), "applied": True, "scaled_by": round(factor, 3),
-            "median_pct_of_mrr": benchmark.value, "source": benchmark.citation()}
+            "median_pct_of_mrr": benchmark.value, "source": benchmark.citation(),
+            "source_band": "$3-5M ARR", "extrapolated": extrapolated}
 
 
 def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
@@ -186,6 +193,11 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     # Memory isolation is injected, not inherited from CHROMA_PATH: .env.example
     # recommends pointing that at the research corpus, and a founder analysis
     # must never write there regardless of how the environment is configured.
+    # Published median churn for this company's price point, if a source covers
+    # it. None when it does not, in which case the prompt simply omits the line
+    # rather than showing an invented comparison.
+    churn_benchmark = cal.monthly_churn(state.price, kind="gross")
+
     oracle = Oracle(
         mode=ORACLE_MODE,
         memory_store=OracleMemoryStore(
@@ -193,6 +205,9 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
             chroma_path=FOUNDER_CHROMA_PATH,
         ),
         include_burn_context=True,
+        churn_benchmark_pct=(
+            churn_benchmark.value * 100.0 if churn_benchmark.is_observed else None
+        ),
     )
 
     proposal_generator = None
@@ -231,6 +246,19 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     trace = dict(trace)
     final_action = trace.get("final_action") or action
     trace["spend_ceiling"] = _apply_spend_ceiling(final_action, state)
+    trace["churn_benchmark"] = (
+        {
+            "median_monthly_pct": round(churn_benchmark.value * 100.0, 2),
+            "company_monthly_pct": round(
+                (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0 * 100.0, 2
+            ),
+            "arpa_band": cal.band_for_arpa(state.price),
+            "source": churn_benchmark.citation(),
+            "derivation": churn_benchmark.page_or_figure,
+        }
+        if churn_benchmark.is_observed
+        else None
+    )
     trace["final_action"] = final_action
     trace["history_months_replayed"] = months_replayed
     trace["absolute_scale"] = scale

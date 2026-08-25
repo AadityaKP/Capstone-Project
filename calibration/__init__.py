@@ -21,7 +21,11 @@ from typing import Any
 
 BANDS_PATH = Path(__file__).resolve().parent / "bands.json"
 
-ARPA_BANDS = ("arpa_lt_25", "arpa_25_100", "arpa_100_250", "arpa_250_1000", "arpa_gt_1000")
+# Follows ChartMogul's own segmentation, which splits $250-500 and $500-1k.
+ARPA_BANDS = (
+    "arpa_lt_25", "arpa_25_100", "arpa_100_250",
+    "arpa_250_500", "arpa_500_1000", "arpa_gt_1000",
+)
 
 
 @dataclass(frozen=True)
@@ -66,9 +70,23 @@ def band_for_arpa(arpa: float) -> str:
         return "arpa_25_100"
     if arpa < 250:
         return "arpa_100_250"
+    if arpa < 500:
+        return "arpa_250_500"
     if arpa < 1000:
-        return "arpa_250_1000"
+        return "arpa_500_1000"
     return "arpa_gt_1000"
+
+
+def annual_retention_to_monthly_churn(annual_retention_pct: float) -> float:
+    """Annual retention % -> monthly churn fraction.
+
+    The one place this conversion happens. Sources print ANNUAL retention;
+    the engine reasons in MONTHLY churn, and conflating the two is the most
+    likely way for a wrong number to reach a founder. Compounding, not
+    division: 54% annual retention is 5.0% monthly churn, not 46/12 = 3.8%.
+    """
+    retention = max(1e-6, min(1.0, annual_retention_pct / 100.0))
+    return 1.0 - retention ** (1.0 / 12.0)
 
 
 def _wrap(node: dict[str, Any] | None, value: Any, confidence: str | None = None) -> Calibrated:
@@ -84,19 +102,50 @@ def _wrap(node: dict[str, Any] | None, value: Any, confidence: str | None = None
     )
 
 
-def band_metric(arpa: float, metric: str, percentile: str = "p50") -> Calibrated:
-    """One banded metric, e.g. band_metric(40, 'monthly_gross_mrr_churn').
-
-    Returns Calibrated(value=None) until the band is filled, which is the
-    expected state for everything except the spend benchmarks today.
-    """
+def _arpa_band(arpa: float) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    node = load().get("arpa_bands", {})
     band_id = band_for_arpa(arpa)
-    for band in load().get("bands", []):
+    for band in node.get("bands", []):
         if band.get("band_id") == band_id:
-            raw = band.get(metric)
-            value = raw.get(percentile) if isinstance(raw, dict) else raw
-            return _wrap(band, value)
-    return Calibrated(value=None, confidence="assumed")
+            return band, node
+    return None, node
+
+
+def annual_retention(arpa: float, kind: str = "customer",
+                     percentile: str = "p50") -> Calibrated:
+    """Annual retention % as printed. kind: customer | gross | net."""
+    band, node = _arpa_band(arpa)
+    if band is None:
+        return Calibrated(value=None, confidence="assumed")
+    raw = band.get(f"annual_{kind}_retention_pct") or {}
+    return _wrap(node, raw.get(percentile), band.get("confidence"))
+
+
+def monthly_churn(arpa: float, kind: str = "customer",
+                  percentile: str = "p50") -> Calibrated:
+    """Monthly churn fraction derived from published annual retention.
+
+    kind: 'customer' (logo churn), 'gross' (gross MRR churn), 'net' (net MRR
+    churn - can be negative when expansion exceeds churn, which is why it is
+    never used as a churn input to the engine).
+    """
+    source = annual_retention(arpa, kind=kind, percentile=percentile)
+    if source.value is None:
+        return Calibrated(value=None, confidence="assumed")
+    return Calibrated(
+        value=annual_retention_to_monthly_churn(float(source.value)),
+        confidence=source.confidence,
+        publisher=source.publisher,
+        report=source.report,
+        year=source.year,
+        page_or_figure=f"{source.page_or_figure} (annual {source.value}% -> monthly)",
+        n=source.n,
+    )
+
+
+# The only spend breakdown that survived verification is the $3-5M ARR band.
+SPEND_BAND_ARR_MIN = 3_000_000
+SPEND_BAND_ARR_MAX = 5_000_000
 
 
 def department_spend_pct_of_arr(department: str) -> Calibrated:
@@ -104,11 +153,24 @@ def department_spend_pct_of_arr(department: str) -> Calibrated:
 
     Percent-of-ARR is also percent-of-MRR for a monthly figure: annual spend of
     0.08 * ARR is 0.08 * 12 * MRR, so monthly spend is 0.08 * MRR.
+
+    Sourced from the $3-5M ARR band - the only breakdown printed as text in the
+    report. Callers applying it to a company outside that band are extrapolating
+    and must say so; see spend_band_applies_to().
     """
-    node = load().get("spend_benchmarks", {}).get("by_department_pct_of_arr", {})
-    raw = node.get(department)
+    bands = load().get("spend_benchmarks", {}).get("by_arr_band", [])
+    if not bands:
+        return Calibrated(value=None, confidence="assumed")
+    node = bands[0]
+    raw = node.get(f"{department}_pct_of_arr")
     value = raw.get("p50") if isinstance(raw, dict) else raw
     return _wrap(node, value)
+
+
+def spend_band_applies_to(arr: float) -> bool:
+    """True when a company sits inside the ARR band the spend figures were
+    printed for. False means any use of them is extrapolation."""
+    return SPEND_BAND_ARR_MIN <= arr <= SPEND_BAND_ARR_MAX
 
 
 def total_spend_pct_of_arr(funding: str = "bootstrapped") -> Calibrated:
@@ -135,7 +197,7 @@ def discretionary_spend_pct_of_mrr() -> Calibrated:
         publisher=marketing.publisher,
         report=marketing.report,
         year=marketing.year,
-        page_or_figure="marketing + R&D, Private SaaS Company Spending by Department",
+        page_or_figure=f"marketing + R&D, {marketing.page_or_figure}",
         n=marketing.n,
     )
 

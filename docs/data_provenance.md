@@ -3,15 +3,18 @@
 What external data entered this project, how it was obtained, exactly where it landed in
 the code, and what measurably changed as a result.
 
-Scope: branch `founder-calibration`, through commit `0eafa08` (2026-08-25).
-Every claim below is checkable with a command in §7.
+Scope: branch `founder-calibration`, 2026-08-25.
+
+**Revision 2.** Source PDFs obtained and a verification pass run against them. One
+revision-1 figure did not survive and has been withdrawn (§2.3). ChartMogul retention data
+added (§2b). ChartMogul scraping was declined on Terms-of-Service grounds (§2c).
 
 **Reading guide.** The project distinguishes three kinds of number, and the distinction is
 enforced in code, not just documented:
 
 | Kind | Meaning | Example |
 |---|---|---|
-| **observed** | printed in a cited external source | marketing = 8% of ARR |
+| **observed** | printed in a cited source page | gross retention 64% at $25–100 ARPA |
 | **assumed** | chosen by us, no source | `SATURATION_ACQUISITION_RATE = 0.20` |
 | **unidentified** | no dataset exists; must not be estimated | price elasticity |
 
@@ -23,78 +26,70 @@ measurement.
 
 ## 1. Provenance summary
 
-| Parameter | Status | Source | Obtained | Lands in |
+| Parameter | Status | Source | Verified | Lands in |
 |---|---|---|---|---|
-| Discretionary spend ceiling | **observed** | SaaS Capital 2026 | 2026-08-25, public web page | `advise_service.py:148` |
-| Marketing saturation (`gamma`, `beta`) | **derived, not sourced** | dimensional fix, no data | 2026-08-25 | `business_logic.py:106` |
-| Saturation acquisition rate | **assumed** | none | — | `business_logic.py:103` |
-| Spend-ceiling multiple | **assumed** (product judgement) | none | — | `advise_service.py:73` |
-| Churn by ARPA band | **pending** | ChartMogul (email gate) | not yet obtained | `bands.json` → all `null` |
-| Price → churn coupling | **pending** | ChartMogul retention | not yet obtained | not yet wired |
-| Price elasticity | **unidentified** | no public dataset exists | — | `bands.json` → `unidentified` |
-
-Only **one** external source has been used so far. Everything else is either pending,
-assumed-and-labelled, or declared unobtainable.
+| Total spend % of ARR | **observed** | SaaS Capital 2026, p2 | yes — 2nd pass vs PDF | `bands.json` |
+| Spend by department | **observed, $3–5M ARR band only** | SaaS Capital 2026, p4 | yes — 2nd pass vs PDF | spend ceiling |
+| ~~Overall department medians~~ | **WITHDRAWN** | — | **failed verification** | removed |
+| Retention / churn by ARPA | **observed** | ChartMogul 2023, p30 | yes — read from PDF text | Oracle prompt, trace |
+| Marketing saturation | **derived, not sourced** | dimensional fix | n/a | `business_logic.py:106` |
+| Saturation acquisition rate | **assumed** | none | n/a | `business_logic.py:103` |
+| Spend-ceiling multiple | **assumed** (product judgement) | none | n/a | `advise_service.py:73` |
+| Price → churn coupling | **pending** | report not supplied | — | not wired |
+| Price elasticity | **unidentified** | no public dataset exists | n/a | `bands.json` |
 
 ---
 
-## 2. Source 1 — SaaS Capital (the only external data currently in the build)
+## 2. Source 1 — SaaS Capital
 
 **Publisher.** SaaS Capital
 **Report.** 2026 Spending Benchmarks for Private B2B SaaS Companies (15th annual survey)
-**URL.** `https://www.saas-capital.com/blog-posts/spending-benchmarks-for-private-b2b-saas-companies/`
-**Access.** Public blog page. No email gate, no account, no scraping — a single HTTP fetch
-of one page.
-**Date obtained.** 2026-08-25
-**Method.** `WebFetch` tool: fetches the URL, converts to markdown, and answers a prompt
-against it using a model. **This is a model-mediated extraction, not a manual read.**
-**Population.** "more than 1,000 SaaS companies", survey completed March 2026.
+**Population.** "more than 1,000 SaaS companies", survey completed March 2026
+**First access.** 2026-08-25, public blog page, single HTTP fetch, no gate, no scraping
+**Verification.** 2026-08-25, against the report PDF supplied by the project owner
 
-### Figures taken
+### 2.1 Confirmed
 
-| Figure | Value | Section of page |
-|---|---|---|
-| Total spend, bootstrapped | 96% of ARR | How Much Do Private SaaS Companies Spend? |
-| Total spend, equity-backed | 101% of ARR | same |
-| Marketing | 8% of ARR | Private SaaS Company Spending by Department |
-| R&D | 22% of ARR | same |
-| Sales | 15% of ARR | same |
-| Customer support/success | 9% of ARR | same |
-| G&A | 15% of ARR | same |
-| Hosting / DevOps | 5% / 4% of ARR | same |
-| Pro services / other CoGS | 5% / 3% of ARR | same |
-| $3–5M ARR band | 12% selling, 8% marketing, 24% R&D, 15% G&A | SaaS Spending by ARR Levels |
+- **96%** of ARR total median spend (bootstrapped), **101%** (equity-backed) — page 2
+- **$3–5M ARR band:** 5% hosting, 3% DevOps, 5% pro services CoGS, 3.5% other CoGS,
+  10% customer support/success, 12% selling, **8% marketing**, **24% R&D**, 15% G&A — page 4
 
-Stored verbatim in `calibration/bands.json` under `spend_benchmarks`, each with
-`confidence: "observed"` and a `source` block naming publisher, report, year, section and
-n.
-
-### Unit conversion, stated explicitly
+### 2.2 Unit conversion, stated explicitly
 
 Percent-of-ARR converts directly to percent-of-MRR for a **monthly** figure:
 
 ```
-annual marketing spend = 0.08 × ARR = 0.08 × 12 × MRR
+annual marketing spend  = 0.08 × ARR = 0.08 × 12 × MRR
 monthly marketing spend = 0.08 × MRR
 ```
 
-So the published 8% marketing + 22% R&D means a median company spends **30% of MRR per
-month** on marketing and product combined. This conversion is recorded in `bands.json`
-`notes` and in the loader docstring. It is the single most likely place for a silent error,
-which is why it is written down in three places.
+So marketing 8% + R&D 24% means a median $3–5M ARR company spends **32% of MRR per month**
+on marketing and product combined.
 
-### ⚠ Verification gap — action required
+### 2.3 Verification pass — one figure withdrawn
 
-The extraction methodology in `calibration_acquisition.md` §3 requires **two passes**: an
-extraction pass and a separate verification pass in a fresh context. These figures went
-through **one pass only**, because `WebFetch` performs a single model-mediated read.
+The second pass used `pypdf` text extraction rather than a model read, so the comparison is
+mechanical rather than another judgement call.
 
-**Before these numbers are defended as sourced, open the URL and confirm each figure in
-the table above against the page.** They currently gate a live product guard. Single-pass
-extraction has a real error rate on exactly this content — banded percentages in small
-multiples — and the failure mode is silent.
+**Withdrawn:** the *overall* department median table reported in revision 1 — sales 15%,
+marketing 8%, customer support 9%, R&D 22%, G&A 15%, hosting 5%, DevOps 4%, pro services
+5%, other CoGS 3%.
 
-### Licensing position
+**These figures do not appear anywhere in the PDF's text.** Pages 5–10 are chart images
+titled "Spend by Company Size" with no extractable content. They came from a single
+model-mediated read of the web page and could not be confirmed, so they have been removed
+from `bands.json`.
+
+This is precisely the failure the two-pass requirement exists to catch, and it had reached
+a live product guard. Recorded here rather than quietly corrected.
+
+**Consequence.** The spend ceiling now derives from the $3–5M ARR band: **32% of MRR**,
+replacing the withdrawn 30%. That band is two orders of magnitude larger than the target
+user, so every analysis records `trace.spend_ceiling.extrapolated = true` alongside
+`source_band: "$3-5M ARR"`. The number is observed; its application to a founder is
+extrapolation, and the two are not conflated.
+
+### 2.4 Licensing position
 
 Fitting shipped constants from published benchmark tables is normal practice; republishing
 the tables is not. This document cites specific figures with full attribution for an
@@ -104,55 +99,146 @@ gitignored so source material cannot be committed by accident.
 
 ---
 
-## 3. What is NOT from data
+## 2b. Source 2 — ChartMogul (retention by ARPA band)
 
-Recorded here so no reader mistakes them for measurements.
+**Publisher.** ChartMogul
+**Reports.** SaaS Benchmarks Report, 2023 edition (60pp); SaaS Retention Report: The New
+Normal, 2024, 2nd edition (28pp, 2,500+ SaaS businesses)
+**Access.** PDFs supplied by the project owner, obtained through ChartMogul's own
+email-gated download. **Not scraped** — see §2c.
+**Date read.** 2026-08-25
+**Method.** `pypdf` text extraction from local files. No model intermediary, so there is
+no extraction error surface requiring a second pass.
+
+### 2b.1 Figures taken — 2023 Benchmarks Report, page 30
+
+Table "Retention benchmarks by ARPA per month range", band headers printed in order
+(`<$25`, `$25-100`, `$100-250`, `$250-500`, `$500-1k`, `>$1k`), four percentile rows each
+for net, gross and customer retention — 72 values, stored verbatim in `bands.json` under
+`arpa_bands` as **annual retention percentages exactly as printed**.
+
+### 2b.2 The annual → monthly conversion
+
+Nothing is converted in the data file. The conversion lives in one inspectable function,
+`calibration.annual_retention_to_monthly_churn()`:
+
+```
+monthly_churn = 1 − (annual_retention)^(1/12)
+```
+
+Compounding, not division. **54% annual retention is 5.01% monthly churn**; the naive
+`(100 − 54)/12` gives 3.83%, understating churn by 31%. This is the error the acquisition
+methodology singled out as most likely, which is why the raw unit is preserved in the data
+file and the conversion has exactly one call site.
+
+Derived medians:
+
+| ARPA band | monthly logo churn | monthly gross MRR churn |
+|---|---|---|
+| <$25 | 5.01% | 5.61% |
+| $25–100 | 3.40% | 3.65% |
+| $100–250 | 2.70% | 2.70% |
+| $250–500 | 2.59% | 2.48% |
+| $500–1k | 2.15% | 1.95% |
+| >$1k | 1.95% | 1.64% |
+
+### 2b.3 Band-boundary deviation from the target schema
+
+The acquisition plan specified `arpa_250_1000` as one band. ChartMogul publishes `$250-500`
+and `$500-1k` separately. Merging two published medians would produce a number no source
+prints, so **the source's segmentation wins** and the schema was widened to six bands.
+
+### 2b.4 Age caveat
+
+The retention table is the **2023** edition. The 2024 retention report states NRR is
+declining across all ARR segments since, so these figures are likely optimistic for 2026.
+Its own ARPA chart (page 17) is an image with no extractable text and could not be used to
+update them. Recorded in `bands.json` under `arpa_bands.caveat`.
+
+### 2b.5 A discrepancy inside the source
+
+Page 34 prose says top-quartile <$25 ARPA net retention "only hit 70%", while the table on
+page 30 prints **68%**. The table is treated as authoritative. Noted so a reader comparing
+the report to our data is not surprised.
+
+### 2b.6 What could NOT be extracted
+
+- NRR by ARPA from the 2024 report — chart image, page 17
+- Price→churn coupling (GRR/NRR by price point) — that figure is from the *AI Churn Wave*
+  report, which was not supplied
+
+---
+
+## 2c. ChartMogul Terms of Service — scraping declined
+
+Checked `https://chartmogul.com/terms/` on 2026-08-25, before any automated collection.
+Clause 8 (Forbidden Use):
+
+> "use any robot, spider, site search/retrieval application, or other automated device,
+> process, or means to access, retrieve, scrape, or index any portion of ChartMogul or its
+> content"
+
+**No scraping was performed.** The prohibition is explicit and unconditional. All
+ChartMogul data in §2b comes from PDFs the project owner downloaded through ChartMogul's
+own distribution route, read locally.
+
+Reading a legitimately obtained file is a distinct act from automated site access. Citing
+figures from it for internal calibration, with attribution and without republishing the
+tables, sits on the same footing as the SaaS Capital material (§2.4).
+
+---
+
+## 3. What is NOT from data
 
 ### `SATURATION_ACQUISITION_RATE = 0.20` — assumed
 `env/business_logic.py:103`. The share of its existing customer base a company could
-plausibly add in one month at full marketing saturation. No public dataset fixes this.
-It is the one free parameter in the reparameterised marketing curve, and it is labelled
-assumed in code, in `bands.json`, and here.
-*Check available:* MicroConf's growth-by-MRR-band data (source 6, pending) would say
-whether 20%/month at saturation is plausible for sub-$1M ARR companies.
+plausibly add in one month at full marketing saturation. No public dataset fixes it. It is
+the one free parameter in the reparameterised marketing curve, labelled assumed in code, in
+`bands.json`, and here.
+*Check still available:* MicroConf's growth-by-MRR-band data would say whether 20%/month at
+saturation is plausible for sub-$1M ARR companies. Not supplied.
 
 ### `DISCRETIONARY_SPEND_MEDIAN_MULTIPLE = 2.0` — product judgement
 `backend/advise_service.py:73`. How far above the published median a plan may sit before
-being clamped. The **median** is observed; this **multiple** is not. It is a decision about
-how prescriptive the product should be, and is stated as such in the code comment.
+being clamped. The **median** is observed; this **multiple** is not.
 
 ### Price elasticity — unidentified, deliberately not estimated
-`apply_pricing_effect` draws `uniform(-0.9, -0.2)`. That range is folk knowledge, not
-measurement; no public SaaS price-elasticity dataset exists. Recorded in `bands.json`
-under `unidentified` with the reason and what would unblock it (first-party A/B price
-tests via the `decisions` table). **It has not been replaced with a plausible-looking
-number**, which would have been the easy and wrong move.
+`apply_pricing_effect` draws `uniform(-0.9, -0.2)`. That range is folk knowledge; no public
+SaaS price-elasticity dataset exists. Recorded in `bands.json` under `unidentified` with
+what would unblock it. **It has not been replaced with a plausible-looking number.**
 
 ---
 
 ## 4. Changes made as a result
 
-### 4.1 Discretionary spend ceiling — traced to data
+### 4.1 Churn benchmark in the Oracle prompt — traced to ChartMogul
 
-- **Commit** `0eafa08`
-- **Code** `backend/advise_service.py:148` `_apply_spend_ceiling()`
-- **Chain** SaaS Capital page → `bands.json` `spend_benchmarks.by_department_pct_of_arr`
-  → `calibration.discretionary_spend_pct_of_mrr()` → ceiling = `MRR × 30% × 2.0`
-- **Behaviour** plans above the ceiling scale marketing and R&D down proportionally, so
-  the board's product/marketing balance is preserved and only the magnitude changes
-- **Fails safe** if the benchmark is ever absent, `is_observed` is false and **nothing is
-  capped** — an uncalibrated guard is worse than no guard
-- **Audit trail** every analysis writes `trace.spend_ceiling` with the ceiling, whether it
-  bound, the scale factor, the median used, and the citation string
+- **Chain** ChartMogul p30 → `bands.json` `arpa_bands` → `annual_retention_to_monthly_churn()`
+  → `Oracle(churn_benchmark_pct=…)` → prompt line
+- **Why it matters** churn in isolation is uninterpretable: 5%/month is poor at $500 ARPA
+  and unremarkable at $10. The prompt now carries the published median for the company's
+  own price point, turning an absolute number into a judgement.
+- **Fails safe** `None` when no band covers the company; the prompt line is simply omitted
+  rather than showing an invented comparison
+- **Audit trail** `trace.churn_benchmark` records company rate, median, band, citation and
+  the annual→monthly derivation
 
-### 4.2 Marketing saturation — a fix the data did not provide
+### 4.2 Discretionary spend ceiling — traced to SaaS Capital
 
-This change is **not** traceable to a dataset, and the distinction matters.
+- **Code** `backend/advise_service.py` `_apply_spend_ceiling()`
+- **Ceiling** `MRR × 32% × 2.0`
+- **Behaviour** plans above it scale marketing and R&D down proportionally, preserving the
+  board's balance and correcting only magnitude
+- **Fails safe** if the benchmark is absent, nothing is capped — an uncalibrated guard is
+  worse than no guard
+- **Honesty** records `extrapolated: true` and `source_band` on every analysis
 
-`gamma = uniform(15_000, 50_000)` was a spend level with no reference to who was being
-bought — dimensionally wrong, not merely uncalibrated. No public dataset fixes it: open
-marketing-mix datasets (Robyn, Meridian, the arXiv synthetic generator) are synthetic and
-retail-shaped, so fitting to them would substitute another model's assumptions for ours.
+### 4.3 Marketing saturation — a fix the data did not provide
+
+Not traceable to a dataset, and the distinction matters. `gamma = uniform(15_000, 50_000)`
+was a spend level with no reference to who was being bought — dimensionally wrong, not
+merely uncalibrated. Open marketing-mix datasets are synthetic and retail-shaped, so
+fitting to them would substitute another model's assumptions for ours.
 
 Reparameterised at `env/business_logic.py:106` so both anchors scale with the company:
 
@@ -162,17 +248,16 @@ beta       = acquirable × price          # max new MRR per month
 gamma      = (acquirable / 2) × CAC      # spend that buys half of them
 ```
 
-Opt-in via `initial_config={"scale_aware_marketing": True}`; **off by default**, so prior
-runs reproduce exactly.
+Opt-in via `initial_config={"scale_aware_marketing": True}`; **off by default**.
 
 ---
 
 ## 5. Measured impact
 
-### 5.1 Marketing response — new MRR per dollar spent
+### 5.1 Marketing response
 
-Mean of 60 draws per cell, seeded. Response as a share of MRR, at equivalent *relative*
-spend (brand channel, spend ≈ 25% of MRR):
+Mean of 60 seeded draws per cell. Response as a share of MRR at equivalent *relative* spend
+(brand, ≈25% of MRR):
 
 | Company | Before | After |
 |---|---|---|
@@ -180,86 +265,85 @@ spend (brand channel, spend ≈ 25% of MRR):
 | $50k MRR | 25.5% | 21.3% |
 | $200k MRR | 21.8% | 21.3% |
 
-Before, identical relative spend produced materially different returns purely because of
-company size. After, it does not. The dead zone is also gone: $12k-MRR brand spend at
-$1,000 moved 0.9% → 2.6%, and the inverse distortion — small-company ppc paying 51.7% of
-MRR at $7,500 — fell to 10.8%.
+Identical relative spend previously produced materially different returns purely because of
+company size. The dead zone is also gone: $12k-MRR brand spend at $1,000 moved 0.9% → 2.6%,
+and the inverse distortion (small-company ppc paying 51.7% of MRR at $7,500) fell to 10.8%.
 
 ### 5.2 Advice-quality audit
 
-`advice_audit.py`, six company profiles, real advise path, no mocks.
+`advice_audit.py`, six profiles, real advise path, no mocks.
 
 | Build | Violations |
 |---|---|
 | Before any fixes | 9 |
-| After Oracle prompt carries burn/runway | 6 |
-| After hiring guard on final action | 2 |
-| After sourced spend ceiling (`0eafa08`) | **1** |
+| Oracle prompt carries burn/runway | 6 |
+| Hiring guard on final action | 2 |
+| Sourced spend ceiling | 1 |
+| Churn benchmark in prompt | see §5.4 |
 
-The one remaining: `pre_revenue` reads `LOW` risk at 4.0 months runway.
+### 5.3 What the data revealed about the engine
 
-**What the data revealed about the engine.** Before the ceiling, the board recommended
-26% of MRR on marketing and 40% on R&D — **66% against a 30% published median**. The
-ceiling now binds on 4 of 6 profiles, all landing at exactly 60%. That is evidence the
-over-spending tendency is being *clamped*, not *cured*: the proposal generator still wants
-to exceed 2× the median in most cases. Per-ARPA targets from ChartMogul would let the
-generator aim correctly instead of being corrected after the fact.
+Before the ceiling, the board recommended 26% of MRR on marketing and 40% on R&D — **66%
+against a 32% published median**. The ceiling binds on most profiles, which is evidence the
+over-spending tendency is being *clamped*, not *cured*.
 
-### 5.3 Confidence limits on these numbers
+### 5.4 Confidence limits
 
-- Audit figures are **one run per profile**. LLM output varies; `advice_audit.py --repeat N`
-  measures the spread and **has not been run**. Treat the direction as established and the
-  magnitudes as provisional.
+- Audit figures are **one run per profile**; `advice_audit.py --repeat N` has not been run.
+  Direction established, magnitudes provisional.
 - §5.1 figures are seeded and reproducible exactly.
-- 36/36 tests pass at `0eafa08`.
 
 ---
 
 ## 6. Integrity controls
 
-Mechanisms that stop an unsourced number from passing as sourced:
-
 1. **No silent defaults.** `calibration/__init__.py` returns `Calibrated(value=None)` for
-   anything absent. Callers must handle it; `_apply_spend_ceiling` declines to cap rather
-   than invent a ceiling.
+   anything absent; `_apply_spend_ceiling` declines to cap rather than invent a ceiling.
 2. **`is_observed` gates use.** A value is usable only if printed for that exact band.
-3. **Provenance travels with the value.** `Calibrated.citation()` carries publisher,
-   report and year to the UI.
-4. **Half a benchmark is not a benchmark.** `discretionary_spend_pct_of_mrr()` requires
-   *both* marketing and R&D to be observed, or returns `None`.
-5. **Every engine change is default-off.** `scale_aware_marketing`,
-   `include_burn_context`, `hiring_runway_guard_months`, `scale_absolutes` all default to
-   research behaviour, so prior results remain reproducible.
-6. **The same rule already applies to the causal graph.** Seeded `MAY_CAUSE` priors are
-   rendered as "the board's working assumption", distinct from observed `CONFIRMED_CAUSE`
-   edges — corrected in `109254a` after being found to overstate them.
+3. **Provenance travels with the value.** `Calibrated.citation()` carries publisher, report
+   and year to the UI; `page_or_figure` carries the derivation.
+4. **Half a benchmark is not a benchmark.** `discretionary_spend_pct_of_mrr()` requires both
+   components observed, or returns `None`.
+5. **Raw units are preserved.** Retention is stored as published (annual); conversion is
+   code with one call site, not a value baked into the data file.
+6. **Extrapolation is labelled.** `spend_band_applies_to()` distinguishes a figure printed
+   for a company's band from one borrowed from another.
+7. **Every engine change is default-off**, so prior research results remain reproducible.
+8. **The same rule already applies to the causal graph.** Seeded `MAY_CAUSE` priors render
+   as "the board's working assumption", distinct from observed `CONFIRMED_CAUSE` edges.
 
 ---
 
 ## 7. How to verify every claim here
 
 ```bash
-git log --oneline founder-calibration          # commits cited above
-git show 0eafa08 --stat                        # what the calibration commit touched
+git log --oneline founder-calibration
 ```
 
 ```bash
-venv\Scripts\python.exe -c "import calibration as c; d=c.discretionary_spend_pct_of_mrr(); print(d.value, d.confidence, d.citation())"
+venv\Scripts\python.exe -c "import calibration as c; d=c.monthly_churn(40,'gross'); print(round(d.value*100,2), d.confidence, d.page_or_figure)"
 ```
+
+Expect `3.65 observed p30, 'Retention benchmarks by ARPA per month range' (annual 64% -> monthly)`.
 
 ```bash
-venv\Scripts\python.exe -c "import calibration as c; b=c.band_metric(40,'monthly_gross_mrr_churn'); print(b.value, b.confidence)"
+venv\Scripts\python.exe -c "import calibration as c; print(c.annual_retention_to_monthly_churn(54)*100)"
 ```
 
-Expect `30.0 observed SaaS Capital, …` and `None assumed` — the second proving unfilled
-bands stay empty rather than defaulting.
+Expect `5.01…` — the compounding conversion, not `3.83`.
+
+```bash
+venv\Scripts\python.exe -c "import calibration as c; print(c.spend_band_applies_to(144000))"
+```
+
+Expect `False` — a $12k-MRR founder is outside the band the spend figures were printed for.
 
 ```bash
 venv\Scripts\python.exe advice_audit.py
 venv\Scripts\python.exe -m pytest tests/ -q
 ```
 
-The SaaS Capital page itself is public and can be opened directly to check §2.
+Source PDFs are gitignored; re-verification requires the files from the project owner.
 
 ---
 
@@ -267,13 +351,14 @@ The SaaS Capital page itself is public and can be opened directly to check §2.
 
 | Gap | Blocked on | Consequence while open |
 |---|---|---|
-| SaaS Capital figures single-pass | your manual check against the page | a live guard rests on unverified extraction |
-| Churn by ARPA band | 3 ChartMogul PDFs (email gate) | `bands.json` bands all `null`; churn stays hand-tuned |
-| Price → churn coupling | ChartMogul retention report | price changes still touch churn zero |
-| `SATURATION_ACQUISITION_RATE` sanity check | MicroConf PDF | the one free parameter stays assumed |
+| Price → churn coupling | ChartMogul *AI Churn Wave* report, not supplied | price changes still touch churn zero |
+| Retention data is 2023 | a current edition | figures likely optimistic; NRR has since declined |
+| Spend figures are $3–5M ARR | no published per-ARPA or small-ARR spend split | ceiling extrapolates, and says so |
+| `SATURATION_ACQUISITION_RATE` | MicroConf report, not supplied | the one free parameter stays assumed |
+| CAC payback, gross margin | not printed in any supplied source | CAC still comes from founder input only |
 | Real founder-scale rows | Flippa ToS decision | memory corpus stays simulator-derived |
 | Price elasticity | first-party A/B tests | lever unidentified; must not be presented as estimated |
 | Audit variance | `--repeat N` run | magnitudes provisional |
 
-Two of these are not data problems and will not close by acquiring anything: price
-elasticity requires running experiments, and audit variance requires spending compute.
+Two of these will not close by acquiring anything: price elasticity requires running
+experiments, and audit variance requires spending compute.

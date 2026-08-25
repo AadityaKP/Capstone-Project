@@ -45,6 +45,7 @@ class Oracle:
         llm=None,
         enable_memory_retrieval: bool = True,
         include_burn_context: bool = False,
+        churn_benchmark_pct: float | None = None,
     ):
         self.mode = mode
         self.run_id = run_id or str(uuid.uuid4())
@@ -53,6 +54,9 @@ class Oracle:
         # Product surfaces set this so the brief can reason about runway; the
         # research prompt stays unchanged by default (see prompt_builder).
         self.include_burn_context = include_burn_context
+        # Published median monthly churn for this company's ARPA band, or None
+        # when no source covers it. Never inferred - see calibration/bands.json.
+        self.churn_benchmark_pct = churn_benchmark_pct
         self.state_history = deque(maxlen=5)
         self.pending_memories = deque()
         self.global_month = 0
@@ -253,6 +257,7 @@ class Oracle:
             shock_label=shock_label,
             graph_context=graph_context,
             include_burn_context=self.include_burn_context,
+            churn_benchmark_pct=self.churn_benchmark_pct,
         )
 
         if hasattr(self.llm, "complete"):

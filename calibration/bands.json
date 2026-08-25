@@ -1,15 +1,23 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "notes": [
-    "Every value is either printed in a cited source (confidence 'observed') or absent (null).",
-    "Nothing here is interpolated or assumed yet. When a value is filled by inference rather than",
-    "read from a page, its confidence must say so, and the UI must render it differently - the same",
-    "rule already applied to MAY_CAUSE edges in the causal graph.",
-    "Spend benchmarks are company-level, not ARPA-banded: SaaS Capital segments by funding type and",
-    "ARR, not by ARPA. They are kept in their own object rather than forced into the ARPA bands, so",
-    "no value is attributed to a segmentation its source never used.",
-    "Percent-of-ARR converts directly to percent-of-MRR for a monthly figure: annual spend of",
-    "0.08 * ARR = 0.08 * 12 * MRR, so monthly spend is 0.08 * MRR."
+    "Every number in this file is printed verbatim in a cited source page. Nothing here is",
+    "converted, averaged or inferred - derivations (annual retention -> monthly churn) live in",
+    "calibration/__init__.py so the arithmetic is inspectable and testable rather than baked in.",
+    "",
+    "Retention figures are stored as ANNUAL retention percentages exactly as the source prints",
+    "them. The monthly/annual confusion is the single most likely failure in this pipeline, so",
+    "the raw unit is preserved and conversion is explicit and one place only.",
+    "",
+    "ARPA band boundaries follow ChartMogul's own segmentation, which splits $250-500 and",
+    "$500-1k. The original target schema merged those into one $250-1000 band; merging two",
+    "published medians would have produced a number no source prints, so the source's bands win.",
+    "",
+    "SCHEMA v2 CORRECTION: v1 carried an overall department-median spend table (sales 15%,",
+    "marketing 8%, R&D 22%, ...) taken from the SaaS Capital web page via a single",
+    "model-mediated read. Those figures could NOT be verified against the report PDF - pages",
+    "5-10 are chart images with no extractable text - so they have been removed. Only the",
+    "$3-5M ARR band breakdown and the total-spend figures survive verification."
   ],
 
   "spend_benchmarks": {
@@ -21,33 +29,20 @@
         "publisher": "SaaS Capital",
         "report": "2026 Spending Benchmarks for Private B2B SaaS Companies (15th annual survey)",
         "year": 2026,
-        "page_or_figure": "How Much Do Private SaaS Companies Spend?",
-        "n": 1000
-      }
-    },
-    "by_department_pct_of_arr": {
-      "sales": {"p50": 15},
-      "marketing": {"p50": 8},
-      "customer_support_success": {"p50": 9},
-      "rnd": {"p50": 22},
-      "g_and_a": {"p50": 15},
-      "hosting": {"p50": 5},
-      "devops": {"p50": 4},
-      "pro_services_cogs": {"p50": 5},
-      "other_cogs": {"p50": 3},
-      "confidence": "observed",
-      "source": {
-        "publisher": "SaaS Capital",
-        "report": "2026 Spending Benchmarks for Private B2B SaaS Companies",
-        "year": 2026,
-        "page_or_figure": "Private SaaS Company Spending by Department",
-        "n": 1000
+        "page_or_figure": "p2, 'Funding Source' takeaways",
+        "n": 1000,
+        "verified": "second pass against report PDF, 2026-08-25"
       }
     },
     "by_arr_band": [
       {
         "arr_min_usd": 3000000,
         "arr_max_usd": 5000000,
+        "hosting_pct_of_arr": {"p50": 5},
+        "devops_pct_of_arr": {"p50": 3},
+        "pro_services_cogs_pct_of_arr": {"p50": 5},
+        "other_cogs_pct_of_arr": {"p50": 3.5},
+        "customer_support_success_pct_of_arr": {"p50": 10},
         "selling_pct_of_arr": {"p50": 12},
         "marketing_pct_of_arr": {"p50": 8},
         "rnd_pct_of_arr": {"p50": 24},
@@ -57,95 +52,94 @@
           "publisher": "SaaS Capital",
           "report": "2026 Spending Benchmarks for Private B2B SaaS Companies",
           "year": 2026,
-          "page_or_figure": "SaaS Spending by ARR Levels",
-          "n": 1000
+          "page_or_figure": "p4, 'Spend by Company Size' takeaways",
+          "n": 1000,
+          "verified": "second pass against report PDF, 2026-08-25"
         }
+      }
+    ],
+    "unverified_removed": {
+      "what": "overall department medians across all company sizes",
+      "why": "reported by a single model-mediated read of the web page; the report PDF carries these only as chart images (pages 5-10, no extractable text), so the values could not be confirmed",
+      "effect": "the spend ceiling now derives from the $3-5M ARR band, which is printed, and records that it is being applied outside that band"
+    }
+  },
+
+  "arpa_bands": {
+    "source": {
+      "publisher": "ChartMogul",
+      "report": "SaaS Benchmarks Report",
+      "year": 2023,
+      "page_or_figure": "p30, 'Retention benchmarks by ARPA per month range'",
+      "n": null,
+      "verified": "read directly from report PDF text, 2026-08-25",
+      "unit": "annual retention percentage, as printed"
+    },
+    "caveat": "2023 edition. The 2024 retention report (The New Normal, 2,500+ businesses) shows NRR declining across segments since, so these retention figures are likely optimistic for 2026. Its own ARPA chart is an image with no extractable text, so it could not be used to update these.",
+    "bands": [
+      {
+        "band_id": "arpa_lt_25",
+        "arpa_min_usd": 0,
+        "arpa_max_usd": 25,
+        "annual_net_retention_pct": {"p10_best": 82, "p25_top": 68, "p50": 54, "p75_bottom": 38},
+        "annual_gross_retention_pct": {"p10_best": 73, "p25_top": 63, "p50": 50, "p75_bottom": 35},
+        "annual_customer_retention_pct": {"p10_best": 75, "p25_top": 65, "p50": 54, "p75_bottom": 38},
+        "confidence": "observed"
+      },
+      {
+        "band_id": "arpa_25_100",
+        "arpa_min_usd": 25,
+        "arpa_max_usd": 100,
+        "annual_net_retention_pct": {"p10_best": 101, "p25_top": 91, "p50": 73, "p75_bottom": 58},
+        "annual_gross_retention_pct": {"p10_best": 83, "p25_top": 76, "p50": 64, "p75_bottom": 51},
+        "annual_customer_retention_pct": {"p10_best": 84, "p25_top": 75, "p50": 66, "p75_bottom": 53},
+        "confidence": "observed"
+      },
+      {
+        "band_id": "arpa_100_250",
+        "arpa_min_usd": 100,
+        "arpa_max_usd": 250,
+        "annual_net_retention_pct": {"p10_best": 110, "p25_top": 95, "p50": 86, "p75_bottom": 69},
+        "annual_gross_retention_pct": {"p10_best": 86, "p25_top": 82, "p50": 72, "p75_bottom": 58},
+        "annual_customer_retention_pct": {"p10_best": 87, "p25_top": 82, "p50": 72, "p75_bottom": 58},
+        "confidence": "observed"
+      },
+      {
+        "band_id": "arpa_250_500",
+        "arpa_min_usd": 250,
+        "arpa_max_usd": 500,
+        "annual_net_retention_pct": {"p10_best": 112, "p25_top": 101, "p50": 87, "p75_bottom": 75},
+        "annual_gross_retention_pct": {"p10_best": 90, "p25_top": 84, "p50": 74, "p75_bottom": 64},
+        "annual_customer_retention_pct": {"p10_best": 90, "p25_top": 81, "p50": 73, "p75_bottom": 64},
+        "confidence": "observed"
+      },
+      {
+        "band_id": "arpa_500_1000",
+        "arpa_min_usd": 500,
+        "arpa_max_usd": 1000,
+        "annual_net_retention_pct": {"p10_best": 120, "p25_top": 104, "p50": 91, "p75_bottom": 80},
+        "annual_gross_retention_pct": {"p10_best": 94, "p25_top": 86, "p50": 79, "p75_bottom": 73},
+        "annual_customer_retention_pct": {"p10_best": 93, "p25_top": 85, "p50": 77, "p75_bottom": 68},
+        "confidence": "observed"
+      },
+      {
+        "band_id": "arpa_gt_1000",
+        "arpa_min_usd": 1000,
+        "arpa_max_usd": null,
+        "annual_net_retention_pct": {"p10_best": 126, "p25_top": 110, "p50": 100, "p75_bottom": 78},
+        "annual_gross_retention_pct": {"p10_best": 94, "p25_top": 91, "p50": 82, "p75_bottom": 68},
+        "annual_customer_retention_pct": {"p10_best": 92, "p25_top": 86, "p50": 79, "p75_bottom": 65},
+        "confidence": "observed"
       }
     ]
   },
 
-  "bands": [
-    {
-      "band_id": "arpa_lt_25",
-      "arpa_min_usd": 0,
-      "arpa_max_usd": 25,
-      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_expansion_mrr_pct": {"p50": null},
-      "cac_payback_months": {"p50": null},
-      "gross_margin_pct": {"p50": null},
-      "marketing_spend_pct_of_arr": {"p50": null},
-      "total_spend_pct_of_arr": {"p50": null},
-      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
-      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
-      "confidence": "assumed"
-    },
-    {
-      "band_id": "arpa_25_100",
-      "arpa_min_usd": 25,
-      "arpa_max_usd": 100,
-      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_expansion_mrr_pct": {"p50": null},
-      "cac_payback_months": {"p50": null},
-      "gross_margin_pct": {"p50": null},
-      "marketing_spend_pct_of_arr": {"p50": null},
-      "total_spend_pct_of_arr": {"p50": null},
-      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
-      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
-      "confidence": "assumed"
-    },
-    {
-      "band_id": "arpa_100_250",
-      "arpa_min_usd": 100,
-      "arpa_max_usd": 250,
-      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_expansion_mrr_pct": {"p50": null},
-      "cac_payback_months": {"p50": null},
-      "gross_margin_pct": {"p50": null},
-      "marketing_spend_pct_of_arr": {"p50": null},
-      "total_spend_pct_of_arr": {"p50": null},
-      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
-      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
-      "confidence": "assumed"
-    },
-    {
-      "band_id": "arpa_250_1000",
-      "arpa_min_usd": 250,
-      "arpa_max_usd": 1000,
-      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_expansion_mrr_pct": {"p50": null},
-      "cac_payback_months": {"p50": null},
-      "gross_margin_pct": {"p50": null},
-      "marketing_spend_pct_of_arr": {"p50": null},
-      "total_spend_pct_of_arr": {"p50": null},
-      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
-      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
-      "confidence": "assumed"
-    },
-    {
-      "band_id": "arpa_gt_1000",
-      "arpa_min_usd": 1000,
-      "arpa_max_usd": null,
-      "monthly_logo_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_gross_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_net_mrr_churn": {"p25": null, "p50": null, "p75": null},
-      "monthly_expansion_mrr_pct": {"p50": null},
-      "cac_payback_months": {"p50": null},
-      "gross_margin_pct": {"p50": null},
-      "marketing_spend_pct_of_arr": {"p50": null},
-      "total_spend_pct_of_arr": {"p50": null},
-      "annual_growth_pct": {"p25": null, "p50": null, "p75": null},
-      "source": {"publisher": null, "report": null, "year": null, "page_or_figure": null, "n": null},
-      "confidence": "assumed"
-    }
-  ],
+  "still_missing": {
+    "cac_payback_months": "not printed in any supplied source",
+    "gross_margin_pct": "not printed in any supplied source",
+    "marketing_spend_pct_of_arr_by_arpa": "SaaS Capital segments by ARR and funding type, not ARPA; no per-ARPA spend figure exists in the supplied sources",
+    "annual_growth_by_mrr_band": "requires MicroConf State of Independent SaaS, not supplied"
+  },
 
   "unidentified": {
     "price_elasticity": {
@@ -155,8 +149,8 @@
     },
     "marketing_saturation_absolute": {
       "value": null,
-      "reason": "No public SaaS marketing-saturation dataset exists; open MMM datasets are synthetic and retail-shaped. Not a data gap - a dimensional error. gamma was a bare spend level with no reference to who is being bought. Reparameterised as customers_at_half_saturation * CAC so it scales with the company.",
-      "unblocked_by": "cac_payback_months + arpa + gross_margin_pct per band (already in schema)"
+      "reason": "No public SaaS marketing-saturation dataset exists; open MMM datasets are synthetic and retail-shaped. Not a data gap - a dimensional error. gamma was a bare spend level with no reference to who was being bought. Reparameterised as customers_at_half_saturation * CAC so it scales with the company.",
+      "unblocked_by": "already fixed structurally; SATURATION_ACQUISITION_RATE remains assumed"
     }
   }
 }

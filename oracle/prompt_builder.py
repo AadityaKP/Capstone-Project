@@ -21,6 +21,7 @@ def build_prompt(
     shock_label: str | None = None,
     graph_context: GraphContext | None = None,
     include_burn_context: bool = False,
+    churn_benchmark_pct: float | None = None,
 ) -> str:
     avg_churn = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
     previous_mrr = (
@@ -75,6 +76,17 @@ def build_prompt(
                 f"- Company age: {state.months_elapsed} months",
             ]
             if include_burn_context
+            else []
+        ),
+        # Churn in isolation is uninterpretable: 5%/month is poor at $500 ARPA
+        # and unremarkable at $10. The published median for this company's own
+        # price point turns an absolute number into a judgement.
+        *(
+            [
+                f"- Median monthly churn for this price point: {churn_benchmark_pct:.1f}%"
+                f" (published benchmark; this company is at {avg_churn * 100:.1f}%)"
+            ]
+            if churn_benchmark_pct is not None
             else []
         ),
         f"- CAC: {state.cac:.1f}",
