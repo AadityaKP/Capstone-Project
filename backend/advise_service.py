@@ -18,15 +18,16 @@ import uuid
 from typing import Any
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FOUNDER_CHROMA_PATH = os.path.join(ROOT_DIR, "chroma_db_founder")
-
-# Must precede any Oracle/memory import-time construction.
-os.environ.setdefault("CHROMA_PATH", FOUNDER_CHROMA_PATH)
+FOUNDER_CHROMA_PATH = os.environ.get(
+    "FOUNDER_CHROMA_PATH", os.path.join(ROOT_DIR, "chroma_db_founder")
+)
 
 from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
 from boardroom.boardroom import Boardroom
 from env import business_logic
 from env.schemas import EnvState
+from oracle.memory import OracleMemoryStore
+from oracle.oracle import Oracle
 
 from backend.database import connect, utc_now
 
@@ -125,6 +126,18 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     state = build_env_state(payload)
 
     scale = absolute_scale(state.mrr)
+
+    # Memory isolation is injected, not inherited from CHROMA_PATH: .env.example
+    # recommends pointing that at the research corpus, and a founder analysis
+    # must never write there regardless of how the environment is configured.
+    oracle = Oracle(
+        mode=ORACLE_MODE,
+        memory_store=OracleMemoryStore(
+            run_id=str(uuid.uuid4()),
+            chroma_path=FOUNDER_CHROMA_PATH,
+        ),
+    )
+
     boardroom = Boardroom(
         [
             CFOProposalAgent(scale=scale),
@@ -134,6 +147,7 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         use_oracle=True,
         oracle_mode=ORACLE_MODE,
         oracle_frequency=ORACLE_FREQUENCY,
+        oracle_instance=oracle,
         scale_absolutes=scale,
     )
     boardroom.start_episode(episode_seed=None)
