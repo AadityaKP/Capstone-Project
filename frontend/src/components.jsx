@@ -171,12 +171,12 @@ export function buildPlanCards(analysis, month) {
         hires > 0
           ? "Runway is long enough to grow the team."
           : cappedByRisk
-            ? "Holding hiring while risk is elevated."
+            ? "A hire was proposed and then held back — your runway doesn't comfortably cover one yet."
             : "Revisit when runway comfortably exceeds two years."
       ),
       chain: [
         "The finance advisor gates hiring on runway and growth efficiency",
-        cappedByRisk ? "Strategic adjustment: hiring paused at the board's risk level" : null
+        cappedByRisk ? "The hire was removed by the board's cash-safety check" : null
       ].filter(Boolean),
       isAction: hires > 0,
       starred: false

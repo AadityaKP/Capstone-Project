@@ -1,0 +1,352 @@
+{
+ "name": "kettle_month_1",
+ "signature": "age=15|initial_mrr=11000.0000|initial_cash=95000.0000|monthly_costs=15500.0000|average_price=55.0000|cac=130.0000|churn_smb=0.0340|competitors=5.0000|product_quality=0.5000|initial_headcount=2.0000",
+ "recorded_at": "2026-08-26T15:48:21.201530+00:00",
+ "inputs": {
+  "company_name": "Kettle Analytics",
+  "initial_mrr": 11000,
+  "initial_cash": 95000,
+  "average_price": 55,
+  "cac": 130.0,
+  "churn_enterprise": 0.034,
+  "churn_smb": 0.034,
+  "churn_b2c": 0.034,
+  "competitors": 5,
+  "product_quality": 0.5,
+  "monthly_costs": 15500,
+  "initial_headcount": 2
+ },
+ "company_age_months": 15,
+ "analysis": {
+  "brief": {
+   "risk_level": "LOW",
+   "growth_outlook": "ACCELERATING",
+   "efficiency_pressure": "LOW",
+   "innovation_urgency": "LOW",
+   "macro_condition": "EXPANSION",
+   "expected_outcome": "GROWTH",
+   "key_risks": [
+    "Churn rate is slightly below benchmark, but still a risk"
+   ],
+   "key_opportunities": [
+    "Low burn rate, long runway, and high LTV/CAC ratio provide a solid foundation for growth"
+   ],
+   "recommended_focus": [
+    "Continuously monitor and improve churn prevention strategies, and invest in innovation to further accelerate growth"
+   ],
+   "confidence": 0.85,
+   "parse_ok": true
+  },
+  "trace": {
+   "month": 15,
+   "oracle_mode": "oracle_v4_causal",
+   "used_oracle": true,
+   "refresh_reason": "initial",
+   "brief_source": "llm",
+   "cache_key": [
+    "oracle_v4_causal",
+    "0",
+    "2",
+    "5",
+    "10",
+    "FLAT",
+    "NORMAL"
+   ],
+   "shock_label": null,
+   "base_weights": {
+    "efficiency": 0.3,
+    "growth": 0.2,
+    "innovation": 0.4,
+    "macro": 0.1
+   },
+   "applied_weights": {
+    "efficiency": 0.27466887417218544,
+    "growth": 0.22533112582781456,
+    "innovation": 0.36453642384105955,
+    "macro": 0.1354635761589404
+   },
+   "brief": {
+    "risk_level": "LOW",
+    "growth_outlook": "ACCELERATING",
+    "efficiency_pressure": "LOW",
+    "innovation_urgency": "LOW",
+    "macro_condition": "EXPANSION",
+    "expected_outcome": "GROWTH",
+    "key_risks": [
+     "Churn rate is slightly below benchmark, but still a risk"
+    ],
+    "key_opportunities": [
+     "Low burn rate, long runway, and high LTV/CAC ratio provide a solid foundation for growth"
+    ],
+    "recommended_focus": [
+     "Continuously monitor and improve churn prevention strategies, and invest in innovation to further accelerate growth"
+    ],
+    "confidence": 0.85,
+    "parse_ok": true
+   },
+   "memory_count": 0,
+   "retrieved_memories": [],
+   "proposal_source": "llm",
+   "proposal_error": null,
+   "causal_stress_node": "Growth_Stall",
+   "stress_persistence_months": 1,
+   "previous_final_action": null,
+   "causal_contexts": {
+    "CFO": {
+     "role": "CFO",
+     "stress_node": "Growth_Stall",
+     "chain_summary": "Growth_Stall -MAY_CAUSE-> Burn_Rate_Reduction",
+     "root_cause_node": "Burn_Rate_Reduction",
+     "confidence": 0.58,
+     "raw_triples": [
+      [
+       "Growth_Stall",
+       "MAY_CAUSE",
+       "Burn_Rate_Reduction"
+      ]
+     ]
+    },
+    "CMO": {
+     "role": "CMO",
+     "stress_node": "Growth_Stall",
+     "chain_summary": "Growth_Stall -MAY_CAUSE-> Growth_Acceleration_Push",
+     "root_cause_node": "Growth_Acceleration_Push",
+     "confidence": 0.72,
+     "raw_triples": [
+      [
+       "Growth_Stall",
+       "MAY_CAUSE",
+       "Growth_Acceleration_Push"
+      ]
+     ]
+    },
+    "CPO": {
+     "role": "CPO",
+     "stress_node": "Growth_Stall",
+     "chain_summary": "Growth_Stall -MAY_CAUSE-> Innovation_Pipeline_Build",
+     "root_cause_node": "Innovation_Pipeline_Build",
+     "confidence": 0.65,
+     "raw_triples": [
+      [
+       "Growth_Stall",
+       "MAY_CAUSE",
+       "Innovation_Pipeline_Build"
+      ]
+     ]
+    }
+   },
+   "proposals": [
+    {
+     "agent": "CFO",
+     "objective": "Reduce burn rate to extend runway",
+     "actions": {
+      "hiring": {
+       "hires": 1,
+       "cost_per_employee": 10000.0
+      },
+      "pricing": {
+       "price_change_pct": 0.01
+      }
+     },
+     "expected_impact": "Reduce burn rate by 5-10%",
+     "risks": [
+      "Hiring too many employees may lead to increased burn rate"
+     ],
+     "rationale": "Based on the causal chain, hiring and reducing burn rate may help address the Growth_Stall. The CFO context for Growth_Stall suggests that Burn_Rate_Reduction may be a contributing factor.",
+     "causal_confidence": 0.58,
+     "base_score": 0.4886387030905077,
+     "final_confidence": 0.5003660319646799,
+     "score_vector": {
+      "efficiency": 0.3958333333333333,
+      "growth": 1.0,
+      "innovation": 0.10200000000000001,
+      "macro": 0.8666666666666667
+     }
+    },
+    {
+     "agent": "CMO",
+     "objective": "Accelerate growth",
+     "actions": {
+      "marketing": {
+       "spend": 2000.0,
+       "channel": "ppc"
+      }
+     },
+     "expected_impact": "Increase MRR by 5-10%",
+     "risks": [
+      "Marketing spend may not be effective in accelerating growth"
+     ],
+     "rationale": "Based on the CMO context for Growth_Stall, Growth_Acceleration_Push may be a contributing factor. Increasing marketing spend may help accelerate growth.",
+     "causal_confidence": 0.72,
+     "base_score": 0.4886387030905077,
+     "final_confidence": 0.5208888574944812,
+     "score_vector": {
+      "efficiency": 0.3958333333333333,
+      "growth": 1.0,
+      "innovation": 0.10200000000000001,
+      "macro": 0.8666666666666667
+     }
+    },
+    {
+     "agent": "CPO",
+     "objective": "Build innovation pipeline",
+     "actions": {
+      "product": {
+       "r_and_d_spend": 1000.0
+      }
+     },
+     "expected_impact": "Increase innovation pipeline by 10-20%",
+     "risks": [
+      "R&D spend may not lead to immediate growth"
+     ],
+     "rationale": "Based on the CPO context for Growth_Stall, Innovation_Pipeline_Build may be a contributing factor. Increasing R&D spend may help build the innovation pipeline.",
+     "causal_confidence": 0.65,
+     "base_score": 0.4886387030905077,
+     "final_confidence": 0.5106274447295805,
+     "score_vector": {
+      "efficiency": 0.3958333333333333,
+      "growth": 1.0,
+      "innovation": 0.10200000000000001,
+      "macro": 0.8666666666666667
+     }
+    }
+   ],
+   "pre_modifier_action": {
+    "marketing": {
+     "spend": 2000.0,
+     "channel": "ppc"
+    },
+    "hiring": {
+     "hires": 1,
+     "cost_per_employee": 10000.0
+    },
+    "pricing": {
+     "price_change_pct": 0.01
+    },
+    "product": {
+     "r_and_d_spend": 1204.0
+    }
+   },
+   "post_modifier_action": {
+    "marketing": {
+     "spend": 3276.0000000000005,
+     "channel": "ppc"
+    },
+    "hiring": {
+     "hires": 1,
+     "cost_per_employee": 10000.0
+    },
+    "pricing": {
+     "price_change_pct": 0.01
+    },
+    "product": {
+     "r_and_d_spend": 1024.002
+    }
+   },
+   "final_action": {
+    "marketing": {
+     "spend": 3004.564877540386,
+     "channel": "ppc"
+    },
+    "hiring": {
+     "hires": 0,
+     "cost_per_employee": 10000.0
+    },
+    "pricing": {
+     "price_change_pct": 0.01
+    },
+    "product": {
+     "r_and_d_spend": 4035.4351224596144
+    }
+   },
+   "action_modifier_applied": true,
+   "marketing_spend_change_pct": 63.800000000000026,
+   "rd_spend_change_pct": -14.950000000000005,
+   "hires_change": 0,
+   "spend_ceiling": {
+    "ceiling_usd": 7040,
+    "applied": true,
+    "scaled_by": 0.917,
+    "median_pct_of_mrr": 32.0,
+    "source": "SaaS Capital, 2026 Spending Benchmarks for Private B2B SaaS Companies, 2026",
+    "source_band": "$3-5M ARR",
+    "extrapolated": true
+   },
+   "churn_benchmark": {
+    "median_monthly_pct": 3.65,
+    "company_monthly_pct": 3.4,
+    "arpa_band": "arpa_25_100",
+    "source": "ChartMogul, SaaS Benchmarks Report, 2023",
+    "derivation": "p30, 'Retention benchmarks by ARPA per month range' (annual 64% -> monthly)"
+   },
+   "assumed_fields": [
+    {
+     "field": "Interest rate",
+     "value": "3.0%",
+     "why": "not asked at onboarding; typical conditions",
+     "correctable": false
+    },
+    {
+     "field": "Consumer confidence",
+     "value": 100.0,
+     "why": "not asked at onboarding; index where 100 is neutral",
+     "correctable": false
+    },
+    {
+     "field": "Unemployment",
+     "value": "4.0%",
+     "why": "not asked at onboarding; typical conditions",
+     "correctable": false
+    },
+    {
+     "field": "Valuation multiple",
+     "value": "10.0x ARR",
+     "why": "not asked at onboarding; engine default",
+     "correctable": false
+    },
+    {
+     "field": "Innovation factor",
+     "value": 1.0,
+     "why": "no scarring assumed at the start of an analysis",
+     "correctable": false
+    },
+    {
+     "field": "Lifetime value",
+     "value": "price / monthly churn",
+     "why": "derived from your own numbers, never asked",
+     "correctable": false
+    }
+   ],
+   "history_months_replayed": 0,
+   "absolute_scale": 0.22,
+   "graph_summary": {
+    "stress_node": "Growth_Stall",
+    "observed": [],
+    "expected": [
+     "Burn_Rate_Reduction",
+     "Growth_Acceleration_Push",
+     "Innovation_Pipeline_Build"
+    ],
+    "confidence": 0.65,
+    "roles": 3
+   }
+  },
+  "display": {
+   "confidence": {
+    "band": "Low",
+    "model_band": "High",
+    "assumed_count": 6,
+    "sentence": "Low confidence - 6 of these numbers are estimates, not yours",
+    "capped": true
+   },
+   "runway": "21 months of cash at current costs",
+   "spend_ratio": "You spend $2.05 for every $1 of revenue",
+   "show_rule_of_40": false,
+   "monthly_burn": 15500.0,
+   "monthly_burn_supplied": true
+  },
+  "llm_ok": true,
+  "oracle_mode": "oracle_v4_causal",
+  "created_at": "2026-08-26T15:48:21.200717+00:00"
+ }
+}
