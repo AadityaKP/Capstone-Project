@@ -11,7 +11,8 @@ import {
   RiskChip, Banner, buildPlanCards, PlanCard, FocusBar, EvidenceList,
   ConfidenceStrip, RiskBullets, SimulatedTag
 } from "../components.jsx";
-import { deriveCac, deriveLtv, monthName, runwayMonths } from "../derive.js";
+import { deriveCac, deriveLtv, monthName } from "../derive.js";
+import { runwayMonths } from "../founderView.js";
 import WhatIfPanel from "../whatif.jsx";
 import { whatif as fetchWhatIf } from "../api.js";
 
@@ -46,6 +47,7 @@ export default function Advice({ navigate, params }) {
   const [whatIfLoading, setWhatIfLoading] = useState(false);
   const [whatIfError, setWhatIfError] = useState(null);
   const [shockMode, setShockMode] = useState(false);
+  const [showHeld, setShowHeld] = useState(false);
 
   async function runWhatIf(shock) {
     setWhatIfLoading(true);
@@ -90,7 +92,10 @@ export default function Advice({ navigate, params }) {
 
   const v = month.values;
   const cac = deriveCac(v);
-  const known = [v.mrr, v.cash, v.costs, v.price, v.churnMonthly, v.newCustomers, v.marketingSpend, cac.value, deriveLtv(v), runwayMonths(v)];
+  // runwayMonths is null when the company is not burning cash; a guardrail
+  // comparing LLM claims against known numbers must not be handed a null.
+  const known = [v.mrr, v.cash, v.costs, v.price, v.churnMonthly, v.newCustomers,
+                 v.marketingSpend, cac.value, deriveLtv(v), runwayMonths(v)].filter((n) => n != null);
   // The server reports what it actually assumed (trace.assumed_fields). The old
   // client-side count could not see the macro fields the server fills in and so
   // understated them; it stays only as a fallback for analyses stored before
@@ -99,6 +104,10 @@ export default function Advice({ navigate, params }) {
   const estimatedCount = assumedFields
     ? assumedFields.length
     : (cac.source === "estimated" ? 1 : 0) + (state.company?.maturity ? 0 : 1) + 1;
+  // Older stored analyses have no `correctable` flag; treating them as
+  // correctable keeps the previous behaviour rather than hiding them.
+  const correctable = (assumedFields || []).filter((a) => a.correctable !== false);
+  const internalCount = (assumedFields || []).length - correctable.length;
 
   const decisions = month.decisions || [];
   const decisionFor = (domain) => decisions.find((d) => d.domain === domain) || null;
@@ -163,17 +172,39 @@ export default function Advice({ navigate, params }) {
       {/* guarded LLM bullets */}
       <RiskBullets brief={brief} knownNumbers={known} />
 
-      {/* L2 cards */}
-      <div className="plan-grid">
-        {planCards.map((c) => (
-          <PlanCard
-            key={c.domain}
-            card={c}
-            decisionState={decisionFor(c.domain)?.state || null}
-            onDecide={state.demo ? null : decide}
-          />
-        ))}
-      </div>
+      {/* L2 cards. When the board's recommendation is to change nothing, say so
+          once rather than rendering four cards that each ask the founder to
+          confirm they did nothing — which is also what was polluting the
+          accepted-action signal memory.py learns from. */}
+      {planCards.every((c) => !c.isAction) ? (
+        <article className="panel no-action-panel">
+          <h3>Nothing to change this month</h3>
+          <p className="subtle">
+            The board isn't asking you to spend, hire or move price. Hold what you're
+            doing and update your numbers next month.
+          </p>
+          <button className="link-button" type="button" onClick={() => setShowHeld(!showHeld)}>
+            {showHeld ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+            {showHeld ? "Hide" : "Show"} what each advisor said
+          </button>
+          {showHeld && (
+            <div className="plan-grid">
+              {planCards.map((c) => <PlanCard key={c.domain} card={c} compact />)}
+            </div>
+          )}
+        </article>
+      ) : (
+        <div className="plan-grid">
+          {planCards.map((c) => (
+            <PlanCard
+              key={c.domain}
+              card={c}
+              decisionState={decisionFor(c.domain)?.state || null}
+              onDecide={state.demo || !c.isAction ? null : decide}
+            />
+          ))}
+        </div>
+      )}
 
       {/* D5 — what taking this plan actually does, against two baselines */}
       <WhatIfPanel
@@ -203,21 +234,36 @@ export default function Advice({ navigate, params }) {
 
       {/* Nothing silently assumed: every field the founder did not supply, with
           the value used and why, as reported by the server that used it. */}
-      {assumedFields && assumedFields.length > 0 && (
-        <Expandable title={`Assumed values (${assumedFields.length})`}>
+      {/* Split, not listed. Interest rate, consumer confidence, unemployment,
+          valuation multiple and innovation factor are simulator internals; no
+          founder has an opinion on any of them, and inviting one to "enter
+          anything here you actually know" invited an invented number into the
+          analysis. They collapse to one sentence. What is left is what a
+          founder could genuinely supply, and is worth asking for. */}
+      {correctable.length > 0 && (
+        <Expandable title={`Numbers we guessed (${correctable.length})`}>
           <p className="subtle">
-            You didn't give us these, so the board used the values below. Anything here
-            that you actually know is worth entering — it changes the advice.
+            You didn't give us these, so the board used the values below. Each one is
+            something you could look up, and each one changes the advice.
           </p>
           <ul className="wi-assumptions">
-            {assumedFields.map((a) => (
+            {correctable.map((a) => (
               <li key={a.field}>
                 <strong>{a.field}:</strong> {String(a.value)}
                 <span className="wi-assumption-detail">{a.why}</span>
               </li>
             ))}
           </ul>
+          <button className="link-button" type="button" onClick={() => navigate("/update")}>
+            Fill these in <ChevronRight size={15} />
+          </button>
+          {internalCount > 0 && (
+            <p className="subtle">This also assumes normal market conditions.</p>
+          )}
         </Expandable>
+      )}
+      {correctable.length === 0 && internalCount > 0 && (
+        <p className="subtle assumption-line">This analysis assumes normal market conditions.</p>
       )}
 
       {/* L5 (qualitative in MVP) */}
@@ -239,7 +285,7 @@ export default function Advice({ navigate, params }) {
       <article className="panel checklist-panel">
         <h3>Next actions</h3>
         <ul className="checklist">
-          {planCards.map((c) => {
+          {planCards.filter((c) => c.isAction).map((c) => {
             const d = decisionFor(c.domain);
             const on = d?.state === "accepted";
             return (

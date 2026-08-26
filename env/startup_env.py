@@ -45,6 +45,14 @@ class StartupEnv(gym.Env):
         self.stable_cac = bool(
             self.initial_config.get("stable_cac", self.scale_aware_marketing)
         )
+        # Opt-in: R&D measured as a share of the company's own revenue, and
+        # product quality given its own headroom instead of borrowing
+        # innovation_factor's. Off by default - it changes what the engine
+        # believes about R&D, not just its scale. See
+        # business_logic.apply_innovation_investment.
+        self.scale_aware_rnd = bool(
+            self.initial_config.get("scale_aware_rnd", False)
+        )
         # Opt-in gross margin on recognised revenue. None reproduces the
         # original behaviour exactly - revenue booked to cash at 100% margin,
         # no cost of revenue deducted - so every recorded result is untouched.
@@ -203,9 +211,13 @@ class StartupEnv(gym.Env):
             rng=self._rng,
         )
 
-        expansion = business_logic.compute_expansion_mrr(self.state, action.product)
-        
-        business_logic.apply_innovation_investment(self.state, action.product)
+        expansion = business_logic.compute_expansion_mrr(
+            self.state, action.product, scale_aware=self.scale_aware_rnd
+        )
+
+        business_logic.apply_innovation_investment(
+            self.state, action.product, scale_aware=self.scale_aware_rnd
+        )
 
         churn_rate = business_logic.compute_churn_rate(self.state)
 

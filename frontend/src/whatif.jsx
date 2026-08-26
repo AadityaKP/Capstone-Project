@@ -8,9 +8,16 @@
 // shock tape, as a median line with a 25–75 interquartile band. The caveat sits
 // directly under the chart, not in a footnote, because the whole panel is a
 // simulated counterfactual and a reader who misses that misreads everything.
+//
+// Lines stop where companies stop. The server sends ragged series — a run that
+// ran out of cash contributes nothing after the month it died — plus
+// `alive_fraction`, the share of runs still solvent in each month. A line is
+// solid while every run is alive, dashed once some have died, and ends at a
+// marker when none are left. Without that, "died in month 1" and "stagnated for
+// a year" were the same flat line.
 
 import React, { useState } from "react";
-import { Activity, AlertTriangle, Loader2, Zap } from "lucide-react";
+import { Activity, AlertTriangle, Loader2, Skull, Zap } from "lucide-react";
 import { money, pct } from "./derive.js";
 
 const POLICY_ORDER = ["recommended", "hold", "rule_based"];
@@ -23,36 +30,78 @@ const POLICY_STYLE = {
   rule_based: { color: "var(--blue)", band: "rgba(47, 127, 213, 0.13)" }
 };
 
-const PANELS = [
-  { key: "mrr", label: "Monthly revenue", format: money },
-  { key: "cash", label: "Cash", format: money },
-  { key: "churn", label: "Churn", format: (v) => pct(v) },
-  { key: "rule_of_40", label: "Rule of 40", format: (v) => v.toFixed(0) }
-];
+// The fourth panel is whichever efficiency measure means something at this
+// company's size. The server decides and says so in result.display, so the
+// $1M-ARR floor is not hardcoded here as a second copy.
+function panelsFor(display) {
+  const efficiencyPanel = display?.efficiency_panel_series === "rule_of_40"
+    ? { key: "rule_of_40", label: "Rule of 40", format: (v) => v.toFixed(0) }
+    : {
+        key: "spend_ratio",
+        label: display?.efficiency_panel_label || "Spend per $1 of revenue",
+        format: (v) => `$${v.toFixed(2)}`
+      };
+  return [
+    { key: "mrr", label: "Monthly revenue", format: money },
+    { key: "cash", label: "Cash", format: money },
+    { key: "churn", label: "Customers lost", format: (v) => `1 in ${Math.round(100 / Math.max(v, 0.01))}` },
+    efficiencyPanel
+  ];
+}
+
+// Where a policy's line can be drawn, and where it has to change character.
+//   last  — final month with any surviving run; the line ends here
+//   full  — final month where every run is still alive; solid up to here
+function lifespan(median, alive) {
+  let last = -1;
+  for (let i = 0; i < median.length; i += 1) if (median[i] != null) last = i;
+  let full = -1;
+  for (let i = 0; i <= last; i += 1) {
+    if ((alive?.[i] ?? 1) >= 1) full = i;
+    else break;
+  }
+  return { last, full: full < 0 ? 0 : full };
+}
 
 // One panel: three median lines, each inside its own IQR band, on shared axes.
-function FanChart({ title, series, format, shockMonth }) {
+function FanChart({ title, series, alive, format, shockMonth }) {
   const w = 320, h = 130, padX = 6, padTop = 8, padBottom = 18;
 
   const all = POLICY_ORDER.flatMap((p) => {
     const s = series[p];
-    return s ? [...s.p25, ...s.p75, ...s.median] : [];
+    if (!s) return [];
+    return [...s.p25, ...s.p75, ...s.median].filter((v) => v != null);
   });
   if (!all.length) return null;
 
   const min = Math.min(...all), max = Math.max(...all);
   const span = max - min || 1;
-  const months = series[POLICY_ORDER[0]].median.length;
+  const months = series[POLICY_ORDER.find((p) => series[p])].median.length;
 
   const x = (i) => padX + (i / Math.max(months - 1, 1)) * (w - padX * 2);
   const y = (v) => h - padBottom - ((v - min) / span) * (h - padTop - padBottom);
 
-  const line = (pts) => pts.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  // Points between two month indexes, skipping months with no survivors.
+  const pointsBetween = (values, from, to) => {
+    const out = [];
+    for (let i = from; i <= to; i += 1) {
+      if (values[i] == null) continue;
+      out.push(`${x(i).toFixed(1)},${y(values[i]).toFixed(1)}`);
+    }
+    return out.join(" ");
+  };
+
   // Band = upper edge left-to-right, then lower edge right-to-left, closed.
-  const band = (lo, hi) =>
-    [...hi.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`),
-     ...lo.map((v, i) => `${x(lo.length - 1 - i).toFixed(1)},${y(lo[lo.length - 1 - i]).toFixed(1)}`)
-    ].join(" ");
+  const bandPoints = (lo, hi, last) => {
+    const up = [];
+    const down = [];
+    for (let i = 0; i <= last; i += 1) {
+      if (hi[i] == null || lo[i] == null) continue;
+      up.push(`${x(i).toFixed(1)},${y(hi[i]).toFixed(1)}`);
+      down.unshift(`${x(i).toFixed(1)},${y(lo[i]).toFixed(1)}`);
+    }
+    return [...up, ...down].join(" ");
+  };
 
   const zeroY = min < 0 && max > 0 ? y(0) : null;
 
@@ -69,28 +118,78 @@ function FanChart({ title, series, format, shockMonth }) {
             className="wi-shock-line"
           />
         )}
-        {POLICY_ORDER.map((p) => series[p] && (
-          <polygon key={`b-${p}`} points={band(series[p].p25, series[p].p75)}
-                   fill={POLICY_STYLE[p].band} stroke="none" />
-        ))}
-        {POLICY_ORDER.map((p) => series[p] && (
-          <polyline key={`l-${p}`} points={line(series[p].median)}
-                    fill="none" stroke={POLICY_STYLE[p].color} strokeWidth="2"
-                    strokeLinejoin="round" strokeLinecap="round" />
-        ))}
+        {POLICY_ORDER.map((p) => {
+          const s = series[p];
+          if (!s) return null;
+          const { last } = lifespan(s.median, alive[p]);
+          if (last < 0) return null;
+          return (
+            <polygon key={`b-${p}`} points={bandPoints(s.p25, s.p75, last)}
+                     fill={POLICY_STYLE[p].band} stroke="none" />
+          );
+        })}
+        {POLICY_ORDER.map((p) => {
+          const s = series[p];
+          if (!s) return null;
+          const { last, full } = lifespan(s.median, alive[p]);
+          if (last < 0) return null;
+          const stroke = POLICY_STYLE[p].color;
+          return (
+            <g key={`l-${p}`}>
+              <polyline points={pointsBetween(s.median, 0, full)}
+                        fill="none" stroke={stroke} strokeWidth="2"
+                        strokeLinejoin="round" strokeLinecap="round" />
+              {/* Dashed once some runs have died: the median behind it is over
+                  survivors only, which is a different claim from the solid part. */}
+              {last > full && (
+                <polyline points={pointsBetween(s.median, full, last)}
+                          fill="none" stroke={stroke} strokeWidth="2"
+                          strokeDasharray="3 3"
+                          strokeLinejoin="round" strokeLinecap="round" />
+              )}
+              {last < months - 1 && s.median[last] != null && (
+                <g className="wi-death-mark">
+                  <line x1={x(last) - 3} y1={y(s.median[last]) - 3}
+                        x2={x(last) + 3} y2={y(s.median[last]) + 3} stroke={stroke} />
+                  <line x1={x(last) - 3} y1={y(s.median[last]) + 3}
+                        x2={x(last) + 3} y2={y(s.median[last]) - 3} stroke={stroke} />
+                </g>
+              )}
+            </g>
+          );
+        })}
         <text x={padX} y={h - 5} className="wi-axis">now</text>
         <text x={w - padX} y={h - 5} className="wi-axis" textAnchor="end">
           {months} mo
         </text>
       </svg>
       <span className="wi-chart-end">
-        {POLICY_ORDER.filter((p) => series[p]).map((p) => (
-          <em key={p} style={{ color: POLICY_STYLE[p].color }}>
-            {format(series[p].median[series[p].median.length - 1])}
-          </em>
-        ))}
+        {POLICY_ORDER.filter((p) => series[p]).map((p) => {
+          const s = series[p];
+          const { last } = lifespan(s.median, alive[p]);
+          return (
+            <em key={p} style={{ color: POLICY_STYLE[p].color }}>
+              {last >= 0 && s.median[last] != null ? format(s.median[last]) : "—"}
+            </em>
+          );
+        })}
       </span>
     </div>
+  );
+}
+
+// "Survives 0%" told a founder nothing about whether the company lasted one
+// month or eleven. The sentence comes from founder_view on the server; the
+// percentage stays because the column is scanned, not read.
+function survivalCell(policy) {
+  const summary = policy.summary;
+  const survived = Math.round(summary.survival_rate * 100);
+  if (!summary.deaths) return <span className="wi-alive">{survived}%</span>;
+  return (
+    <span className={survived === 0 ? "wi-dead" : "wi-partial"}>
+      {survived}%
+      <em>{policy.display?.survival}</em>
+    </span>
   );
 }
 
@@ -136,7 +235,16 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
   }
 
   const { policies, horizon_months: horizon, n_seeds: seeds, shock, assumptions } = result;
+  const display = result.display || {};
+  const panels = panelsFor(display);
   const shockMonth = shock ? shock.month : null;
+  const alive = Object.fromEntries(
+    POLICY_ORDER.filter((p) => policies[p]).map((p) => [p, policies[p].alive_fraction || []])
+  );
+
+  // The board's own plan running out of cash is the headline, not a table cell.
+  const recommended = policies.recommended?.summary;
+  const anyDeaths = POLICY_ORDER.some((p) => policies[p]?.summary.deaths > 0);
 
   return (
     <article className="panel wi-panel">
@@ -150,6 +258,24 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
           <Zap size={13} /> {shockMode ? "Competitor shock on" : "Add a competitor shock"}
         </button>
       </div>
+
+      {recommended?.deaths > 0 && (
+        <p className="wi-death-note">
+          <Skull size={14} />
+          <span>
+            In simulation, the board's plan ran out of cash in{" "}
+            {recommended.deaths === recommended.runs
+              ? "every run"
+              : `${recommended.deaths} of ${recommended.runs} runs`}
+            {recommended.median_death_month != null &&
+              `, typically around month ${recommended.median_death_month}`}
+            {recommended.earliest_death_month != null &&
+              recommended.earliest_death_month !== recommended.median_death_month &&
+              ` (earliest month ${recommended.earliest_death_month})`}
+            .
+          </span>
+        </p>
+      )}
 
       <div className="wi-legend">
         {POLICY_ORDER.filter((p) => policies[p]).map((p) => (
@@ -167,12 +293,13 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
       )}
 
       <div className="wi-grid">
-        {PANELS.map((panel) => (
+        {panels.map((panel) => (
           <FanChart
             key={panel.key}
             title={panel.label}
             format={panel.format}
             shockMonth={shockMonth}
+            alive={alive}
             series={Object.fromEntries(
               POLICY_ORDER.filter((p) => policies[p]).map((p) => [p, policies[p].series[panel.key]])
             )}
@@ -183,6 +310,18 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
       {/* The caveat is rendered here, immediately beneath the charts, on purpose. */}
       <p className="wi-caveat">{result.caveat}</p>
 
+      {display.rule_of_40_withheld_because && (
+        <p className="wi-caveat">{display.rule_of_40_withheld_because}</p>
+      )}
+
+      {anyDeaths && (
+        <p className="wi-survivor-note">
+          A line goes dashed once some runs have run out of cash, and ends where none are
+          left. Past that point the line averages only the companies still standing, so it
+          can rise while most of them are gone.
+        </p>
+      )}
+
       <div className="wi-table-wrap">
         <table className="wi-table">
           <thead>
@@ -191,7 +330,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
               <th>Revenue in {horizon} mo</th>
               <th>Cash in {horizon} mo</th>
               <th>Survives</th>
-              <th>Rule of 40</th>
+              <th>{display.efficiency_panel_label || "Rule of 40"}</th>
               {shockMode && <th>Shock cost</th>}
               {shockMode && <th>Recovery</th>}
             </tr>
@@ -202,10 +341,14 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
               return (
                 <tr key={p} className={p === "recommended" ? "wi-row-primary" : ""}>
                   <td><i style={{ background: POLICY_STYLE[p].color }} /> {policies[p].label}</td>
-                  <td>{money(s.median_terminal_mrr)}</td>
-                  <td>{money(s.median_terminal_cash)}</td>
-                  <td>{Math.round(s.survival_rate * 100)}%</td>
-                  <td>{s.mean_rule_of_40.toFixed(0)}</td>
+                  <td>{policies[p].display?.revenue ?? money(s.median_terminal_mrr)}</td>
+                  <td>{policies[p].display?.cash ?? money(s.median_terminal_cash)}</td>
+                  <td>{survivalCell(policies[p])}</td>
+                  <td>
+                    {display.efficiency_panel_series === "rule_of_40"
+                      ? s.mean_rule_of_40.toFixed(0)
+                      : policies[p].display?.spend_ratio ?? "—"}
+                  </td>
                   {shockMode && (
                     <td>{s.shock_cost_pct == null ? "—" : `${s.shock_cost_pct.toFixed(1)}%`}</td>
                   )}
@@ -228,6 +371,10 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
       <p className="wi-meta">
         Median of {seeds} simulated runs per plan, same {seeds} starting conditions for each,
         so the plan is the only thing that differs.
+        {anyDeaths && (
+          <> Revenue and cash for a run that ended early are its figures at the month it
+          ended.</>
+        )}
         {result.shock_tape_shared === false && (
           <strong> Conditions diverged between plans in this run — compare with care.</strong>
         )}

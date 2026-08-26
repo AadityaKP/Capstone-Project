@@ -1,0 +1,31 @@
+{
+  "_comment": [
+    "Thresholds for the engine-to-founder translation layer (backend/founder_view.py).",
+    "They live in a data file rather than in either implementation because the",
+    "client is local-first: Home computes runway and unit economics from numbers",
+    "the browser holds and never sends, so those few rules exist on both sides.",
+    "frontend/src/founderView.js imports this file directly (Vite resolves JSON),",
+    "so neither side carries its own copy of a number."
+  ],
+
+  "rule_of_40_mrr_floor": 83333,
+  "_rule_of_40_mrr_floor_why": "Rule of 40 is a public-SaaS benchmark and is meaningless below roughly $1M ARR. 83,333 is $1M/12. Below it the spend-per-revenue-dollar ratio is shown instead.",
+
+  "ltv_cac_healthy": 3.0,
+  "_ltv_cac_healthy_why": "The engine's own threshold in compute_reward: below 3x it penalises the policy.",
+
+  "ltv_cac_watch": 1.0,
+
+  "ltv_cac_unmeasurable": 20.0,
+  "_ltv_cac_unmeasurable_why": "Above this the ratio is measurement noise, not health. A founder who spent $10 and signed 10 customers has a $1 CAC and a 100x ratio; printing 'Healthy' for that is worse than printing nothing.",
+
+  "cac_min_customers": 5,
+  "_cac_min_customers_why": "New customers in the reported month below which a derived CAC is not reported at all.",
+
+  "confidence_caps": [
+    { "max_assumed": 1, "cap": "High" },
+    { "max_assumed": 4, "cap": "Moderate" },
+    { "max_assumed": 9999, "cap": "Low" }
+  ],
+  "_confidence_caps_why": "Confidence used to be the model's own scalar, rendered beside the assumption count but computed independently of it, so the strip could read 'High confidence · 6 estimated inputs'. The count now caps the band, which makes that sentence impossible rather than merely unlikely."
+}

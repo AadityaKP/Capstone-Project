@@ -186,7 +186,7 @@ def test_projection_returns_all_policies_with_full_bands():
     assert set(result["policies"]) == set(POLICIES)
     for policy in POLICIES:
         series = result["policies"][policy]["series"]
-        assert set(series) == {"mrr", "cash", "churn", "rule_of_40"}
+        assert set(series) == {"mrr", "cash", "churn", "rule_of_40", "spend_ratio"}
         for panel in series.values():
             assert len(panel["median"]) == result["horizon_months"]
             assert len(panel["p25"]) == len(panel["p75"]) == result["horizon_months"]

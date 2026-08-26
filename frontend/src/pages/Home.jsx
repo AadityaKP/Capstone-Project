@@ -6,9 +6,13 @@ import {
   useStore, latestMonth, previousMonth, latestAnalysis
 } from "../store.jsx";
 import {
-  runwayMonths, deriveCac, deriveLtv, efficiencyBand, monthDeltas,
-  money, pct, signedPct, signedPp, monthsLabel, daysSince, dateLabel, eventTrigger
+  deriveCac, deriveLtv, monthDeltas,
+  money, signedPct, signedPp, daysSince, dateLabel, eventTrigger
 } from "../derive.js";
+import {
+  runwayMonths, runwayLabel, churnLabel, churnPhrase, efficiency,
+  showRuleOf40, spendRatioLabel
+} from "../founderView.js";
 import { positionSentence, refreshReasonCopy, expectedOutcomeCopy, OUTCOME } from "../copy.js";
 import { RiskChip, KpiCard, DeltaArrow, Banner, buildPlanCards, PlanCard, SimulatedTag } from "../components.jsx";
 
@@ -25,7 +29,7 @@ export default function Home({ navigate }) {
   const runway = runwayMonths(v);
   const cac = deriveCac(v);
   const ltv = deriveLtv(v);
-  const eff = efficiencyBand(ltv, cac.value);
+  const eff = efficiency(ltv, cac.value, v.newCustomers);
   const deltas = monthDeltas(month, prev);
   const age = daysSince(month.enteredAt);
   const stale = age != null && age > 35;
@@ -87,26 +91,30 @@ export default function Home({ navigate }) {
       {/* 2 · KPI row */}
       <div className="kpi-grid founder-grid">
         <KpiCard
-          label="Runway" value={monthsLabel(runway)}
-          delta={prev ? <DeltaArrow value={deltas?.runway} format={(x) => `${x > 0 ? "+" : ""}${x.toFixed(1)} mo`} /> : null}
-          sub="cash ÷ net burn"
-          hint="Cash in the bank divided by monthly net burn (costs minus revenue), assuming both stay flat."
-          band={Number.isFinite(runway) && runway < 12 ? "watch" : null}
+          label="Cash lasts" value={runwayLabel(v)}
+          delta={prev && deltas?.runway != null ? <DeltaArrow value={deltas.runway} format={(x) => `${x > 0 ? "+" : ""}${x.toFixed(1)} mo`} /> : null}
+          sub={runway === null ? "revenue covers your costs" : "at your current costs"}
+          hint="Cash in the bank divided by what you spend each month beyond what you earn, assuming both stay flat."
+          band={runway !== null && runway < 12 ? "watch" : null}
         />
         <KpiCard
-          label="MRR" value={money(v.mrr)}
+          label="Revenue" value={money(v.mrr)}
           delta={prev ? <DeltaArrow value={deltas?.mrrPct} /> : null}
-          sub="monthly recurring revenue"
+          sub={spendRatioLabel(v) ? `you spend ${spendRatioLabel(v)} earned` : "per month"}
+          hint={showRuleOf40(v.mrr)
+            ? "Monthly recurring revenue."
+            : "Monthly recurring revenue, and what you spend for each dollar of it. Rule of 40, the usual SaaS benchmark, doesn't mean anything below about $1M a year."}
         />
         <KpiCard
-          label="Churn" value={`${pct(v.churnMonthly)}/mo`}
+          label="Customers lost" value={churnLabel(v.churnMonthly)}
           delta={prev ? <DeltaArrow value={deltas?.churnPp} goodWhenDown format={signedPp} /> : null}
-          sub="customers lost per month"
+          sub="every month"
+          hint={churnPhrase(v.churnMonthly)}
         />
         <KpiCard
-          label="Growth efficiency" value={eff.label}
-          sub={eff.ratio ? `lifetime value ≈ ${eff.ratio.toFixed(1)}× acquisition cost` : "add marketing spend + new customers"}
-          hint="Healthy when lifetime value is at least 3× your customer acquisition cost."
+          label="Winning customers" value={eff.label}
+          sub={eff.detail}
+          hint="Healthy when what a customer pays back over their life is at least 3× what they cost to win."
           band={eff.band === "unhealthy" ? "watch" : null}
         />
       </div>

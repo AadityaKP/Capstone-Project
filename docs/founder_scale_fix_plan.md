@@ -6,12 +6,13 @@ Everything below was verified against the code on this branch and reproduced by
 running the engine, not inferred from screenshots. Numbers in tables are measured
 output; appendix A says how to re-run any of them.
 
-**Status: steps 1 and 2 are done.** Sections 0-4 describe the state the product
+**Status: all six steps are done.** Sections 0-4 describe the state the product
 shipped in and are kept as the record of what was wrong; §2.1's four-configuration
 table is now reachable through the supported payload rather than by patching, so
-`founder_scale_probes.py configs` prints the before and after side by side. Steps
-3-6 are open. One defect not in the original analysis surfaced the moment step 2
-was switched on - see §2.2.
+`founder_scale_probes.py configs` prints the before and after side by side. Two
+defects not in the original analysis surfaced while fixing it - a divergent CAC
+loop (§2.2) and an efficiency ceiling that refused well-measured data (§5, step 5)
+- and both are recorded where they were found rather than quietly patched.
 
 ---
 
@@ -75,12 +76,54 @@ This is not one constant. `headcount * 8000` is a load-bearing protocol with
 | `agents/causal_proposal_agents.py:104` | causal proposal runway |
 | `frontend/src/derive.js:63` | the inverse mapping, costs → headcount |
 | `advice_audit.py:20`, `tests/test_founder_guards.py:25` | audit and test mirrors |
+| `boardroom/boardroom.py:772` | **an eighth, found only by running the product** |
 
 `prompt_builder.py:74` deserves stating plainly: the prompt sent to the model
 says `- Monthly burn: 8,000` for a founder whose real burn is $500. **The
 strategist is given a false cost base and asked why the company is in trouble.**
 That is a direct, mechanical cause of the generic advice, independent of anything
 about onboarding.
+
+### 1.2 The eighth site, and why grep missed it
+
+Seven sites were found by searching for `headcount * 8000`. The eighth was found
+by running the finished product and asking why the plan was empty:
+
+```python
+# boardroom.py, _resolve_conflicts
+base_burn = state.headcount * cost_per_employee
+```
+
+The constant is a variable here, so no search for the literal could find it - and
+it is the wrong variable. `cost_per_employee` is the **one-time recruiting cost**
+of a new hire, $10,000 by default, used as such three lines above. Used again as
+a monthly salary it charged the $500/month founder $10,000 a month:
+
+```
+total_needed = 500 (marketing) + 600 (R&D) + 10,000 (the hire) + 10,000 (base_burn)
+shortfall    = 21,100 - 5,000 cash = 16,100     <- entirely fictional
+```
+
+The resolver then zeroed the whole plan to cover it, and the founder was shown
+**hold / wait / hold** and told nothing. That is the same screen the original
+analysis complains about in its §6 - "three of four cards this month are hold /
+wait / hold" - diagnosed there as a product decision about empty states. It was
+not. It was this line.
+
+Fixing the burn exposed a second flaw underneath it. Cutting a hire rounds **down**
+(`math.floor($6,100 / $10,000)` is zero), so a headcount costing more than the
+remaining shortfall can never be cut at all: the plan sheds every dollar of
+marketing and R&D to protect a hire it still cannot afford. On the real-burn path
+the cut now rounds up - a hire you cannot pay for is not a hire - and the
+overshoot from removing a whole salary is given back to the marketing budget that
+was cut first, rather than banked as a saving nobody asked for.
+
+Measured on the same founder, end to end through `/api/advise` with the real
+model: the plan went from `marketing $0 / R&D $0 / hires 0` to **`marketing $425 /
+R&D $1,000 / hires 0`**, and the strategist's own risk bullets moved from generic
+to specific - "High churn rate (10.0%) compared to industry benchmark (3.7%)".
+Research runs keep the original expression and the original rounding, both gated
+on `state.monthly_burn is not None`.
 
 ### 1.1 There are three financial models, not two
 
@@ -367,7 +410,7 @@ winning; and the competitor shock at month 6 finally lands, at -12.8% / -12.1% /
 -5.8% against the same seeds. The shock parameter was never broken - it was
 unreachable.
 
-### Step 3 — make R&D able to move product quality
+### Step 3 — make R&D able to move product quality &nbsp;· DONE
 
 Separate scarring from investment. `innovation_factor` keeps the `(1 − f)`
 headroom term because it is a scarring variable. `product_quality` gets its own
@@ -388,9 +431,30 @@ Gate it behind an `initial_config` flag so research runs are untouched.
 
 Effort: **S** code, **M** validation.
 Done when: the `recommended` and `hold` churn series diverge visibly over 12
-months, and the divergence is attributable to R&D spend alone.
+months, and the divergence is attributable to R&D spend alone. **Both hold.**
 
-### Step 4 — charts end at death, and death is a first-class result
+The half-saturation point is anchored to SaaS Capital's published median R&D
+spend (24% of ARR), so a company spending what the median company spends buys
+half the achievable rate. That deliberately does *not* preserve the old
+calibration point: $100,000 of half-saturation at the $50k-MRR company the engine
+was tuned for means spending twice your revenue on R&D to get half the available
+improvement, which is not a defensible anchor at any size. Replacing it is a
+change of belief, not a refactor, which is why it sits behind `scale_aware_rnd`.
+`compute_expansion_mrr`'s $50,000 constant *is* 1.0x the calibration company's
+revenue, so that one was rescaled rather than replaced and reproduces exactly.
+
+Measured, $2,500 MRR over 12 months, R&D as a share of revenue:
+
+| R&D | $/mo | quality after | effective churn | vs. spending nothing |
+|---|---|---|---|---|
+| 0% | $0 | 0.500 | 2.590% | - |
+| 4% | $100 | 0.521 | 2.554% | -1.4% |
+| 24% (median) | $600 | 0.570 | 2.469% | **-4.7%** |
+| 100% | $2,500 | 0.608 | 2.403% | -7.2% |
+
+Against 0.500000 at every spend before. It saturates, so there is no free lunch.
+
+### Step 4 — charts end at death, and death is a first-class result &nbsp;· DONE
 
 `_rollout` currently pads a dead company forward to the horizon, which makes
 "died in month 2" and "stagnated for a year" render identically. Replace the
@@ -412,9 +476,17 @@ month 1 in all 50 runs"**.
 Files: `backend/whatif_service.py`, `frontend/src/whatif.jsx`.
 Effort: **M** code, **S** validation.
 Done when: a plan that dies in month 1 and a plan that stagnates for 12 months
-are visually distinguishable at a glance.
+are visually distinguishable at a glance. **They are** - solid line, dashed line,
+death marker, verified in the running app (3 solid segments, 3 dashed, 1 marker
+on the sample company).
 
-### Step 5 — `founder_view.py`, the translation layer
+The survivorship bias this introduces is worth stating plainly, because it is
+visible in the data: the `rule_based` arm's median MRR runs 6,817 -> 6,446 ->
+5,738 -> 4,267 -> 8,511 across its last five months. That last jump is not
+recovery, it is two survivors out of twenty. The chart is dashed for exactly that
+stretch, and the panel says why underneath.
+
+### Step 5 — `founder_view.py`, the translation layer &nbsp;· DONE
 
 One module at the API boundary converting `EnvState` + oracle output into founder
 vocabulary. Raw engine fields stay in the response for debugging; **no component
@@ -437,9 +509,33 @@ Also fix `ConfidenceStrip` (`components.jsx:299`), which renders
 and so prints "High confidence · 6 estimated inputs". Confidence must be a
 function of the assumption count, not merely displayed beside it.
 
-Effort: **M**. Done when: no `.jsx` file imports an engine field name.
+Effort: **M**. Done when: no `.jsx` file imports an engine field name. **None
+does**, pinned by `test_no_component_renders_a_raw_engine_field`, which strips
+comments first so that explaining a field is not mistaken for rendering it.
 
-### Step 6 — the determinism test, and the contradiction test
+Thresholds live in `config/founder_view.json`, not in either implementation. The
+client is local-first - Home computes runway and unit economics from numbers the
+browser never sends - so a few rules necessarily exist on both sides; the numbers
+do not, and a test asserts the JS reaches through the shared file rather than
+inlining a copy.
+
+Running it found one bug the unit tests could not: the LTV/CAC ceiling was a flat
+20x, and the sample company sits at 20.3x off **44** measured customers. The
+ceiling exists because a huge ratio usually means a tiny denominator; when the
+denominator is visible and large enough to trust, that reason is gone, and
+refusing to answer on good data is its own dishonesty. It now applies only to an
+unverified sample, and a large ratio from a good one says "Healthy" with the
+caveat that the payback assumes churn holds.
+
+The `Assumed values (9)` panel is also split rather than listed. Interest rate,
+consumer confidence, unemployment, valuation multiple and innovation factor are
+`EnvState` internals; no founder has an opinion on any of them, and inviting one
+to "enter anything here you actually know" invited an invented number into the
+analysis. They collapse to one sentence about market conditions. What remains is
+`Numbers we guessed (3)` - costs, acquisition cost, churn split - each of which a
+founder could genuinely supply.
+
+### Step 6 — the determinism test, and the contradiction test &nbsp;· DONE
 
 Two tests, written before step 1 lands and kept red until it does.
 
@@ -466,6 +562,12 @@ current constants. **No existing test exercises a company below $12k MRR**, whic
 is why the whole failure shipped green.
 
 Effort: **S**. Done when both tests pass and the founder-scale fixture is in CI.
+**Both pass.** The non-contradiction test is parameterised over four company
+sizes, and asserts the converse too: a company that really is dying is reported
+as dying by both engines. The contract is agreement, not optimism.
+
+Total: 187 tests, `RuntimeWarning` promoted to an error, `advice_audit.py` at 0
+violations across 6 profiles, and the research fingerprint unchanged.
 
 ---
 

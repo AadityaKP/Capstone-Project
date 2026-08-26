@@ -12,9 +12,10 @@ import {
 } from "./derive.js";
 import {
   RISK, OUTCOME, FOCUS_LABELS, CHANNEL_COPY, DOMAIN_META,
-  confidenceBand, refreshReasonCopy, briefSourceCopy, scaleWord,
+  refreshReasonCopy, briefSourceCopy, scaleWord,
   guardBullets, rewriteMemory, SIMULATED_PREFIX, causalEvidenceCopy
 } from "./copy.js";
+import { confidenceSentence } from "./founderView.js";
 
 // ---- small primitives ----
 
@@ -120,6 +121,7 @@ export function buildPlanCards(analysis, month) {
         word ? `Strategic adjustment: product spend ${word} given the board's read of your risk` : null,
         "Kept above the board's minimum product investment"
       ].filter(Boolean),
+      isAction: amount > 0,
       starred: starDomain === "product"
     });
   }
@@ -149,11 +151,13 @@ export function buildPlanCards(analysis, month) {
         word ? `Strategic adjustment: marketing ${word} given the board's read of your risk` : null,
         "Kept above the board's minimum presence spend"
       ].filter(Boolean),
+      isAction: amount > 0,
       starred: starDomain === "marketing"
     });
   }
 
-  // Hiring — engine hires are $8k payroll slots, translated per §5.4.
+  // Hiring — engine hires are salary slots (business_logic.SALARY_SLOT_USD),
+  // translated to a monthly payroll figure per §5.4.
   {
     const hires = fa.hiring?.hires ?? 0;
     const cappedByRisk = (t.pre_modifier_action?.hiring?.hires ?? 0) > 0 && hires === 0;
@@ -174,6 +178,7 @@ export function buildPlanCards(analysis, month) {
         "The finance advisor gates hiring on runway and growth efficiency",
         cappedByRisk ? "Strategic adjustment: hiring paused at the board's risk level" : null
       ].filter(Boolean),
+      isAction: hires > 0,
       starred: false
     });
   }
@@ -196,6 +201,7 @@ export function buildPlanCards(analysis, month) {
           ? "The finance advisor suggests ≈+5% only when lifetime value is under 3× acquisition cost"
           : "Pricing holds unless growth efficiency drops below the healthy line"
       ],
+      isAction: change > 0.001,
       starred: false
     });
   }
@@ -296,19 +302,25 @@ export function EvidenceList({ analysis }) {
 
 // ---- confidence & freshness strip (§10.1 L6) ----
 
+// Confidence and the assumption count used to be two independent facts printed
+// side by side, so the strip could read "High confidence · 6 estimated inputs".
+// They are now one sentence in which the count caps the band, computed by
+// founder_view on the server; confidenceSentence is the fallback for analyses
+// stored before display blocks existed.
 export function ConfidenceStrip({ analysis, month, estimatedCount = 0 }) {
   if (!analysis) return null;
-  const band = confidenceBand(analysis.brief?.confidence);
+  const sentence = analysis.display?.confidence?.sentence
+    || analysis.trace?.display?.confidence?.sentence
+    || confidenceSentence(analysis.brief?.confidence, estimatedCount);
   const reason = refreshReasonCopy(analysis.trace?.refresh_reason || analysis.reason);
   const reuse = briefSourceCopy(analysis.trace?.brief_source);
   return (
     <div className="confidence-strip">
-      <span><strong>{band}</strong> confidence</span>
+      <span>{sentence}</span>
       <span className="dot-sep">·</span>
       <span>{reason}</span>
       {reuse && (<><span className="dot-sep">·</span><span>{reuse}</span></>)}
       {month && (<><span className="dot-sep">·</span><span>numbers from {new Date(month.enteredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></>)}
-      {estimatedCount > 0 && (<><span className="dot-sep">·</span><span>{estimatedCount} estimated input{estimatedCount > 1 ? "s" : ""}</span></>)}
     </div>
   );
 }

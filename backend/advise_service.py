@@ -31,6 +31,7 @@ from env.schemas import EnvState
 from oracle.memory import OracleMemoryStore
 from oracle.oracle import Oracle
 
+from backend import founder_view
 from backend.database import connect, utc_now
 import calibration as cal
 
@@ -162,12 +163,20 @@ def assumed_fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
     the client, which could not see the four macro fields the server filled in
     and therefore undercounted them. This is the server saying what it actually
     assumed, so the disclosure cannot drift from the behaviour.
+
+    `correctable` splits them. Interest rate, consumer confidence, unemployment,
+    valuation multiple and innovation factor are EnvState internals: no founder
+    has an opinion on any of them, and inviting one to "enter anything here you
+    actually know" invites an invented number into the analysis. They collapse
+    into a single line about market conditions. The rest are things a founder
+    genuinely could supply, and those are worth asking for.
     """
     config = payload.get("config") or {}
     assumed: list[dict[str, Any]] = []
 
-    def add(field: str, value: Any, why: str) -> None:
-        assumed.append({"field": field, "value": value, "why": why})
+    def add(field: str, value: Any, why: str, correctable: bool = False) -> None:
+        assumed.append({"field": field, "value": value, "why": why,
+                        "correctable": correctable})
 
     if config.get("interest_rate") is None:
         add("Interest rate", f"{DEFAULT_INTEREST_RATE}%", "not asked at onboarding; typical conditions")
@@ -180,14 +189,19 @@ def assumed_fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
     if config.get("monthly_costs") is None:
         add("Monthly costs", "$8,000 per person on the team",
             "not supplied, so the engine falls back to its own salary-slot convention; "
-            "your real monthly costs change the plan more than any other number")
+            "your real monthly costs change the plan more than any other number",
+            correctable=True)
     if config.get("cac") is None:
-        add("Acquisition cost", "$50", "not supplied and not derivable from marketing spend and new customers")
+        add("Acquisition cost", "$50",
+            "not supplied and not derivable from marketing spend and new customers",
+            correctable=True)
     if config.get("ltv") is None:
-        add("Lifetime value", "price / monthly churn", "derived from your own numbers, never asked")
+        add("Lifetime value", "price / monthly churn",
+            "derived from your own numbers, never asked")
     if not any(config.get(k) is not None for k in ("churn_enterprise", "churn_smb", "churn_b2c")):
         add("Churn split", "one blended rate applied to all three segments",
-            "the engine models enterprise, SMB and consumer churn separately; your blended figure fills all three, so the average it uses is exactly your number")
+            "the engine models enterprise, SMB and consumer churn separately; your blended figure fills all three, so the average it uses is exactly your number",
+            correctable=True)
     return assumed
 
 
@@ -329,9 +343,31 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     trace["history_months_replayed"] = months_replayed
     trace["absolute_scale"] = scale
     trace["graph_summary"] = _graph_summary(trace)
+
+    # Engine vocabulary is translated once, here, and the client renders the
+    # result. Raw brief and trace keys are untouched underneath for debugging.
+    monthly_outflow = (
+        business_logic.monthly_burn(state)
+        + float((final_action.get("marketing") or {}).get("spend", 0.0) or 0.0)
+        + float((final_action.get("product") or {}).get("r_and_d_spend", 0.0) or 0.0)
+    )
+    display = {
+        "confidence": founder_view.confidence(
+            brief.get("confidence"), len(trace["assumed_fields"])
+        ),
+        "runway": founder_view.runway_phrase(
+            state.cash, business_logic.monthly_burn(state), state.mrr
+        ),
+        "spend_ratio": founder_view.spend_ratio_phrase(monthly_outflow, state.mrr),
+        "show_rule_of_40": founder_view.rule_of_40_is_meaningful(state.mrr),
+        "monthly_burn": business_logic.monthly_burn(state),
+        "monthly_burn_supplied": state.monthly_burn is not None,
+    }
+
     return {
         "brief": brief,
         "trace": trace,
+        "display": display,
         "llm_ok": llm_ok,
         "oracle_mode": ORACLE_MODE,
         "created_at": utc_now(),
@@ -411,7 +447,11 @@ def store_analysis(company_id: str, month_index: int, result: dict[str, Any]) ->
                 company_id,
                 month_index,
                 json.dumps(result.get("brief")),
-                json.dumps(result.get("trace")),
+                # display rides inside the trace so a stored analysis replays
+                # with the same words it was first shown with, rather than
+                # being re-translated by whatever the rules say later.
+                json.dumps({**(result.get("trace") or {}),
+                            "display": result.get("display")}),
                 1 if result.get("llm_ok") else 0,
                 result.get("oracle_mode"),
                 result.get("created_at"),

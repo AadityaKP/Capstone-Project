@@ -341,3 +341,61 @@ def test_research_mode_never_carries_a_burn_figure():
     assert env.state.monthly_burn is None
     assert env.scale_aware_marketing is False
     assert env.stable_cac is False
+
+
+# --- the cash-safety resolver --------------------------------------------
+#
+# Boardroom._resolve_conflicts was the eighth place the engine reimplemented
+# "burn = headcount x a per-head constant", and the one a grep for
+# `headcount * 8000` misses because the constant is a variable - and the wrong
+# variable. cost_per_employee is the ONE-TIME recruiting cost of a new hire; used
+# again as a monthly salary it charged a founder-only company $10,000 a month,
+# invented a shortfall, and zeroed the entire plan to cover it.
+
+def _proposed():
+    return {
+        "marketing": {"spend": 500.0, "channel": "ppc"},
+        "hiring": {"hires": 1, "cost_per_employee": 10_000.0},
+        "product": {"r_and_d_spend": 600.0},
+        "pricing": {"price_change_pct": 0.0},
+    }
+
+
+def _resolved(st):
+    return Boardroom(agents())._resolve_conflicts(copy.deepcopy(_proposed()), st, 0.5)
+
+
+def test_a_founder_who_can_afford_the_plan_is_given_the_plan():
+    """$2,500 MRR, $5,000 cash, $500/month of real costs. $500 of marketing and
+    $600 of R&D are comfortably affordable; the $10,000 hire is not."""
+    out = _resolved(state(mrr=2_500, cash=5_000, costs=500, price=25, cac=25, churn=0.10))
+    assert out["marketing"]["spend"] == 500.0
+    assert out["product"]["r_and_d_spend"] == 600.0
+    assert out["hiring"]["hires"] == 0
+
+
+def test_an_unaffordable_hire_is_cut_rather_than_rounded_away():
+    """Rounding the cut down meant a hire costing more than the remaining
+    shortfall could never be cut: floor($6,100 / $10,000) is zero, so the plan
+    shed every dollar of marketing and R&D to protect it."""
+    out = _resolved(state(mrr=2_500, cash=5_000, costs=500, price=25, cac=25, churn=0.10))
+    assert out["hiring"]["hires"] == 0
+
+
+def test_a_hire_the_company_can_afford_survives():
+    out = _resolved(state(mrr=2_500, cash=200_000, costs=500, price=25, cac=25, churn=0.10))
+    assert out["hiring"]["hires"] == 1
+    assert out["marketing"]["spend"] == 500.0
+
+
+def test_the_resolver_is_untouched_without_a_real_burn_figure():
+    """Research runs reach the same code and their recorded trajectories were
+    produced by the original rounding and the original base_burn expression."""
+    st = state(mrr=2_500, cash=5_000, costs=500, price=25, cac=25, churn=0.10)
+    st.monthly_burn = None
+    st.headcount = 1
+    out = _resolved(st)
+    # base_burn = headcount * cost_per_employee = $10,000; nothing survives.
+    assert out["marketing"]["spend"] == 0.0
+    assert out["product"]["r_and_d_spend"] == 0.0
+    assert out["hiring"]["hires"] == 0

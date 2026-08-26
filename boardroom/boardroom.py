@@ -769,7 +769,27 @@ class Boardroom:
         cost_per_employee = max(1.0, action["hiring"].get("cost_per_employee", 10000))
         hiring_spend = action["hiring"].get("hires", 0) * cost_per_employee
         
-        base_burn = state.headcount * cost_per_employee
+        # The eighth place the engine reimplemented "burn = headcount x a
+        # per-head constant", and the one a grep for `headcount * 8000` misses
+        # because the constant is a variable here - and the wrong variable.
+        # cost_per_employee is the ONE-TIME recruiting cost of a new hire
+        # ($10,000 by default, and used as such three lines above in
+        # hiring_spend); using it again as a monthly salary charged a
+        # founder-only company $10,000 a month.
+        #
+        # Measured on a founder at $2,500 MRR, $5,000 cash and $500/month of
+        # real costs: total_needed came to $21,100 against $5,000, a $16,100
+        # shortfall that does not exist, and the resolver zeroed the entire
+        # plan to cover it - $500 of marketing, $600 of R&D and the hire. The
+        # founder was shown "hold / wait / hold" and told nothing.
+        #
+        # Research runs have no monthly_burn and keep the original expression
+        # exactly, because their recorded trajectories depend on it.
+        base_burn = (
+            business_logic.monthly_burn(state)
+            if state.monthly_burn is not None
+            else state.headcount * cost_per_employee
+        )
         total_needed = mkt_spend + rd_spend + hiring_spend + base_burn
         
         shortfall = total_needed - state.cash
@@ -793,11 +813,34 @@ class Boardroom:
         # 2. Cut Hiring
         hires_value = action["hiring"].get("hires", 0) * cost_per_employee
         hiring_cut_value = min(hires_value, shortfall)
-        hires_to_cut = math.floor(hiring_cut_value / cost_per_employee)
+        # A hire is lumpy, and rounding the cut DOWN means a headcount whose
+        # cost exceeds the remaining shortfall can never be cut at all:
+        # floor($6,100 / $10,000) is zero, so the plan sheds every dollar of
+        # marketing and R&D to protect a hire it still cannot afford. Rounding
+        # up removes the hire instead, which is the honest reading of "you do
+        # not have the money for this person".
+        #
+        # Only on the real-burn path. Research runs keep the original rounding,
+        # because their recorded trajectories were produced by it.
+        if state.monthly_burn is not None:
+            hires_to_cut = min(
+                action["hiring"].get("hires", 0),
+                math.ceil(hiring_cut_value / cost_per_employee),
+            )
+        else:
+            hires_to_cut = math.floor(hiring_cut_value / cost_per_employee)
         action["hiring"]["hires"] -= hires_to_cut
         shortfall -= (hires_to_cut * cost_per_employee)
         
-        if shortfall <= 0: return action
+        if shortfall <= 0:
+            # Cutting a whole hire usually overshoots, and the overshoot was
+            # paid for by the marketing budget that was cut first. Give it back
+            # rather than banking a saving nobody asked for: the founder above
+            # was told to spend nothing on a month where $500 of marketing and
+            # $600 of R&D were comfortably affordable.
+            if state.monthly_burn is not None and shortfall < 0:
+                action["marketing"]["spend"] += min(mkt_cut, -shortfall)
+            return action
         
         # 3. Cut R&D (last priority)
         max_allowed_rd_cut = action["product"]["r_and_d_spend"] * rd_protection_ratio

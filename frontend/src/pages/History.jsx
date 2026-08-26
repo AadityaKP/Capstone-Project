@@ -5,8 +5,9 @@ import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useStore, analysisForMonth } from "../store.jsx";
 import {
-  money, pct, signedPct, signedPp, monthName, runwayMonths, monthDeltas, monthsLabel
+  money, pct, signedPct, signedPp, monthName, monthDeltas, monthsLabel
 } from "../derive.js";
+import { runwayMonths, runwayLabel } from "../founderView.js";
 import { RiskChip, MiniLine, OutcomeBadge } from "../components.jsx";
 
 // Mirror of the engine's outcome labelling (classify_realized_outcome): ±10% MRR
@@ -40,7 +41,7 @@ function MonthEntry({ month, prev, analysis, outcome, navigate }) {
         <p className="timeline-numbers">
           MRR {money(v.mrr)}{deltas?.mrrPct != null && <em> ({signedPct(deltas.mrrPct)})</em>}
           {" · "}churn {pct(v.churnMonthly)}{deltas?.churnPp != null && Math.abs(deltas.churnPp) >= 0.05 && <em> ({signedPp(deltas.churnPp)})</em>}
-          {" · "}runway {monthsLabel(runwayMonths(v))}
+          {" · "}cash lasts {runwayLabel(v)}
         </p>
         {analysis?.brief?.recommended_focus?.length > 0 && (
           <p className="timeline-plan">Plan: {analysis.brief.recommended_focus.join(" · ").toLowerCase()}</p>
@@ -97,7 +98,12 @@ export default function History({ navigate }) {
         <article className="panel history-charts">
           <MiniLine label="MRR" points={months.map((m) => m.values.mrr)} format={money} />
           <MiniLine label="Churn" points={months.map((m) => m.values.churnMonthly)} goodWhenDown format={(x) => pct(x)} />
-          <MiniLine label="Runway" points={months.map((m) => Math.min(runwayMonths(m.values), 60))} format={(x) => monthsLabel(x)} />
+          {/* null means not burning cash; the line shows it as the 60-month ceiling
+              rather than dropping the month, and the label above says which. */}
+          <MiniLine label="Cash lasts" points={months.map((m) => {
+            const r = runwayMonths(m.values);
+            return r === null ? 60 : Math.min(r, 60);
+          })} format={(x) => monthsLabel(x)} />
         </article>
       )}
       <ol className="timeline">

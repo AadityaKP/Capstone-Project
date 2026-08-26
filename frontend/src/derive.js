@@ -2,14 +2,13 @@
 // Formulas follow docs/founder_frontend_spec.md §5 (input architecture),
 // §9 (KPI definitions) and §10.3 (rounding rules).
 
-// Runway = cash ÷ net burn, assuming revenue and costs stay flat (§7 O3).
-// Returns Infinity when the company is cash-flow positive.
-export function runwayMonths({ cash, costs, mrr }) {
-  const netBurn = (costs || 0) - (mrr || 0);
-  if (!cash || cash <= 0) return 0;
-  if (netBurn <= 0) return Infinity;
-  return cash / netBurn;
-}
+// runwayMonths and efficiencyBand moved to founderView.js. Both were
+// translation rather than arithmetic, and both shipped a founder-facing
+// defect: runway returned Infinity (printed as "∞" beside a projection that
+// said the company died in month 1), and the efficiency band had no ceiling,
+// so a $1 acquisition cost derived from ten customers read "Healthy".
+import { runwayMonths } from "./founderView.js";
+export { runwayMonths };
 
 // Annual churn → monthly equivalent: 1 − (1 − annual)^(1/12).
 export function annualToMonthlyChurn(annualPct) {
@@ -31,15 +30,6 @@ export function deriveLtv({ price, churnMonthly }) {
   const churn = Math.max((churnMonthly || 0) / 100, 0.001);
   if (!price || price <= 0) return null;
   return price / churn;
-}
-
-// LTV:CAC health bands from the engine's own thresholds (§9): ≥3 healthy, 1–3 watch, <1 unhealthy.
-export function efficiencyBand(ltv, cac) {
-  if (!ltv || !cac || cac <= 0) return { band: "unknown", label: "Needs data", ratio: null };
-  const ratio = ltv / cac;
-  if (ratio >= 3) return { band: "healthy", label: "Healthy", ratio };
-  if (ratio >= 1) return { band: "watch", label: "Watch", ratio };
-  return { band: "unhealthy", label: "Unhealthy", ratio };
 }
 
 // Market crowdedness → competitor count (§5.1): thresholds in the engine sit at 4/5/8/10.
@@ -105,10 +95,11 @@ export function signedPp(value, digits = 1) {
   return `${sign}${value.toFixed(digits)}pp`;
 }
 
+// null now means "not burning cash" rather than Infinity, and is rendered by
+// founderView.runwayLabel. This stays for plain month counts; it no longer has
+// an infinity branch, because nothing can reach it.
 export function monthsLabel(value) {
-  if (value == null || Number.isNaN(value)) return "—";
-  if (!Number.isFinite(value)) return "∞";
-  if (value >= 24) return `${Math.round(value)} mo`;
+  if (value == null || Number.isNaN(value) || !Number.isFinite(value)) return "—";
   return `${Math.round(value)} mo`;
 }
 
@@ -138,11 +129,15 @@ export function monthDeltas(current, previous) {
   const mrrPct = previous.values.mrr > 0
     ? ((current.values.mrr - previous.values.mrr) / previous.values.mrr) * 100
     : null;
+  // Either side can be null ("not burning cash"), and a delta between a number
+  // and "not applicable" is not a number.
+  const nowRunway = runwayMonths(current.values);
+  const wasRunway = runwayMonths(previous.values);
   return {
     mrrPct,
     churnPp: current.values.churnMonthly - previous.values.churnMonthly,
     cash: current.values.cash - previous.values.cash,
-    runway: runwayMonths(current.values) - runwayMonths(previous.values)
+    runway: nowRunway === null || wasRunway === null ? null : nowRunway - wasRunway
   };
 }
 
@@ -152,7 +147,7 @@ export function monthDeltas(current, previous) {
 export function eventTrigger(current, lastAnalyzed) {
   if (!current || !lastAnalyzed) return null;
   const rw = runwayMonths(current.values);
-  if (Number.isFinite(rw) && rw < 12) return "runway";
+  if (rw !== null && rw < 12) return "runway";
   if (lastAnalyzed.values.mrr > 0 && current.values.mrr <= lastAnalyzed.values.mrr * 0.85) return "mrr_drop";
   if (current.values.churnMonthly - lastAnalyzed.values.churnMonthly >= 1.5) return "churn_jump";
   return null;

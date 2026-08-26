@@ -5,9 +5,10 @@ import React, { useMemo, useState } from "react";
 import { Building2, ChevronDown, ChevronRight, CircleDollarSign, Target } from "lucide-react";
 import { useStore, uid } from "../store.jsx";
 import {
-  CROWDEDNESS, MATURITY, annualToMonthlyChurn, runwayMonths, deriveCac,
-  deriveLtv, money, monthsLabel, pct
+  CROWDEDNESS, MATURITY, annualToMonthlyChurn, deriveCac,
+  deriveLtv, money, pct
 } from "../derive.js";
+import { runwayPhrase, efficiency } from "../founderView.js";
 
 const STEPS = [
   { id: "company", label: "Your company", icon: Building2 },
@@ -50,7 +51,10 @@ export default function Onboarding({ navigate }) {
 
   const set = (patch) => dispatch({ type: "SAVE_DRAFT", draft: { ...patch, _step: step } });
 
-  const runway = useMemo(() => runwayMonths({ cash: draft.cash, costs: draft.costs, mrr: draft.mrr }), [draft]);
+  const runway = useMemo(
+    () => runwayPhrase({ cash: draft.cash, costs: draft.costs, mrr: draft.mrr }),
+    [draft]
+  );
 
   const errors = {
     name: !draft.name?.trim() ? "Give your company a name" : null,
@@ -58,8 +62,7 @@ export default function Onboarding({ navigate }) {
     crowdedness: !draft.crowdedness ? "Pick the closest option" : null,
     mrr: draft.mrr == null || draft.mrr <= 0 ? "Monthly recurring revenue is required" : null,
     cash: draft.cash == null || draft.cash <= 0 ? "Cash in the bank is required" : null,
-    costs: draft.costs == null || draft.costs <= 0 ? "Total monthly costs are required"
-      : draft.costs < 5000 ? "Unusually low — did you include salaries?" : null,
+    costs: draft.costs == null || draft.costs <= 0 ? "Total monthly costs are required" : null,
     price: draft.price == null || draft.price <= 0 ? "Average price per customer is required" : null,
     churnMonthly: draft.churnMonthly == null || draft.churnMonthly < 0 ? "Monthly churn is required"
       : draft.churnMonthly > 30 ? "Above 30%/month is extreme — double-check monthly vs. annual" : null
@@ -153,7 +156,7 @@ export default function Onboarding({ navigate }) {
           <Field label="Cash in the bank" error={touched.cash && errors.cash}>
             <NumInput value={draft.cash} onChange={(v) => set({ cash: v })} prefix="$" />
           </Field>
-          <Field label="Total monthly costs" help="Payroll + tools + rent + marketing + everything." error={touched.costs && errors.costs}>
+          <Field label="Total monthly costs" help="Payroll + tools + rent + marketing + everything. If it is just you and a few subscriptions, say so — the number is used exactly as you enter it." error={touched.costs && errors.costs}>
             <NumInput value={draft.costs} onChange={(v) => set({ costs: v })} prefix="$" suffix="/month" />
           </Field>
           <Field label="Marketing spend last month (optional)" help="Unlocks acquisition-cost analysis together with new customers.">
@@ -161,8 +164,8 @@ export default function Onboarding({ navigate }) {
           </Field>
           {draft.cash > 0 && draft.costs > 0 && draft.mrr != null && (
             <div className="live-note">
-              ≈ Runway: <strong>{monthsLabel(runway)}</strong>
-              <span> (cash ÷ net burn, assuming revenue and costs stay flat)</span>
+              <strong>{runway}</strong>
+              <span> — assuming revenue and costs stay flat.</span>
             </div>
           )}
         </div>
@@ -211,8 +214,8 @@ export default function Onboarding({ navigate }) {
 
           {(cac.value || ltv) && (
             <div className="live-note">
-              {cac.value && <>Acquisition cost ≈ <strong>{money(cac.value)}</strong> · </>}
-              {ltv && <>Lifetime value ≈ <strong>{money(ltv)}</strong> (price ÷ churn)</>}
+              <strong>{efficiency(ltv, cac.value, draft.newCustomers).label}</strong>
+              <span> — {efficiency(ltv, cac.value, draft.newCustomers).detail}</span>
             </div>
           )}
 

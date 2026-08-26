@@ -6,9 +6,10 @@ import React, { useMemo, useState } from "react";
 import { ChevronRight, PencilLine } from "lucide-react";
 import { useStore, latestMonth, uid } from "../store.jsx";
 import {
-  CROWDEDNESS, MATURITY, deriveCac, deriveLtv, runwayMonths,
+  CROWDEDNESS, MATURITY, deriveCac, deriveLtv,
   money, moneyExact, pct, signedPct, signedPp, dateLabel, monthsLabel
 } from "../derive.js";
+import { runwayLabel } from "../founderView.js";
 import { ProvChip, Banner } from "../components.jsx";
 
 function Row({ label, value, chip, chipDate }) {
@@ -50,7 +51,7 @@ export function CompanyView({ navigate }) {
           <Row label="Monthly recurring revenue" value={moneyExact(v.mrr)} chip="provided" chipDate={entered} />
           <Row label="Cash in the bank" value={moneyExact(v.cash)} chip="provided" chipDate={entered} />
           <Row label="Total monthly costs" value={moneyExact(v.costs)} chip="provided" chipDate={entered} />
-          <Row label="Runway" value={monthsLabel(runwayMonths(v))} chip="derived" />
+          <Row label="Cash lasts" value={runwayLabel(v)} chip="derived" />
 
           <span className="ledger-section">Customers</span>
           <Row label="Average price" value={`$${v.price}/user/mo`} chip="provided" chipDate={entered} />

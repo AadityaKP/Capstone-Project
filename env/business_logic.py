@@ -251,35 +251,108 @@ def compute_churn_rate(state: EnvState) -> float:
 
     return base * quality_factor * macro_multiplier * decay_multiplier
 
-def apply_innovation_investment(state: EnvState, action: ProductAction) -> None:
-    """
-    Converts R&D spend into innovation gains (nonlinear, saturating).
+# R&D spend at which a company reaches half the achievable monthly product
+# improvement, as a share of its own revenue. SaaS Capital's 2026 survey puts
+# median R&D for private B2B SaaS at 24% of ARR, which for a monthly figure is
+# 24% of MRR: a company spending what the median company spends buys half the
+# achievable rate.
+#
+# This deliberately does NOT preserve the old constant's calibration point. The
+# original half-saturation was $100,000, which at the $50k-MRR company the
+# engine was tuned for means spending twice your revenue on R&D to get half the
+# available improvement. That is not a plausible anchor at any company size, and
+# it is part of why the lever did nothing. Replacing it with a published median
+# is a change of belief about the world, not a refactor, and is why this sits
+# behind a flag.
+#
+# The median is published; placing half-saturation AT the median is a modelling
+# judgement, as is MAX_MONTHLY_QUALITY_GAIN. Both are ASSUMED and are reported
+# as such wherever calibration provenance is surfaced.
+RND_HALF_SATURATION_SHARE = 0.24
+
+# Ceiling on how much of the remaining quality headroom one month of R&D can
+# close, at any spend. Carried over from the original curve unchanged.
+MAX_MONTHLY_QUALITY_GAIN = 0.05
+
+# product_quality moves at half the rate innovation_factor does, as it always
+# has - R&D repairs capability faster than customers feel it.
+QUALITY_GAIN_SHARE = 0.5
+
+# Floor under the revenue a spend share is measured against, so a pre-revenue
+# company does not divide by zero and read every dollar as total saturation.
+MIN_SCALE_MRR = 1_000.0
+
+
+def apply_innovation_investment(state: EnvState, action: ProductAction,
+                                scale_aware: bool = False) -> None:
+    """Converts R&D spend into innovation gains (nonlinear, saturating).
+
+    The original had two defects that compounded into a lever that did
+    literally nothing for a founder, not merely too little:
+
+      1. `gain *= (1.0 - state.innovation_factor)`, applied to BOTH outputs.
+         innovation_factor is a scarring variable - it starts at 1.0 and only
+         depression hysteresis pushes it down - and every founder analysis
+         starts it at 1.0. So the multiplier was exactly zero, and $500,000 of
+         R&D moved product_quality by 0.000000. Since product_quality is the
+         only input to compute_churn_rate a plan can move, churn was identical
+         across every plan by construction.
+      2. The $100,000 saturation constant was absolute, so the same dollar of
+         R&D meant something different at every company size.
+
+    Scale-aware separates the two headrooms - innovation_factor still repairs
+    scarring, product_quality gets its own - and measures spend as a share of
+    the company's own revenue.
     """
     spend = action.r_and_d_spend
 
     if spend <= 0:
         return
 
-    # Saturation curve (Hill-type response)
-    scale = 100_000  # tuning parameter
-    gain = (spend / (spend + scale)) * 0.05  # max ~0.05/month
+    if scale_aware:
+        share = spend / max(state.mrr, MIN_SCALE_MRR)
+        response = share / (share + RND_HALF_SATURATION_SHARE)
+        gain = MAX_MONTHLY_QUALITY_GAIN * response
+        # Each variable closes its own headroom. A whole innovation_factor has
+        # nothing left to repair, which is correct; it must not also mean the
+        # product cannot improve.
+        state.innovation_factor += gain * (1.0 - state.innovation_factor)
+        state.product_quality += (
+            gain * (1.0 - state.product_quality) * QUALITY_GAIN_SHARE
+        )
+    else:
+        # Saturation curve (Hill-type response)
+        scale = 100_000  # tuning parameter
+        gain = (spend / (spend + scale)) * 0.05  # max ~0.05/month
 
-    # Harder to improve when already high
-    gain *= (1.0 - state.innovation_factor)
+        # Harder to improve when already high
+        gain *= (1.0 - state.innovation_factor)
 
-    state.innovation_factor += gain
+        state.innovation_factor += gain
 
-    # Ensures innovation -> lower churn (since churn uses product_quality)
-    state.product_quality += gain * 0.5
-    state.product_quality = min(1.0, state.product_quality)
-    
-    # Clamp to valid range
+        # Ensures innovation -> lower churn (since churn uses product_quality)
+        state.product_quality += gain * 0.5
+
+    state.product_quality = min(1.0, max(0.0, state.product_quality))
     state.innovation_factor = min(1.0, max(0.0, state.innovation_factor))
 
 
-def compute_expansion_mrr(state: EnvState, action: ProductAction) -> float:
+def compute_expansion_mrr(state: EnvState, action: ProductAction,
+                          scale_aware: bool = False) -> float:
+    """Upsell into the existing base, lifted by R&D.
+
+    The $50,000 saturation constant is the $50k-MRR calibration company
+    spending 1.0x its revenue to reach the cap, so the scale-aware form uses
+    exactly that multiple and the calibration point is preserved - unlike
+    apply_innovation_investment above, whose old anchor was not defensible at
+    any size and had to be replaced rather than rescaled.
+
+    The flat 2% underneath is untouched, and remains the largest single term
+    in a founder's projection: it is why the do-nothing arm still grows.
+    """
     effective_rnd = action.r_and_d_spend * state.innovation_factor
-    upsell_factor = 1 + min(effective_rnd / 50_000, 0.5)
+    saturation = max(state.mrr, MIN_SCALE_MRR) if scale_aware else 50_000
+    upsell_factor = 1 + min(effective_rnd / saturation, 0.5)
     return state.mrr * 0.02 * upsell_factor
 
 def apply_pricing_effect(state: EnvState, action: PricingAction, rng=None) -> None:

@@ -43,6 +43,7 @@ import numpy as np
 
 import calibration as cal
 from agents.baseline_agents import CFOAgent, CMOAgent, CPOAgent
+from backend import founder_view
 from env import business_logic
 from env.schemas import EnvState
 from env.startup_env import StartupEnv
@@ -144,6 +145,7 @@ def _make_env(state: EnvState, gross_margin: float | None) -> StartupEnv:
             "max_months": 10_000,          # horizon is controlled by the caller
             "scheduled_shocks": False,     # research fixture, not founder physics
             "scale_aware_marketing": True, # see above - ships with the burn fix
+            "scale_aware_rnd": True,       # R&D that can move the product at all
             "gross_margin": gross_margin,
         }
     )
@@ -165,8 +167,9 @@ def _rollout(
     env.reset(seed=seed)                       # also seeds the global RNG
     env.state = base_state.model_copy(deep=True)
 
-    mrr, cash, churn, rule40 = [], [], [], []
+    mrr, cash, churn, rule40, spend_ratio = [], [], [], [], []
     survived = True
+    died_month: int | None = None
     pre_shock_mrr: float | None = None
     recovery_month: int | None = None
     drawdown = False
@@ -195,6 +198,15 @@ def _rollout(
         cash.append(state.cash)
         churn.append(business_logic.compute_churn_rate(state) * 100.0)
         rule40.append(info["rule_of_40"])
+        # Dollars out per dollar in. Rule of 40 is a public-SaaS benchmark and
+        # means nothing below ~$1M ARR, so founder_view shows this instead;
+        # both travel and the client is told which to draw.
+        outflow = (
+            business_logic.monthly_burn(state)
+            + action["marketing"]["spend"]
+            + action["product"]["r_and_d_spend"]
+        )
+        spend_ratio.append(outflow / state.mrr if state.mrr > 0 else 0.0)
 
         # "Months to recover" only means something once MRR has actually fallen
         # below its pre-shock level. competitor_surge cuts price and lifts churn
@@ -209,30 +221,64 @@ def _rollout(
 
         if terminated:
             survived = False
-            # Pad the remaining months so every path is the same length; a dead
-            # company stays dead rather than being dropped from the median.
-            remaining = horizon - len(mrr)
-            mrr.extend([state.mrr] * remaining)
-            cash.extend([state.cash] * remaining)
-            churn.extend([churn[-1]] * remaining)
-            rule40.extend([rule40[-1]] * remaining)
+            died_month = month
+            # The path ends here. It used to be padded forward to the horizon
+            # so every path was the same length, which made "died in month 1"
+            # and "stagnated for a year" render as the same flat line - and at
+            # founder scale, where every seed died in month 0 or 1, it turned
+            # the whole twelve-month chart into one number drawn twelve times.
+            # _bands handles ragged paths instead, and reports how many
+            # companies are still alive in each month.
             break
 
     return {
         "mrr": mrr, "cash": cash, "churn": churn, "rule40": rule40,
-        "survived": survived, "recovery_month": recovery_month,
+        "spend_ratio": spend_ratio,
+        "survived": survived, "died_month": died_month,
+        "recovery_month": recovery_month,
         "drawdown": drawdown, "cascade_triggered": cascade_triggered,
     }
 
 
-def _bands(series: list[list[float]]) -> dict[str, list[float]]:
-    """Median and 25-75 interquartile band, per month, across seeds."""
-    matrix = np.asarray(series, dtype=float)
-    return {
-        "median": np.median(matrix, axis=0).round(2).tolist(),
-        "p25": np.percentile(matrix, 25, axis=0).round(2).tolist(),
-        "p75": np.percentile(matrix, 75, axis=0).round(2).tolist(),
-    }
+def _bands(series: list[list[float]], horizon: int) -> dict[str, list[float | None]]:
+    """Median and 25-75 interquartile band per month, over survivors only.
+
+    Paths are ragged: a company that ran out of cash in month 3 contributes
+    four points and then stops. Each month is summarised over whoever is still
+    alive in it, and months where nobody is left are None rather than a
+    forward-filled corpse.
+
+    That is survivorship bias, deliberately: the alternative is a median that
+    silently mixes live companies with dead ones held at their last value, and
+    an arm that kills 90% of its seeds looking flat rather than fatal. The bias
+    is the reason `alive_fraction` is returned beside it and rendered rather
+    than merely reported - a median over three survivors of fifty is a
+    different claim from a median over fifty, and the chart has to say so.
+    """
+    median: list[float | None] = []
+    p25: list[float | None] = []
+    p75: list[float | None] = []
+    for month in range(horizon):
+        column = [path[month] for path in series if month < len(path)]
+        if not column:
+            median.append(None)
+            p25.append(None)
+            p75.append(None)
+            continue
+        median.append(round(float(np.median(column)), 2))
+        p25.append(round(float(np.percentile(column, 25)), 2))
+        p75.append(round(float(np.percentile(column, 75)), 2))
+    return {"median": median, "p25": p25, "p75": p75}
+
+
+def _alive_fraction(paths: list[dict[str, Any]], horizon: int) -> list[float]:
+    """Share of seeds still solvent in each month. One per policy, not per
+    panel: all four panels are the same runs, and duplicating it four times is
+    four chances for it to drift."""
+    return [
+        round(sum(1 for p in paths if month < len(p["mrr"])) / len(paths), 3)
+        for month in range(horizon)
+    ]
 
 
 def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
@@ -272,16 +318,29 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
         ]
         cascade_seen = cascade_seen or any(p["cascade_triggered"] for p in paths)
 
+        # Each run's last month: the horizon for a survivor, the month the
+        # cash ran out for everyone else. A median over a mix of the two is
+        # only readable next to the survival rate and the death month, which
+        # is why all three travel together.
         terminal_mrr = [p["mrr"][-1] for p in paths]
         terminal_cash = [p["cash"][-1] for p in paths]
         mean_rule40 = [float(np.mean(p["rule40"])) for p in paths]
         median_terminal_mrr = float(np.median(terminal_mrr))
+        deaths = [p["died_month"] for p in paths if p["died_month"] is not None]
 
         summary: dict[str, Any] = {
             "median_terminal_mrr": round(median_terminal_mrr, 2),
             "median_terminal_cash": round(float(np.median(terminal_cash)), 2),
             "survival_rate": round(sum(p["survived"] for p in paths) / len(paths), 3),
             "mean_rule_of_40": round(float(np.mean(mean_rule40)), 2),
+            # Months are zero-indexed inside the rollout; +1 makes them the
+            # "month 1" a founder would count.
+            "median_death_month": (
+                int(round(float(np.median(deaths)))) + 1 if deaths else None
+            ),
+            "earliest_death_month": (min(deaths) + 1) if deaths else None,
+            "deaths": len(deaths),
+            "runs": len(paths),
             "months_to_recover": None,
             "drawdown_fraction": None,
             "shock_cost_pct": None,
@@ -311,15 +370,18 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
         results[policy] = {
             "label": POLICY_LABELS[policy],
             "series": {
-                "mrr": _bands([p["mrr"] for p in paths]),
-                "cash": _bands([p["cash"] for p in paths]),
-                "churn": _bands([p["churn"] for p in paths]),
-                "rule_of_40": _bands([p["rule40"] for p in paths]),
+                "mrr": _bands([p["mrr"] for p in paths], horizon),
+                "cash": _bands([p["cash"] for p in paths], horizon),
+                "churn": _bands([p["churn"] for p in paths], horizon),
+                "rule_of_40": _bands([p["rule40"] for p in paths], horizon),
+                "spend_ratio": _bands([p["spend_ratio"] for p in paths], horizon),
             },
+            # Per policy, not per panel: every panel is the same runs.
+            "alive_fraction": _alive_fraction(paths, horizon),
             "summary": summary,
         }
 
-    return {
+    return founder_view.translate_projection({
         "horizon_months": horizon,
         "n_seeds": n_seeds,
         "seeds": f"{seeds[0]}-{seeds[-1]}",
@@ -347,7 +409,7 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
         # False means the policies stopped sharing a world and the comparison is
         # no longer clean. Surfaced, never silently swallowed.
         "shock_tape_shared": not cascade_seen,
-    }
+    })
 
 
 def _assumptions(
