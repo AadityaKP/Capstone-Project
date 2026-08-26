@@ -19,7 +19,10 @@ frontend/dist/
 # the regenerable CSV exports are not.
 data/*
 !data/ingest_edgar.py
+!data/extract_panel_sample.py
 !data/coverage_report.md
+!data/panel_extract.md
+!data/panel_shortlist.csv
 !data/edgar.db
 chroma_db_founder/
 backups/

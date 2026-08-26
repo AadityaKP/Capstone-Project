@@ -2,23 +2,36 @@ import random
 import math
 from env.schemas import EnvState, MarketingAction, ProductAction, PricingAction, HiringAction
 
-def interest_rate_shock(state: EnvState, prob: float = 0.1) -> None:
-    if random.random() < prob:
-        state.interest_rate += 1.5  
+
+def _stream(rng):
+    """The random source to draw from.
+
+    None means the global `random` module, which is what every caller used
+    before StartupEnv gained a private generator. Passing an rng isolates the
+    physics from anything else in the process that draws - see
+    StartupEnv.deterministic_rng for why that matters for cross-policy
+    comparison.
+    """
+    return rng if rng is not None else random
+
+
+def interest_rate_shock(state: EnvState, prob: float = 0.1, rng=None) -> None:
+    if _stream(rng).random() < prob:
+        state.interest_rate += 1.5
         state.valuation_multiple *= 0.85
         state.churn_smb *= 1.2
 
-def consumer_confidence_shock(state: EnvState, prob: float = 0.1) -> None:
-    if random.random() < prob:
+def consumer_confidence_shock(state: EnvState, prob: float = 0.1, rng=None) -> None:
+    if _stream(rng).random() < prob:
         state.consumer_confidence -= 20
         state.unemployment += 1.0
 
-def competitive_entry_shock(state: EnvState, prob: float = 0.1) -> None:
-    market_attractiveness = (state.mrr - 50_000) / 50_000 
-    dynamic_prob = 1 / (1 + math.exp(-market_attractiveness)) 
+def competitive_entry_shock(state: EnvState, prob: float = 0.1, rng=None) -> None:
+    market_attractiveness = (state.mrr - 50_000) / 50_000
+    dynamic_prob = 1 / (1 + math.exp(-market_attractiveness))
     actual_prob = prob * (2 * dynamic_prob)
 
-    if random.random() < actual_prob:
+    if _stream(rng).random() < actual_prob:
         state.competitors += 1
         state.price *= 0.9
 
@@ -45,16 +58,41 @@ def inject_hard_shock(state: EnvState, shock_type: str) -> str:
         return "RECESSION: confidence=55, unemployment spike, B2C churn doubled"
     return "NO_SHOCK"
 
-def apply_recession_cascade(state: EnvState) -> None:
+def apply_recession_cascade(state: EnvState, rng=None, always_draw: bool = False) -> None:
     """
     Credit-Bankruptcy Loop.
     If Unemployment High + Rates High -> Confidence Crash.
+
+    `always_draw` is the whole reason cross-policy comparison can be trusted.
+
+    This is the only conditional draw in the module: every other call site
+    consumes exactly one number per step regardless of state, but this one draws
+    only when unemployment > 8 AND interest_rate > 7. That makes the per-step
+    consumption of the shared random stream *state-dependent*, so two policies
+    that reach different macro states fall out of step with each other and stop
+    experiencing the same world - measured at 7 draws/step normally against 8
+    once the condition holds, and reached in 20 of 20 episodes at a median of
+    around month 33, inside the months 25-60 window the thesis analyses.
+
+    Drawing unconditionally and testing the result afterwards is identical in
+    distribution and fixes the desynchronisation outright. It does consume one
+    extra number per step, so it changes trajectories and cannot be the default
+    without invalidating every recorded result; StartupEnv turns it on together
+    with its private generator via `deterministic_rng`.
     """
-    if state.unemployment > 8.0 and state.interest_rate > 7.0:
-        if random.random() < 0.2: 
+    if always_draw:
+        roll = _stream(rng).random()
+        if state.unemployment > 8.0 and state.interest_rate > 7.0 and roll < 0.2:
             state.consumer_confidence -= 10
             state.valuation_multiple *= 0.8
-            state.unemployment += 0.5 
+            state.unemployment += 0.5
+        return
+
+    if state.unemployment > 8.0 and state.interest_rate > 7.0:
+        if _stream(rng).random() < 0.2:
+            state.consumer_confidence -= 10
+            state.valuation_multiple *= 0.8
+            state.unemployment += 0.5
 
 def apply_hysteresis(state: EnvState) -> None:
     """
@@ -103,7 +141,7 @@ def hill_response(spend: float, alpha: float, beta: float, gamma: float) -> floa
 SATURATION_ACQUISITION_RATE = 0.20
 
 
-def marketing_curve_params(state: EnvState, channel: str) -> tuple[float, float, float]:
+def marketing_curve_params(state: EnvState, channel: str, rng=None) -> tuple[float, float, float]:
     """Hill parameters expressed in customers, not bare dollars.
 
     The original constants were dimensionally wrong: gamma is a spend level, but
@@ -129,28 +167,31 @@ def marketing_curve_params(state: EnvState, channel: str) -> tuple[float, float,
     beta = acquirable * max(1.0, state.price)
     gamma = max(1.0, (acquirable / 2.0) * cac)
 
+    draw = _stream(rng)
     if channel == "ppc":
-        alpha = random.uniform(0.5, 1.0)
+        alpha = draw.uniform(0.5, 1.0)
     else:
         # Brand converts more slowly at low spend and compounds harder at high
         # spend; it also reaches further than performance at saturation.
-        alpha = random.uniform(1.5, 3.0)
+        alpha = draw.uniform(1.5, 3.0)
         beta *= 1.5
 
     return alpha, beta, gamma
 
 
-def compute_new_mrr(state: EnvState, action: MarketingAction, scale_aware: bool = False) -> float:
+def compute_new_mrr(state: EnvState, action: MarketingAction, scale_aware: bool = False,
+                    rng=None) -> float:
+    draw = _stream(rng)
     if scale_aware:
-        alpha, beta, gamma = marketing_curve_params(state, action.channel)
+        alpha, beta, gamma = marketing_curve_params(state, action.channel, rng=rng)
     elif action.channel == "ppc":
-        alpha = random.uniform(0.5, 1.0)
-        gamma = random.uniform(15_000, 50_000)
-        beta = random.uniform(10_000, 50_000)
-    else: 
-        alpha = random.uniform(1.5, 3.0)
-        gamma = random.uniform(15_000, 50_000)
-        beta = random.uniform(50_000, 100_000)
+        alpha = draw.uniform(0.5, 1.0)
+        gamma = draw.uniform(15_000, 50_000)
+        beta = draw.uniform(10_000, 50_000)
+    else:
+        alpha = draw.uniform(1.5, 3.0)
+        gamma = draw.uniform(15_000, 50_000)
+        beta = draw.uniform(50_000, 100_000)
 
     response = hill_response(action.spend, alpha, beta, gamma)
 
@@ -213,8 +254,8 @@ def compute_expansion_mrr(state: EnvState, action: ProductAction) -> float:
     upsell_factor = 1 + min(effective_rnd / 50_000, 0.5)
     return state.mrr * 0.02 * upsell_factor
 
-def apply_pricing_effect(state: EnvState, action: PricingAction) -> None:
-    elasticity = random.uniform(-0.9, -0.2)
+def apply_pricing_effect(state: EnvState, action: PricingAction, rng=None) -> None:
+    elasticity = _stream(rng).uniform(-0.9, -0.2)
     demand_change = elasticity * action.price_change_pct
     
     state.price *= (1 + action.price_change_pct)

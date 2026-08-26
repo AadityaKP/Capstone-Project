@@ -67,6 +67,49 @@ ABLATION_SCENARIOS = [
     },
 ]
 
+# V3 attribution: does the MEMORY ARCHITECTURE cause the improvement?
+#
+# ABLATION_SCENARIOS above varies Oracle versions, which answers a different
+# question - it compares releases, not components. Isolating the architecture
+# needs the two memory systems crossed against each other, because the project
+# has two and they are not the same thing:
+#
+#   episodic  - OracleMemoryStore, Chroma, retrieved past run snapshots
+#   semantic  - CausalGraphStore, Neo4j, CONFIRMED_CAUSE / MAY_CAUSE edges
+#
+# Run this suite with environment_config={"deterministic_rng": True} and one
+# seed list, or the arms are not comparable.
+#
+# Note on the semantic arm: CausalGraphStore seeds MAY_CAUSE priors by hand
+# before any live evidence exists, so "semantic only" is partly a hand-authored
+# prior rather than something learned. Any claim from this arm has to say so.
+MEMORY_ABLATION_SCENARIOS = [
+    {
+        "scenario_id": "memory_none",
+        "policy": "boardroom",
+        "label": "No memory (boardroom only)",
+        "oracle_overrides": {},
+    },
+    {
+        "scenario_id": "memory_episodic_only",
+        "policy": "oracle_v3",
+        "label": "Episodic only (Chroma)",
+        "oracle_overrides": {},
+    },
+    {
+        "scenario_id": "memory_semantic_only",
+        "policy": "oracle_v4_causal_no_memory",
+        "label": "Semantic only (causal graph)",
+        "oracle_overrides": {},
+    },
+    {
+        "scenario_id": "memory_full",
+        "policy": "oracle_v4_causal",
+        "label": "Full memory (episodic + semantic)",
+        "oracle_overrides": {},
+    },
+]
+
 
 def ensure_output_dir(output_dir: str | Path = OUTPUT_DIR) -> Path:
     output_path = Path(output_dir)
@@ -494,6 +537,98 @@ def significance_test(df_a: pd.DataFrame, df_b: pd.DataFrame, metric: str = "pos
     }
 
 
+def cohens_d(sample_a: np.ndarray, sample_b: np.ndarray) -> float:
+    """Standardised mean difference, pooled SD, Hedges-corrected for small n.
+
+    A p-value says an effect is unlikely to be chance; it says nothing about
+    whether the effect is large enough to matter. With 200 seeds a trivial
+    difference clears p<0.05 easily, so an ablation reporting only p-values
+    cannot distinguish "the memory architecture helps" from "the memory
+    architecture helps by an amount no one would notice".
+    """
+    n_a, n_b = len(sample_a), len(sample_b)
+    if n_a < 2 or n_b < 2:
+        return float("nan")
+    var_a, var_b = np.var(sample_a, ddof=1), np.var(sample_b, ddof=1)
+    pooled = math.sqrt(((n_a - 1) * var_a + (n_b - 1) * var_b) / (n_a + n_b - 2))
+    if pooled == 0:
+        return 0.0
+    d = (np.mean(sample_b) - np.mean(sample_a)) / pooled
+    # Hedges' g: d is biased upward at small n.
+    correction = 1.0 - (3.0 / (4.0 * (n_a + n_b) - 9.0))
+    return float(d * correction)
+
+
+def effect_magnitude(d: float) -> str:
+    """Cohen's conventional bands. Reported as a word so a reader does not have
+    to remember what 0.5 means."""
+    if math.isnan(d):
+        return "unknown"
+    magnitude = abs(d)
+    if magnitude < 0.2:
+        return "negligible"
+    if magnitude < 0.5:
+        return "small"
+    if magnitude < 0.8:
+        return "medium"
+    return "large"
+
+
+def mean_difference_ci(
+    sample_a: np.ndarray, sample_b: np.ndarray, confidence: float = 0.95
+) -> tuple[float, float, float]:
+    """Welch confidence interval on the difference in means (b - a).
+
+    Welch rather than Student because ablation arms routinely differ in
+    variance - an arm that goes bankrupt more often has a wider spread by
+    construction - and pooling that variance would understate the interval.
+    Returns (difference, low, high).
+    """
+    n_a, n_b = len(sample_a), len(sample_b)
+    if n_a < 2 or n_b < 2:
+        return float("nan"), float("nan"), float("nan")
+    mean_a, mean_b = np.mean(sample_a), np.mean(sample_b)
+    var_a, var_b = np.var(sample_a, ddof=1), np.var(sample_b, ddof=1)
+    se = math.sqrt(var_a / n_a + var_b / n_b)
+    difference = float(mean_b - mean_a)
+    if se == 0:
+        return difference, difference, difference
+
+    # Welch-Satterthwaite degrees of freedom.
+    df = (var_a / n_a + var_b / n_b) ** 2 / (
+        (var_a / n_a) ** 2 / (n_a - 1) + (var_b / n_b) ** 2 / (n_b - 1)
+    )
+    if stats is not None:
+        critical = float(stats.t.ppf(0.5 + confidence / 2.0, df))
+    else:
+        critical = 1.96  # normal approximation; only reached without scipy
+    return difference, difference - critical * se, difference + critical * se
+
+
+def holm_bonferroni(p_values: list[float]) -> list[float]:
+    """Holm-Bonferroni step-down adjusted p-values.
+
+    An ablation compares several arms against one baseline on several metrics,
+    so the family-wise error rate is not the per-test alpha. Holm is used rather
+    than plain Bonferroni because it is uniformly more powerful at the same
+    guarantee, and rather than Benjamini-Hochberg because with a handful of
+    planned comparisons controlling the family-wise rate is the stricter and
+    more defensible choice.
+    """
+    indexed = sorted(
+        ((p, i) for i, p in enumerate(p_values) if not math.isnan(p)),
+        key=lambda pair: pair[0],
+    )
+    adjusted = [float("nan")] * len(p_values)
+    m = len(indexed)
+    running = 0.0
+    for rank, (p, index) in enumerate(indexed):
+        value = min(1.0, (m - rank) * p)
+        running = max(running, value)  # enforce monotonicity
+        adjusted[index] = running
+    return adjusted
+
+
 def _mann_whitney_fallback(sample_a: np.ndarray, sample_b: np.ndarray) -> tuple[float, float]:
     combined = np.concatenate([sample_a, sample_b])
     ranks = pd.Series(combined).rank(method="average").to_numpy()
@@ -526,16 +661,39 @@ def compute_pairwise_significance(
             continue
         for metric in metrics:
             result = significance_test(baseline_df, candidate_df, metric=metric)
+
+            sample_a = pd.to_numeric(baseline_df.get(metric), errors="coerce").dropna().to_numpy()
+            sample_b = pd.to_numeric(candidate_df.get(metric), errors="coerce").dropna().to_numpy()
+            d = cohens_d(sample_a, sample_b)
+            difference, ci_low, ci_high = mean_difference_ci(sample_a, sample_b)
+
             result.update(
                 {
                     "baseline_scenario_id": baseline_scenario_id,
                     "comparison_scenario_id": scenario_id,
                     "comparison_scenario_label": candidate_df["scenario_label"].iloc[0],
+                    "baseline_mean": float(np.mean(sample_a)) if len(sample_a) else float("nan"),
+                    "comparison_mean": float(np.mean(sample_b)) if len(sample_b) else float("nan"),
+                    "mean_difference": difference,
+                    "ci95_low": ci_low,
+                    "ci95_high": ci_high,
+                    "cohens_d": d,
+                    "effect_magnitude": effect_magnitude(d),
                 }
             )
             rows.append(result)
 
-    return pd.DataFrame(rows)
+    frame = pd.DataFrame(rows)
+    if frame.empty:
+        return frame
+
+    # Every row is one comparison in a single planned family, so the reported
+    # p-value has to be corrected before any of them is called significant.
+    frame["p_value_adjusted"] = holm_bonferroni(frame["p_value"].tolist())
+    frame["significant"] = frame["p_value_adjusted"] < 0.05
+    frame["correction"] = "holm-bonferroni"
+    frame["family_size"] = len(frame)
+    return frame
 
 
 def compute_ablation_summary(
@@ -753,7 +911,16 @@ def run_policy_suite(
     num_episodes: int,
     seed_start: int,
     oracle_frequency: int,
+    environment_config: dict[str, Any] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Run every scenario over the same seed list.
+
+    `environment_config` reaches StartupEnv unchanged and is the same for every
+    scenario in the suite, which is the point: pass
+    {"deterministic_rng": True} and the policies genuinely share a world, so a
+    difference between them is attributable to the policy. Without it they do
+    not - see StartupEnv.deterministic_rng.
+    """
     episode_frames = []
     raw_action_trace = []
     raw_monthly_trace = []
@@ -768,6 +935,7 @@ def run_policy_suite(
             oracle_overrides=scenario.get("oracle_overrides") or {},
             return_action_trace=True,
             return_monthly_trace=True,
+            environment_config=environment_config,
         )
         episode_df = episode_df.copy()
         episode_df["scenario_id"] = scenario["scenario_id"]

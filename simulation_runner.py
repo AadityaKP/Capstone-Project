@@ -255,6 +255,24 @@ def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides
             oracle_frequency=oracle_frequency,
             **oracle_overrides,
         )
+    if policy == "oracle_v4_causal_no_memory":
+        # Semantic memory only: the causal graph is still constructed (Oracle
+        # builds a CausalGraphStore whenever mode is oracle_v4_causal), but the
+        # episodic Chroma store is not. This is the arm the V3 attribution
+        # question needs and the one the suite was missing - without it the
+        # ablation cannot separate "the graph did the work" from "the retrieved
+        # episodes did the work", which is the whole claim.
+        return BoardroomAgent(
+            oracle_mode="oracle_v4_causal",
+            oracle_frequency=oracle_frequency,
+            enable_memory_retrieval=False,
+            oracle_instance=Oracle(
+                mode="oracle_v4_causal",
+                memory_store=None,
+                enable_memory_retrieval=False,
+            ),
+            **oracle_overrides,
+        )
     if policy == "oracle_v4_causal_hetero":
         from agents.causal_proposal_agents import BatchedCausalProposalGenerator
         from agents.llm_client import create_llm_client

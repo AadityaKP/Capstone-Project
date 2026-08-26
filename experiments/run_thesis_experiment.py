@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from experiments.thesis_analysis import (
     ABLATION_SCENARIOS,
+    MEMORY_ABLATION_SCENARIOS,
     OUTPUT_DIR,
     POST_SHOCK_END_MONTH,
     POST_SHOCK_START_MONTH,
@@ -39,10 +40,32 @@ def run_thesis_experiment(
     include_primary: bool = True,
     include_ablation: bool = True,
     include_case_study: bool = True,
+    include_memory_ablation: bool = False,
+    deterministic_rng: bool = True,
 ) -> Path:
+    """
+    deterministic_rng gives every scenario in a suite the same world for a given
+    seed. It defaults to True here, unlike the StartupEnv flag it sets, because
+    a comparison run is exactly the case where the old behaviour is wrong: the
+    physics otherwise draws from a stream that policies perturb and that
+    desynchronises on its own once macro conditions diverge. Pass False only to
+    reproduce a pre-existing result bit-for-bit.
+
+    include_memory_ablation runs the four-arm suite that isolates the memory
+    architecture (none / episodic / semantic / full). Off by default because it
+    is a separate question from the version comparison in ABLATION_SCENARIOS and
+    costs another full pass.
+    """
     print("==================================================")
     print("ORACLE THESIS ANALYSIS SUITE")
     print("==================================================")
+
+    environment_config = {"deterministic_rng": True} if deterministic_rng else None
+    if deterministic_rng:
+        print("[CONFIG] deterministic_rng=True - policies share one world per seed.")
+    else:
+        print("[CONFIG] deterministic_rng=False - LEGACY. Policies do NOT share a world;\n"
+              "         cross-policy differences are confounded. Reproduction only.")
 
     mode = mode.lower()
     if mode == "dev":
@@ -64,6 +87,8 @@ def run_thesis_experiment(
     decision_summary_df = decision_detail_df = retrieval_quality_df = decision_map_df = None
     primary_episode_metric_df = significance_df = None
     ablation_episode_df = ablation_action_df = ablation_monthly_df = ablation_recovery_df = ablation_summary_df = None
+    memory_episode_df = memory_monthly_df = memory_recovery_df = None
+    memory_summary_df = memory_metric_df = memory_significance_df = None
     case_episode_df = case_action_slice = case_monthly_slice = case_retrieval_slice = None
 
     if include_primary:
@@ -73,6 +98,7 @@ def run_thesis_experiment(
             num_episodes=resolved_num_episodes,
             seed_start=seed_start,
             oracle_frequency=oracle_frequency,
+            environment_config=environment_config,
         )
 
         primary_recovery_df = compute_recovery_events(primary_monthly_df)
@@ -96,12 +122,50 @@ def run_thesis_experiment(
             num_episodes=resolved_num_episodes,
             seed_start=seed_start,
             oracle_frequency=oracle_frequency,
+            environment_config=environment_config,
         )
         ablation_recovery_df = compute_recovery_events(ablation_monthly_df)
         ablation_summary_df = compute_ablation_summary(
             episode_df=ablation_episode_df,
             monthly_df=ablation_monthly_df,
             recovery_df=ablation_recovery_df,
+        )
+
+    if include_memory_ablation:
+        print("\n=== MEMORY ABLATION (V3 attribution) ===")
+        memory_episode_df, _, memory_monthly_df, _ = run_policy_suite(
+            scenarios=MEMORY_ABLATION_SCENARIOS,
+            num_episodes=resolved_num_episodes,
+            seed_start=seed_start,
+            oracle_frequency=oracle_frequency,
+            environment_config=environment_config,
+        )
+        memory_recovery_df = compute_recovery_events(memory_monthly_df)
+        memory_summary_df = compute_ablation_summary(
+            episode_df=memory_episode_df,
+            monthly_df=memory_monthly_df,
+            recovery_df=memory_recovery_df,
+        )
+        # Effect sizes, confidence intervals and a multiple-comparison
+        # correction, against the no-memory arm. The architecture claim rests on
+        # this table, so it reports how big the difference is and not only
+        # whether it cleared a threshold.
+        memory_metric_df = compute_episode_level_primary_metrics(
+            memory_episode_df, memory_monthly_df
+        )
+        # Primary metric first: months to recover to the pre-shock level is the
+        # quantity the memory claim is actually about. The rest are secondary
+        # and are reported alongside rather than instead.
+        memory_significance_df = compute_pairwise_significance(
+            memory_metric_df,
+            baseline_scenario_id="memory_none",
+            metrics=(
+                "mean_recovery_time_months",   # primary
+                "total_reward",
+                "final_cash",
+                "steps",                       # survival proxy
+                "post_shock_avg_rule40",
+            ),
         )
 
     if include_case_study:
@@ -146,6 +210,14 @@ def run_thesis_experiment(
         ablation_monthly_df.to_csv(output_dir / "ablation_monthly_trace.csv", index=False)
         ablation_recovery_df.to_csv(output_dir / "ablation_recovery_events.csv", index=False)
         ablation_summary_df.to_csv(output_dir / "ablation_summary.csv", index=False)
+
+    if include_memory_ablation and memory_episode_df is not None:
+        memory_episode_df.to_csv(output_dir / "memory_ablation_episode_metrics.csv", index=False)
+        memory_monthly_df.to_csv(output_dir / "memory_ablation_monthly_trace.csv", index=False)
+        memory_recovery_df.to_csv(output_dir / "memory_ablation_recovery_events.csv", index=False)
+        memory_summary_df.to_csv(output_dir / "memory_ablation_summary.csv", index=False)
+        memory_metric_df.to_csv(output_dir / "memory_ablation_episode_metric_summary.csv", index=False)
+        memory_significance_df.to_csv(output_dir / "memory_ablation_significance.csv", index=False)
 
     if include_case_study and case_episode_df is not None:
         case_episode_df.to_csv(output_dir / "case_study_episode_metrics.csv", index=False)

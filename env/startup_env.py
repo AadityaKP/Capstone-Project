@@ -45,6 +45,28 @@ class StartupEnv(gym.Env):
         # no reason they could see. Product surfaces turn them off; research runs
         # leave this True and are unaffected.
         self.scheduled_shocks = bool(self.initial_config.get("scheduled_shocks", True))
+        # Seed-matched cross-policy comparison. Off by default because it changes
+        # trajectories and would invalidate everything already in results/.
+        #
+        # Two things are wrong without it, and both break the premise that a
+        # shared seed list means a shared world:
+        #
+        #   1. The physics draws from the global `random` module, so anything
+        #      else in the process that draws - a policy sampling its own
+        #      actions, for instance - shifts the environment's stream. Measured:
+        #      identical seed and identical actions, but a policy consuming six
+        #      numbers per step saw competitors go 5->9 where a policy consuming
+        #      none saw 5->6.
+        #   2. apply_recession_cascade draws only when unemployment > 8 AND
+        #      interest_rate > 7, making per-step consumption state-dependent, so
+        #      policies desynchronise once they reach different macro states.
+        #
+        # On, the environment owns a private generator nothing else can perturb,
+        # and every step consumes a fixed number of draws from it. Turn this on
+        # for any run whose conclusion rests on comparing policies at equal seeds
+        # - which is every ablation.
+        self.deterministic_rng = bool(self.initial_config.get("deterministic_rng", False))
+        self._rng: random.Random | None = None
         
         self.action_space = spaces.Dict({
             "marketing": spaces.Dict({
@@ -88,6 +110,11 @@ class StartupEnv(gym.Env):
         # that, and say so.
         if seed is not None:
             random.seed(seed)
+        # The private stream is seeded from the same episode seed, so a run is
+        # reproducible from the seed alone. The global module is still seeded
+        # above: policies and baselines that draw for themselves need to be
+        # reproducible too, they just must not share a stream with the physics.
+        self._rng = random.Random(seed) if self.deterministic_rng else None
         self.episode_seed = seed
         
         self.state = EnvState(
@@ -136,16 +163,18 @@ class StartupEnv(gym.Env):
         prev_mrr = self.state.mrr
         shock_label = "NO_SHOCK"
 
-        business_logic.interest_rate_shock(self.state)
-        business_logic.consumer_confidence_shock(self.state)
-        business_logic.competitive_entry_shock(self.state)
+        business_logic.interest_rate_shock(self.state, rng=self._rng)
+        business_logic.consumer_confidence_shock(self.state, rng=self._rng)
+        business_logic.competitive_entry_shock(self.state, rng=self._rng)
 
         if self.scheduled_shocks and self.state.months_elapsed in {24, 48, 72}:
             shock_cycle = ["competitor_surge", "rate_hike", "recession"]
             shock_type = shock_cycle[(self.episode_seed or 0) % len(shock_cycle)]
             shock_label = business_logic.inject_hard_shock(self.state, shock_type)
 
-        business_logic.apply_recession_cascade(self.state)
+        business_logic.apply_recession_cascade(
+            self.state, rng=self._rng, always_draw=self.deterministic_rng
+        )
         business_logic.apply_hysteresis(self.state)
 
         business_logic.apply_recovery(self.state)
@@ -154,6 +183,7 @@ class StartupEnv(gym.Env):
             self.state,
             action.marketing,
             scale_aware=self.scale_aware_marketing,
+            rng=self._rng,
         )
 
         expansion = business_logic.compute_expansion_mrr(self.state, action.product)
@@ -169,7 +199,7 @@ class StartupEnv(gym.Env):
         margin = 1.0 if self.gross_margin is None else self.gross_margin
         self.state.cash += self.state.mrr * margin
 
-        business_logic.apply_pricing_effect(self.state, action.pricing) 
+        business_logic.apply_pricing_effect(self.state, action.pricing, rng=self._rng)
         
         if action.hiring.hires > 0:
             max_hires = int((self.state.cash / 18.0) / action.hiring.cost_per_employee)

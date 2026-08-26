@@ -2,8 +2,13 @@
 
 How to bring up the full stack and exercise every screen yourself, start to finish.
 
-Branch: `founder-integration`. Everything below is verified on Windows (PowerShell) against
+Branch: `founder-calibration`. Everything below is verified on Windows (PowerShell) against
 this branch.
+
+**New since the last revision:** the what-if projection (Part 3.5) and the assumed-values
+expander (Part 3.4). Both are on the Advice screen. If you only have time for one thing,
+do Part 3.5 — it is the surface a reviewer is most likely to ask about, because it is the
+only one that shows the simulator actually running.
 
 ---
 
@@ -173,7 +178,7 @@ path stays short.
 | **Onboarding** | 3 steps, live derived preview (CAC, LTV) before committing |
 | **Analyzing** | staged progress, honest elapsed timer, leaves the seat open |
 | **Home** | risk band, four KPI tiles, this month's plan, what changed |
-| **Advice** | the four domains, each with "Why this number?", watch-outs, evidence |
+| **Advice** | the four domains, each with "Why this number?", watch-outs, evidence, the what-if projection, assumed values |
 | **History** | month list with deltas and accepted-action counts |
 | **My company** | every input with a provenance chip |
 | **Settings** | narratives toggle, service status, sample exit, delete all data |
@@ -274,13 +279,20 @@ profiles produced zero variation. If you see something different, something has 
 | Surface | Expected |
 |---|---|
 | Position | **Moderate risk** · *High confidence* |
-| Provenance | *your first analysis · numbers from <today> · 1 estimated input* |
+| Provenance | *your first analysis · numbers from <today> · 6 estimated inputs* |
 | Product & retention | **≈$4.8k** (≈40% of MRR), marked *Priority* |
 | Marketing & growth | **≈$1.8k** (≈15% of MRR) |
 | Hiring | wait on hiring |
 | Pricing | hold pricing |
 
 Watch-outs and opportunities are written by the strategist and vary in wording.
+
+**Six estimated inputs, not one.** The count now comes from the server rather than being
+computed in the browser. It used to read *1 estimated input* because the client could only
+see the fields it had itself decided not to ask for; four macro values —
+`valuation_multiple`, `unemployment`, `innovation_factor`, `months_in_depression` — were
+being filled in by pydantic schema defaults that no code could enumerate. If you see *1*,
+you are looking at an analysis stored before this change, or at the sample company.
 
 **Moderate, not low, is the point.** This company has 7.5 months of runway and 5.0%
 monthly churn against a published median of 3.65% for its price point. Earlier builds
@@ -325,7 +337,78 @@ $3–5M ARR companies and this founder is far below that band. **`extrapolated: 
 expected here, not a fault** — it is the system declining to pretend the benchmark was
 published for a company this size.
 
-### 3.4 Confirm it persisted
+### 3.4 Assumed values — check nothing is silently filled in
+
+Open **Assumed values (6)** on the Advice screen. Expect a list naming every field the
+founder did not supply, the value used, and why:
+
+| Field | Value | Why |
+|---|---|---|
+| Interest rate | 3.0% | not asked at onboarding; typical conditions |
+| Consumer confidence | 100.0 | index where 100 is neutral |
+| Unemployment | 4.0% | not asked at onboarding |
+| Valuation multiple | 10.0x ARR | engine default |
+| Innovation factor | 1.0 | no scarring assumed at the start of an analysis |
+| Lifetime value | price ÷ monthly churn | derived from your own numbers |
+
+If the founder supplied a value, its row disappears — enter an interest rate during
+onboarding and the count drops to 5. That is the check worth doing: the list is generated
+from what the server actually used, so a row that persists after you supplied the value
+means the input is not reaching `build_env_state`.
+
+A **Churn split** row appears when the founder gives one blended churn figure and no
+per-segment breakdown. The engine models enterprise, SMB and consumer churn separately;
+the blended number fills all three, so the average it computes is exactly the figure
+entered. Worth reading once — it is the least obvious mapping in the product.
+
+### 3.5 The what-if projection — the simulator, running
+
+This is the only screen that steps the Gymnasium environment. Everything else asks the
+board a question; this one plays the answer forward.
+
+Scroll below the four plan cards to **What happens if you follow this plan** and click
+**Run the projection**.
+
+**It should return in well under a second.** There is no LLM call — the plan comes from
+the analysis already on screen. If it takes seconds, something is re-invoking the board.
+
+| Surface | Expected |
+|---|---|
+| Charts | four — Monthly revenue, Cash, Churn, Rule of 40 |
+| Per chart | three median lines, each inside its own shaded 25–75 band |
+| Legend | *Take the board's plan* · *Keep doing what you're doing* · *Standard playbook* |
+| Caveat | directly under the charts, not in a footnote |
+| Table | three rows: revenue, cash, survival %, Rule of 40 |
+| Footer | *Median of 50 simulated runs per plan, same 50 starting conditions for each* |
+
+On the reference profile the board's plan should end ahead of doing nothing on revenue,
+and **Standard playbook** should show a visibly lower survival rate — it spends harder and
+runs some seeds out of cash. That ordering is the point of the panel: it is not there to
+make the board look good, and if the board's plan loses, that is a finding to report, not
+a bug to fix.
+
+**Now click *Add a competitor shock*.** The fan re-runs with a competitor surge at month 6.
+Expect two new columns, **Shock cost** and **Recovery**, an amber dashed marker at month 6
+on all four charts, and a line describing the shock.
+
+**Recovery will read "no drop", and that is correct.** `competitor_surge` adds three
+competitors, cuts price 25% and lifts SMB churn 50% — it does not remove revenue. A company
+still growing never falls below its pre-shock level, so there is no recovery time to
+report and the panel says so instead of printing a fabricated `0 mo`. The shock's real cost
+shows in the **Shock cost** column, which re-runs each plan on the same seeds without the
+shock and compares. Expect small single-digit negative percentages.
+
+That the shock is nearly inert on revenue is a property of the model worth knowing:
+`compute_new_mrr` steps on competitor count only at 4 and 10, so 5→8 changes nothing, and
+in the default marketing curve new revenue does not depend on price at all.
+
+Finally open **Show what this projection assumes (4)**. Gross margin should read **83.5%**,
+tagged *derived*, cited to SaaS Capital with the arithmetic shown — it is the sum of four
+printed CoGS components, not a figure any source prints directly. Price should read *held
+flat*, tagged **unidentified**, because price elasticity has no public dataset and the
+projection refuses to move a lever it cannot justify.
+
+### 3.6 Confirm it persisted
 
 ```bash
 venv\Scripts\python.exe -c "import sqlite3,json; c=sqlite3.connect('data/startup_society.db'); c.row_factory=sqlite3.Row; r=c.execute('SELECT id,llm_ok,oracle_mode FROM analyses ORDER BY created_at DESC LIMIT 1').fetchone(); print(dict(r))"
@@ -417,6 +500,11 @@ it again from `chroma_db/`.
 | `[CausalGraphStore] Neo4j unavailable` in backend log | Neo4j not running | Start Neo4j, or set `FOUNDER_ORACLE_MODE=oracle_v4` |
 | Clicks do nothing after a branch switch | Vite hot-reload got stuck mid-merge | Hard-reload the page |
 | Blank page, console shows duplicate `createRoot` | Dev-only HMR artifact | Harmless; hard-reload clears it |
+| **What-if panel missing entirely on :8000** | Browser cached the old `index.html`, which points at a bundle hash that no longer exists | **Ctrl+Shift+R.** Hit during verification of this build — the page loads and looks fine, the panel is simply absent. Confirm with `document.querySelector('script').src`: it should end in the hash printed by the last `npm run build` |
+| What-if panel missing on :5173 but present on :8000 | Dev server started before the file existed | Restart the Vite dev server |
+| Projection returns 503 | `run_whatif` raised | Check the backend log; the endpoint wraps any failure rather than returning a half-built chart |
+| Projection takes seconds, not milliseconds | Something is re-invoking the board | It must read `trace.final_action` from the existing analysis, never call the LLM |
+| **Conditions diverged between plans** warning in the footer | The three policies stopped sharing an RNG stream | Expected never at a 12-month horizon (0 of 50 rollouts). If you see it, the horizon was raised or the starting macro state was unusual — the comparison is confounded and should be reported, not ignored |
 
 ---
 
@@ -446,3 +534,16 @@ judge a result.
   proposal generator overrode it. Worth watching on every run.
 - **Months are local-first.** Monthly snapshots live in browser localStorage; only analyses
   reach the server. Clearing browser data loses history that the database does not hold.
+- **The projection holds the plan constant.** It repeats this month's plan for twelve
+  months. A founder re-running the analysis monthly would get a different path, so the fan
+  is "what if you did this and nothing else", not "what if you used this product".
+- **The projection's do-nothing arm may be unfairly weak.** It holds the founder's current
+  marketing spend, which onboarding only asks for optionally, and R&D, which it never asks
+  for at all — so both can sit at zero. When marketing spend is absent the assumptions list
+  says so. Enter last month's marketing spend to make the comparison fair.
+- **The shock is nearly inert on revenue** — see 3.5. Do not present shock mode as evidence
+  the plan confers resilience until the shock actually moves revenue.
+- **Cash in the projection uses an 83.5% gross margin; the rest of the engine does not.**
+  Everywhere else revenue still lands in cash at 100% margin (defect D4). The flag is
+  default-off and only the projection sets it, so a cash figure on Home and a cash figure
+  in the fan chart are computed differently. Recorded in `docs/data_provenance.md` §R3.1.
