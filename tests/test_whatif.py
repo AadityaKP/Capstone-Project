@@ -8,8 +8,11 @@ no drawdown happened.
 
 from __future__ import annotations
 
+import copy
+import math
 import random
 
+import numpy as np
 import pytest
 
 import calibration as cal
@@ -17,6 +20,8 @@ from backend.advise_service import assumed_fields, build_env_state
 from backend.whatif_service import (
     NOOP_ACTION,
     POLICIES,
+    POLICY_HOLD,
+    POLICY_RECOMMENDED,
     SHOCK_MONTH,
     _clean_action,
     _rule_based_action,
@@ -277,3 +282,138 @@ def test_build_env_state_sets_macro_fields_explicitly():
     assert state.unemployment == 4.0
     assert state.valuation_multiple == 10.0
     assert state.innovation_factor == 1.0
+
+
+# --------------------------------------------------------------------------
+# Founder scale: the case that used to die in month 0
+#
+# tests/test_whatif.py::FOUNDER above is $12k MRR with two $8k salary slots - a
+# comfortable company that survives on the old constants, which is exactly why
+# the failure below shipped green. Nothing here exercised a company small enough
+# for the salary slot to matter until this fixture.
+# --------------------------------------------------------------------------
+
+FOUNDER_SMALL = {
+    "company_age_months": 8,
+    "config": {
+        "initial_mrr": 2_500, "initial_cash": 5_000, "average_price": 25, "cac": 50,
+        "churn_enterprise": 0.10, "churn_smb": 0.10, "churn_b2c": 0.10,
+        "competitors": 5, "product_quality": 0.5,
+        "monthly_costs": 500,          # the number that never used to arrive
+        "initial_headcount": 1,
+    },
+    "recommended_action": {
+        "marketing": {"spend": 250, "channel": "ppc"},
+        "hiring": {"hires": 0, "cost_per_employee": 10_000},
+        "product": {"r_and_d_spend": 100},
+    },
+    "current_marketing_spend": 10,
+    "n_seeds": 12,
+}
+
+
+def test_a_founder_is_not_killed_by_the_engines_own_salary_slot():
+    """The regression this change exists for.
+
+    $2,500 MRR against $500/month of real costs. Every arm reported 0% survival,
+    because the client encoded costs as one $8k salary slot and the physics
+    charged it: the company was dead in month 0 whatever the plan said.
+    """
+    result = run_whatif(copy.deepcopy(FOUNDER_SMALL))
+    for policy in (POLICY_RECOMMENDED, POLICY_HOLD):
+        assert result["policies"][policy]["summary"]["survival_rate"] == 1.0
+
+
+def test_the_projection_is_not_one_number_drawn_twelve_times():
+    """Forward-filling a company that died in month 0 made every chart flat."""
+    series = run_whatif(copy.deepcopy(FOUNDER_SMALL))["policies"][POLICY_HOLD]["series"]["mrr"]["median"]
+    assert len(set(series)) > 1
+    assert series[-1] > series[0]
+
+
+def test_marketing_at_founder_scale_is_not_a_money_printer():
+    """Under the absolute Hill constants $500 of ppc returned $1,255 of new MRR
+    for a $2,500 company - half its revenue in one month - because beta is drawn
+    as $10k-100k regardless of company size. Fixing burn without fixing this
+    turned 0% survival into 4.3x growth on $250/month."""
+    result = run_whatif(copy.deepcopy(FOUNDER_SMALL))
+    median = result["policies"][POLICY_RECOMMENDED]["series"]["mrr"]["median"]
+    gains = [(median[i] - median[i - 1]) / median[i - 1] for i in range(1, len(median))]
+    assert max(gains) < 0.25, "10% of MRR on ppc must not compound faster than this"
+
+
+def test_cac_cannot_run_away_under_the_scale_aware_curve():
+    """marketing_curve_params places gamma from state.cac, so a month with a
+    fractional response writes an enormous CAC, the CAC pushes gamma further
+    right, and the next response is smaller still. Measured before the guard:
+    cac 1.4e17 -> 9.0e43 in a single step, overflowing the float32 observation.
+
+    A month that acquired a fraction of a customer has no cost-per-customer, so
+    the previous estimate stands.
+    """
+    base = build_env_state(FOUNDER_SMALL)
+    env = StartupEnv(initial_config={
+        "max_months": 10_000, "scheduled_shocks": False,
+        "scale_aware_marketing": True,
+    })
+    env.reset(seed=0)
+    env.state = base.model_copy(deep=True)
+
+    # $1 of brand spend sits far left of gamma: the response is a rounding error.
+    starved = {
+        "marketing": {"spend": 1.0, "channel": "brand"},
+        "hiring": {"hires": 0, "cost_per_employee": 10_000.0},
+        "product": {"r_and_d_spend": 0.0},
+        "pricing": {"price_change_pct": 0.0},
+    }
+    for _ in range(24):
+        env.step(copy.deepcopy(starved))
+
+    assert math.isfinite(env.state.cac)
+    assert env.state.cac == base.cac
+
+
+def test_without_the_guard_cac_is_the_runaway_this_prevents():
+    """The negative half: same months, guard off. Pins that the guard is
+    load-bearing rather than decorative.
+
+    The divergence is super-exponential and does not settle at a large
+    number - it leaves the float range. Left running it takes
+    `hill_response` with it, because gamma ** alpha raises OverflowError once
+    gamma passes ~1e103 at alpha 3. Either exit counts as the runaway; what
+    is being pinned is that it happens at all.
+    """
+    base = build_env_state(FOUNDER_SMALL)
+    env = StartupEnv(initial_config={
+        "max_months": 10_000, "scheduled_shocks": False,
+        "scale_aware_marketing": True, "stable_cac": False,
+    })
+    env.reset(seed=0)
+    env.state = base.model_copy(deep=True)
+    starved = {
+        "marketing": {"spend": 1.0, "channel": "brand"},
+        "hiring": {"hires": 0, "cost_per_employee": 10_000.0},
+        "product": {"r_and_d_spend": 0.0},
+        "pricing": {"price_change_pct": 0.0},
+    }
+    diverged = False
+    with np.errstate(over="ignore"):
+        try:
+            for _ in range(24):
+                env.step(copy.deepcopy(starved))
+                if env.state.cac > 1e30:
+                    diverged = True
+                    break
+        except OverflowError:
+            diverged = True
+    assert diverged
+
+
+def test_costs_reach_the_projection_and_change_the_answer():
+    """Same company, same plan, costs supplied vs. left to the salary slot."""
+    without = copy.deepcopy(FOUNDER_SMALL)
+    without["config"].pop("monthly_costs")
+    real = run_whatif(copy.deepcopy(FOUNDER_SMALL))
+    slotted = run_whatif(without)
+    assert real["policies"][POLICY_HOLD]["summary"]["survival_rate"] == 1.0
+    assert slotted["policies"][POLICY_HOLD]["summary"]["survival_rate"] == 0.0

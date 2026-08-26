@@ -5,13 +5,18 @@ the flags at their defaults, and each test pins both sides of that.
 """
 
 import copy
+import hashlib
+import json
 
 import pytest
 
 from agents.baseline_agents import CFOAgent, CMOAgent, CPOAgent, merge_actions
 from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
 from boardroom.boardroom import Boardroom
+from env import business_logic
 from env.schemas import EnvState
+from env.startup_env import StartupEnv
+from oracle.oracle import Oracle
 from oracle.parser import parse_llm_response
 from oracle.prompt_builder import build_prompt
 
@@ -22,7 +27,7 @@ def state(mrr=12_000, cash=90_000, costs=24_000, price=40, cac=91, churn=0.05):
         churn_enterprise=churn, churn_smb=churn, churn_b2c=churn,
         interest_rate=3, consumer_confidence=100, competitors=5,
         product_quality=0.5, price=price, months_elapsed=12,
-        headcount=max(1, round(costs / 8000)),
+        headcount=1, monthly_burn=costs,
     )
 
 
@@ -190,3 +195,149 @@ def test_marketing_response_still_tracks_unit_economics():
     cheap = _relative_response(50_000, 80, 80 * 0.9)
     costly = _relative_response(50_000, 80, 80 * 2.3)
     assert cheap > costly
+
+
+# --- the burn contract ----------------------------------------------------
+#
+# `headcount * 8000` had seven implementations across five subsystems, and the
+# moment a real cost figure arrived they would have disagreed. These pin that
+# there is one of them, that the fallback is exact, and that the model is told
+# the truth.
+
+def test_monthly_burn_none_reproduces_the_headcount_convention():
+    """The fallback is what keeps every recorded research run valid."""
+    st = state()
+    st.monthly_burn = None
+    st.headcount = 3
+    assert business_logic.monthly_burn(st) == 3 * business_logic.SALARY_SLOT_USD
+
+
+def test_real_costs_replace_the_headcount_convention():
+    st = state(costs=500)                       # a founder-only company
+    assert business_logic.monthly_burn(st) == 500
+    # what the salary-slot encoding would have charged instead: 16x over
+    assert st.headcount * business_logic.SALARY_SLOT_USD == 8_000
+
+
+def test_every_burn_consumer_reads_the_same_number():
+    st = state(mrr=0, cash=6_000, costs=500)
+    expected = 6_000 / 500
+    assert Boardroom(agents())._estimate_runway_months(st) == pytest.approx(expected)
+    assert Oracle._estimate_runway_months(st) == pytest.approx(expected)
+    assert f"{expected:.1f} months" in build_prompt(st, include_burn_context=True)
+
+
+def test_prompt_states_the_real_burn_not_a_salary_slot():
+    """The prompt used to tell the model a $500/month founder burned $8,000,
+    then ask it why the company was in trouble."""
+    prompt = build_prompt(state(mrr=2_500, cash=5_000, costs=500), include_burn_context=True)
+    assert "- Monthly burn: 500" in prompt
+    assert "8,000" not in prompt
+
+
+def test_runway_clause_reads_as_a_sentence_when_cash_flow_positive():
+    prompt = build_prompt(state(mrr=2_500, cash=5_000, costs=500), include_burn_context=True)
+    assert "cash-flow positive - revenue covers the current burn" in prompt
+    assert "positive months of cash" not in prompt
+
+
+def test_hiring_adds_ongoing_payroll_once_burn_is_real():
+    """Under the headcount convention a hire raised burn for free, because burn
+    was derived from headcount. With a real figure it has to be added."""
+    env = StartupEnv(initial_config={
+        "initial_mrr": 12_000, "initial_cash": 500_000,
+        "monthly_burn": 20_000, "scheduled_shocks": False,
+    })
+    env.reset(seed=0)
+    env.step({
+        "marketing": {"spend": 0.0, "channel": "ppc"},
+        "hiring": {"hires": 2, "cost_per_employee": 10_000.0},
+        "product": {"r_and_d_spend": 0.0},
+        "pricing": {"price_change_pct": 0.0},
+    })
+    assert env.state.headcount == 3
+    assert env.state.monthly_burn == 20_000 + 2 * business_logic.SALARY_SLOT_USD
+
+
+def test_headcount_alone_still_drives_burn_when_no_costs_are_supplied():
+    """The same hire, with monthly_burn left at None: research behaviour."""
+    env = StartupEnv(initial_config={
+        "initial_mrr": 12_000, "initial_cash": 500_000, "scheduled_shocks": False,
+    })
+    env.reset(seed=0)
+    before = business_logic.monthly_burn(env.state)
+    env.step({
+        "marketing": {"spend": 0.0, "channel": "ppc"},
+        "hiring": {"hires": 2, "cost_per_employee": 10_000.0},
+        "product": {"r_and_d_spend": 0.0},
+        "pricing": {"price_change_pct": 0.0},
+    })
+    assert env.state.monthly_burn is None
+    assert business_logic.monthly_burn(env.state) == before + 2 * business_logic.SALARY_SLOT_USD
+
+
+# --- research comparability -----------------------------------------------
+
+# Fingerprint of four research-mode episodes: every StartupEnv default, 60
+# months, a fixed action cycle. Recorded on the commit before monthly_burn
+# existed and unchanged by it.
+RESEARCH_FINGERPRINT = "aff36e6589a6c1b4c12257004a6faad31006ea17d69a8a2bb74798eddc9a7bbb"
+
+_RESEARCH_ACTIONS = [
+    {"marketing": {"spend": 12_000.0, "channel": "ppc"},
+     "hiring": {"hires": 1, "cost_per_employee": 10_000.0},
+     "product": {"r_and_d_spend": 9_000.0},
+     "pricing": {"price_change_pct": 0.02}},
+    {"marketing": {"spend": 0.0, "channel": "brand"},
+     "hiring": {"hires": 0, "cost_per_employee": 10_000.0},
+     "product": {"r_and_d_spend": 0.0},
+     "pricing": {"price_change_pct": 0.0}},
+    {"marketing": {"spend": 30_000.0, "channel": "brand"},
+     "hiring": {"hires": 2, "cost_per_employee": 12_000.0},
+     "product": {"r_and_d_spend": 15_000.0},
+     "pricing": {"price_change_pct": -0.05}},
+]
+
+
+def test_research_episodes_are_byte_identical_to_the_recorded_physics():
+    """The guarantee the whole burn change rests on.
+
+    Everything in results/ was produced by StartupEnv at its defaults. This
+    pins that those defaults still produce exactly the same trajectories:
+    monthly_burn=None falls back to the headcount slot, scale_aware_marketing
+    and stable_cac are off, and no flag added here leaks into a research run.
+
+    A failure means recorded results are no longer comparable to new ones. That
+    is a decision to take deliberately on founder-calibration, not a test to
+    update casually - if you meant it, re-record the fingerprint and say so in
+    the commit.
+    """
+    digest = hashlib.sha256()
+    for seed in (0, 1, 7, 42):
+        env = StartupEnv()
+        env.reset(seed=seed)
+        for month in range(60):
+            _, reward, terminated, truncated, info = env.step(
+                _RESEARCH_ACTIONS[month % len(_RESEARCH_ACTIONS)]
+            )
+            snapshot = dict(info["state"])
+            snapshot.pop("monthly_burn", None)   # the new field; absent before
+            digest.update(json.dumps({
+                "seed": seed, "m": month, "r": round(reward, 9),
+                "r40": round(info["rule_of_40"], 9), "shock": info["shock_label"],
+                "s": {k: (round(v, 9) if isinstance(v, float) else v)
+                      for k, v in sorted(snapshot.items())},
+            }, sort_keys=True).encode())
+            if terminated or truncated:
+                break
+    assert digest.hexdigest() == RESEARCH_FINGERPRINT
+
+
+def test_research_mode_never_carries_a_burn_figure():
+    """Belt and braces: the fallback is reached because the field is unset,
+    not because a default happened to equal the slot."""
+    env = StartupEnv()
+    env.reset(seed=0)
+    assert env.state.monthly_burn is None
+    assert env.scale_aware_marketing is False
+    assert env.stable_cac is False

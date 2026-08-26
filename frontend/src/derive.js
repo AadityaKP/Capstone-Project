@@ -56,12 +56,12 @@ export const MATURITY = [
   { id: "polished", label: "Polished", quality: 0.8 }
 ];
 
-// Virtual engine headcount (§5.4): non-marketing burn ÷ $8k salary slots, so the
-// engine's internal burn matches reality. Never shown to the founder.
-export function virtualHeadcount({ costs, marketingSpend }) {
-  const nonMarketing = Math.max((costs || 0) - (marketingSpend || 0), 8000);
-  return Math.max(1, Math.round(nonMarketing / 8000));
-}
+// virtualHeadcount lived here: non-marketing burn ÷ $8k salary slots, because the
+// engine derived every burn figure from headcount. It is gone. Both of its floors
+// — Math.max(…, 8000) and Math.max(1, …) — meant every company with monthly costs
+// between $0 and $12,000 was charged exactly $8,000, so a founder spending $500
+// was billed sixteen times over and died in month 0 of every projection. Costs now
+// travel to the engine as themselves, in ScenarioConfig.monthly_costs.
 
 // ---- formatting (§10.3) ----
 

@@ -7,11 +7,12 @@ Every number in that document comes from here. Run any section on its own:
     venv/Scripts/python.exe experiments/founder_scale_probes.py whatif
     venv/Scripts/python.exe experiments/founder_scale_probes.py configs
     venv/Scripts/python.exe experiments/founder_scale_probes.py marketing
+    venv/Scripts/python.exe experiments/founder_scale_probes.py cac
     venv/Scripts/python.exe experiments/founder_scale_probes.py all
 
-`configs` simulates the two candidate fixes by patching rather than editing, so
-the direction and size of each can be measured before committing to either. It
-never writes to the source tree.
+`configs` is the before/after for steps 1 and 2. The "before" arm is not a
+reconstruction: omitting `monthly_costs` from the payload puts the engine back on
+its headcount-slot convention, which is exactly the state the product shipped in.
 """
 
 from __future__ import annotations
@@ -32,16 +33,15 @@ from env.schemas import EnvState, MarketingAction, ProductAction
 from env.startup_env import StartupEnv
 
 
-# A real founder, and the reason this plan exists: 20x smaller than the
-# $50k-MRR company every constant in the engine is tuned for.
+# A real founder, and the reason this work exists: 20x smaller than the
+# $50k-MRR company every constant in the engine was tuned for.
 FOUNDER_SMALL = {
     "company_age_months": 8,
     "config": {
         "initial_mrr": 2500, "initial_cash": 5000, "average_price": 25, "cac": 50,
         "churn_enterprise": 0.10, "churn_smb": 0.10, "churn_b2c": 0.10,
         "competitors": 5, "product_quality": 0.5,
-        # what api.js sends today: virtualHeadcount({costs: 500, marketingSpend: 10})
-        #   = max(1, round(max(500 - 10, 8000) / 8000)) = 1  ->  charged $8,000/mo
+        "monthly_costs": 500,          # the number that never used to arrive
         "initial_headcount": 1,
     },
     "recommended_action": {
@@ -53,7 +53,16 @@ FOUNDER_SMALL = {
     "n_seeds": 20,
 }
 
-TRUE_BURN = 500.0  # the founder's actual monthly costs
+
+def _legacy(payload: dict) -> dict:
+    """The same founder with costs withheld: the engine's own salary slot.
+
+    This is the shipped behaviour before step 1, reached through the supported
+    code path rather than by patching anything.
+    """
+    out = deepcopy(payload)
+    out["config"].pop("monthly_costs", None)
+    return out
 
 
 def _state(**overrides) -> EnvState:
@@ -71,30 +80,25 @@ def _state(**overrides) -> EnvState:
 
 # ---------------------------------------------------------------- section 0
 def rollout() -> None:
-    """One instrumented path. Shows the death arithmetic month by month."""
-    state = build_env_state(FOUNDER_SMALL)
-    print(f"absolute_scale({state.mrr:,.0f}) = {absolute_scale(state.mrr)}  "
-          f"(0.05 is the floor: every company under $2,500 MRR scales identically)")
-
-    for tag, raw in (
-        ("hold (zero spend)", None),
-        ("board plan", FOUNDER_SMALL["recommended_action"]),
-    ):
-        action = W._clean_action(raw)
+    """One instrumented path, on the founder's real costs and on the slot."""
+    for tag, payload in (("real costs", FOUNDER_SMALL), ("salary slot", _legacy(FOUNDER_SMALL))):
+        state = build_env_state(payload)
+        action = W._clean_action(payload["recommended_action"])
         env = StartupEnv(initial_config={
-            "max_months": 10_000, "scheduled_shocks": False, "gross_margin": None,
+            "max_months": 10_000, "scheduled_shocks": False,
+            "scale_aware_marketing": True,
         })
         env.reset(seed=0)
         env.state = state.model_copy(deep=True)
 
-        print(f"\n=== {tag}")
-        print(f"{'mo':>3} {'mrr':>10} {'cash':>11} {'R40':>9} {'salary':>8}  terminated")
+        print(f"\n=== {tag}: burn = ${B.monthly_burn(state):,.0f}/mo")
+        print(f"{'mo':>3} {'mrr':>10} {'cash':>11} {'R40':>9} {'burn':>9}  terminated")
         for month in range(12):
-            salary = env.state.headcount * 8000.0
+            burn = B.monthly_burn(env.state)
             _, _, terminated, _, info = env.step(deepcopy(action))
             s = env.state
             print(f"{month:>3} {s.mrr:>10.1f} {s.cash:>11.1f} "
-                  f"{info['rule_of_40']:>9.1f} {salary:>8.0f}  {terminated}")
+                  f"{info['rule_of_40']:>9.1f} {burn:>9,.0f}  {terminated}")
             if terminated:
                 print(f"    -> dead at month index {month}, cash ${s.cash:,.1f}")
                 break
@@ -102,7 +106,11 @@ def rollout() -> None:
 
 # ---------------------------------------------------------------- section 3
 def rnd() -> None:
-    """R&D spend against product quality, and the churn drift underneath it."""
+    """R&D spend against product quality, and the churn drift underneath it.
+
+    Still broken, and still the reason churn barely separates the arms. Step 3
+    of the plan; nothing in steps 1 and 2 touches it.
+    """
     print("=== R&D effect, innovation_factor = 1.0 (the founder default) ===")
     print("    gain *= (1.0 - innovation_factor)  ->  the product is exactly zero")
     for spend in (0, 200, 1_000, 5_000, 50_000, 500_000):
@@ -133,8 +141,9 @@ def rnd() -> None:
 
 # ---------------------------------------------------------------- section 0
 def whatif() -> None:
-    """The shipped endpoint, at founder scale. Reproduces the screenshots."""
+    """The shipped endpoint, at founder scale."""
     result = W.run_whatif(deepcopy(FOUNDER_SMALL))
+    print("starting_state:", result["starting_state"])
     print("shock_tape_shared:", result["shock_tape_shared"])
     for policy, data in result["policies"].items():
         s = data["summary"]
@@ -143,52 +152,28 @@ def whatif() -> None:
               f"cash=${s['median_terminal_cash']:>10,.0f}")
         print("   mrr  :", [round(v) for v in data["series"]["mrr"]["median"]])
         print("   churn:", [round(v, 2) for v in data["series"]["churn"]["median"]])
-    print("\nNo death month is reported anywhere in the payload:")
+    print("\nStill no death month in the payload - that is step 4:")
     print("  summary keys:", sorted(result["policies"]["hold"]["summary"]))
 
 
 # -------------------------------------------------------------- section 2.1
 def configs() -> None:
-    """The four configurations. Both fixes simulated by patching, not editing."""
-    original_step = StartupEnv.step
-    original_make_env = W._make_env
-
-    def patched_step(self, action):
-        headcount = self.state.headcount
-        obs, reward, terminated, truncated, info = original_step(self, action)
-        # refund the fake $8k salary slot, charge the founder's real costs
-        self.state.cash += headcount * 8000.0 - TRUE_BURN
-        terminated = self.state.cash <= 0          # re-evaluate against corrected cash
-        info["state"]["cash"] = self.state.cash
-        return obs, reward, terminated, truncated, info
-
-    def scale_aware_make_env(_state, gross_margin):
-        return StartupEnv(initial_config={
-            "max_months": 10_000, "scheduled_shocks": False,
-            "gross_margin": gross_margin, "scale_aware_marketing": True,
-        })
-
-    def report(tag):
-        result = W.run_whatif(deepcopy(FOUNDER_SMALL))
+    """Before and after, both reached through the supported payload."""
+    for tag, payload in (
+        ("BEFORE - costs withheld, engine charges its $8k salary slot", _legacy(FOUNDER_SMALL)),
+        ("AFTER  - costs supplied, scale-aware marketing on", FOUNDER_SMALL),
+    ):
+        result = W.run_whatif(deepcopy(payload))
+        burn = result["starting_state"]["monthly_burn"]
         print(f"\n########## {tag}")
+        print(f"           burn charged: ${burn:,.0f}/mo "
+              f"(supplied={result['starting_state']['monthly_burn_supplied']})")
         for policy, data in result["policies"].items():
             s = data["summary"]
             print(f"  {policy:<12} survival={s['survival_rate']:>5.0%}  "
                   f"12mo MRR=${s['median_terminal_mrr']:>9,.0f}  "
                   f"cash=${s['median_terminal_cash']:>10,.0f}")
             print(f"     mrr: {[round(v) for v in data['series']['mrr']['median']]}")
-
-    try:
-        report("A. as shipped today")
-        StartupEnv.step = patched_step
-        report(f"B. real burn (${TRUE_BURN:,.0f}/mo), marketing constants unchanged")
-        W._make_env = scale_aware_make_env
-        report("C. real burn + scale-aware marketing (both fixes)")
-        StartupEnv.step = original_step
-        report("D. scale-aware marketing only, fake $8k burn")
-    finally:
-        StartupEnv.step = original_step
-        W._make_env = original_make_env
 
 
 # ---------------------------------------------------------------- section 2
@@ -219,9 +204,42 @@ def marketing() -> None:
         print()
 
 
+# --------------------------------------------------------------- section 2.2
+def cac() -> None:
+    """The loop the scale-aware curve closes, and the guard that breaks it.
+
+    marketing_curve_params places gamma from state.cac. A month whose response
+    is a fraction of a customer writes an enormous CAC, that CAC pushes gamma
+    further right, and the next response is smaller still. Nothing damps it.
+    """
+    starved = {
+        "marketing": {"spend": 1.0, "channel": "brand"},
+        "hiring": {"hires": 0, "cost_per_employee": 10_000.0},
+        "product": {"r_and_d_spend": 0.0},
+        "pricing": {"price_change_pct": 0.0},
+    }
+    base = build_env_state(FOUNDER_SMALL)
+
+    for guard in (False, True):
+        env = StartupEnv(initial_config={
+            "max_months": 10_000, "scheduled_shocks": False,
+            "scale_aware_marketing": True, "stable_cac": guard,
+        })
+        env.reset(seed=0)
+        env.state = base.model_copy(deep=True)
+        print(f"\n=== stable_cac={guard}   ($1/mo of brand spend, far left of gamma)")
+        try:
+            for month in range(10):
+                _, gamma_beta, gamma = B.marketing_curve_params(env.state, "brand")
+                print(f"  month {month:>2}: cac={env.state.cac:>12.4g}  gamma={gamma:>12.4g}")
+                env.step(deepcopy(starved))
+        except OverflowError as exc:
+            print(f"  month {month:>2}: OverflowError from hill_response - {exc}")
+
+
 SECTIONS = {
     "rollout": rollout, "rnd": rnd, "whatif": whatif,
-    "configs": configs, "marketing": marketing,
+    "configs": configs, "marketing": marketing, "cac": cac,
 }
 
 if __name__ == "__main__":

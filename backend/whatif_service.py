@@ -120,10 +120,30 @@ def _rule_based_action(state: EnvState, scale: float) -> dict[str, Any]:
 
 
 def _make_env(state: EnvState, gross_margin: float | None) -> StartupEnv:
+    """The environment a founder is projected in.
+
+    `scale_aware_marketing` is on here and off in research runs, and it had to
+    ship in the same change as the burn fix rather than after it. Measured on a
+    $2,500-MRR founder, same seeds, recommended arm:
+
+        as shipped               $3,404 flat,  0% survival
+        real burn only          $10,802,     100% survival
+        real burn + this flag    $4,431,     100% survival
+        this flag only           $2,591 flat,  0% survival
+
+    The burn constant is the sole cause of death - this flag alone changes
+    nothing. But the absolute Hill constants are a money printer at founder
+    scale, because beta is drawn as $10k-100k of new MRR regardless of company
+    size: $250/month of ads takes a $2,500 company to $10,802 in a year. Fixing
+    burn alone would replace a visibly broken projection with a plausible-looking
+    wrong one, which is worse. See marketing_curve_params for the reparameterised
+    curve and docs/founder_scale_fix_plan.md for the full measurement.
+    """
     return StartupEnv(
         initial_config={
             "max_months": 10_000,          # horizon is controlled by the caller
             "scheduled_shocks": False,     # research fixture, not founder physics
+            "scale_aware_marketing": True, # see above - ships with the burn fix
             "gross_margin": gross_margin,
         }
     )
@@ -229,6 +249,8 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
 
     recommended = _clean_action(payload.get("recommended_action"))
 
+    supplied_costs = (payload.get("config") or {}).get("monthly_costs")
+
     # The do-nothing arm holds what the founder is spending today. Marketing
     # spend is an optional onboarding field; when it is absent the arm holds at
     # zero and the response says so rather than inventing a level for it.
@@ -312,10 +334,16 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
             "mrr": base_state.mrr, "cash": base_state.cash,
             "price": base_state.price, "headcount": base_state.headcount,
             "months_elapsed": base_state.months_elapsed,
+            # The number the whole projection turns on, and the one that used
+            # to be silently replaced by a $8k salary slot. It travels back so
+            # a founder can see which figure was actually charged.
+            "monthly_burn": business_logic.monthly_burn(base_state),
+            "monthly_burn_supplied": base_state.monthly_burn is not None,
         },
         "recommended_action": recommended,
         "caveat": CAVEAT,
-        "assumptions": _assumptions(margin, current_marketing, shock),
+        "assumptions": _assumptions(margin, current_marketing, shock,
+                                    base_state, supplied_costs),
         # False means the policies stopped sharing a world and the comparison is
         # no longer clean. Surfaced, never silently swallowed.
         "shock_tape_shared": not cascade_seen,
@@ -323,10 +351,32 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def _assumptions(
-    margin: cal.Calibrated, current_marketing: float | None, shock: bool
+    margin: cal.Calibrated,
+    current_marketing: float | None,
+    shock: bool,
+    base_state: EnvState,
+    supplied_costs: float | None,
 ) -> list[dict[str, Any]]:
     """Every modelling choice this projection rests on, stated in full."""
     items: list[dict[str, Any]] = [
+        {
+            "field": "Monthly costs",
+            "value": (
+                f"${business_logic.monthly_burn(base_state):,.0f}/mo"
+                + ("" if supplied_costs is not None else " (estimated)")
+            ),
+            "basis": "reported" if supplied_costs is not None else "assumption",
+            "source": None,
+            "detail": (
+                "Your own figure, charged against cash every month."
+                if supplied_costs is not None
+                else "You did not supply monthly costs, so the engine charges its own "
+                     "convention of $8,000 per person on the team. For a small team that "
+                     "is usually far more than the truth and it dominates the result - "
+                     "entering your real costs changes this projection more than any "
+                     "other number."
+            ),
+        },
         {
             "field": "Gross margin",
             "value": f"{margin.value}%" if margin.value is not None else "not applied",

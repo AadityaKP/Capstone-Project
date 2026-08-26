@@ -107,10 +107,20 @@ def _f(value: Any, fallback: float) -> float:
 def build_env_state(payload: dict[str, Any]) -> EnvState:
     """Founder inputs -> EnvState (spec section 5 mappings).
 
-    The founder's real burn reaches the board through initial_headcount, which
-    the client derives as costs / $8k salary slots: Boardroom estimates runway
-    as headcount * 8000, so virtual headcount makes that estimate match the
-    founder's actual costs without any engine change.
+    The founder's costs travel as `monthly_costs` and land on EnvState as
+    `monthly_burn`, which every burn consumer now reads through
+    business_logic.monthly_burn: the physics, the board's runway estimate, the
+    Oracle, the prompt the model actually sees, and both agent modules.
+
+    They used to travel as *virtual headcount* - costs divided into $8k salary
+    slots on the client - because Boardroom estimated runway as headcount * 8000.
+    That encoding floored at one slot, so every company with costs between $0 and
+    $12,000/month was charged exactly $8,000. A founder spending $500 was charged
+    sixteen times over, died in month 0 of every projection, and was told by a
+    prompt reading "Monthly burn: 8,000" that they had a cost problem.
+
+    `initial_headcount` still arrives, but it is now the founder's real team size
+    and carries no money.
     """
     config = payload.get("config") or {}
 
@@ -133,6 +143,11 @@ def build_env_state(payload: dict[str, Any]) -> EnvState:
         price=price,
         months_elapsed=int(_f(payload.get("company_age_months"), 0)),
         headcount=max(1, int(_f(config.get("initial_headcount"), 1))),
+        monthly_burn=(
+            None
+            if config.get("monthly_costs") is None
+            else max(0.0, float(config["monthly_costs"]))
+        ),
         unemployment=DEFAULT_UNEMPLOYMENT,
         valuation_multiple=DEFAULT_VALUATION_MULTIPLE,
         innovation_factor=DEFAULT_INNOVATION_FACTOR,
@@ -162,6 +177,10 @@ def assumed_fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
     add("Valuation multiple", f"{DEFAULT_VALUATION_MULTIPLE}x ARR", "not asked at onboarding; engine default")
     add("Innovation factor", DEFAULT_INNOVATION_FACTOR, "no scarring assumed at the start of an analysis")
 
+    if config.get("monthly_costs") is None:
+        add("Monthly costs", "$8,000 per person on the team",
+            "not supplied, so the engine falls back to its own salary-slot convention; "
+            "your real monthly costs change the plan more than any other number")
     if config.get("cac") is None:
         add("Acquisition cost", "$50", "not supplied and not derivable from marketing spend and new customers")
     if config.get("ltv") is None:

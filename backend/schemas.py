@@ -56,9 +56,11 @@ class FounderConfig(BaseModel):
     competitors: int = Field(default=5, ge=0)
     product_quality: float = Field(default=0.5, ge=0, le=1)
     initial_headcount: int = Field(default=1, ge=1, le=10000)
-    # `monthly_burn_override` was accepted here and read by nothing. Burn reaches
-    # the engine through initial_headcount instead (client-side virtualHeadcount,
-    # $8k salary slots), which Boardroom already uses for its runway estimate.
+    # The founder's actual monthly costs. These used to be encoded as virtual
+    # headcount ($8k salary slots) on the client, which floored every company
+    # under $12k/mo of costs at exactly $8,000 and killed it in month 0 of every
+    # projection. None keeps the engine on its headcount convention.
+    monthly_costs: float | None = Field(default=None, ge=0)
     interest_rate: float | None = Field(default=None, ge=0, le=100)
     consumer_confidence: float | None = Field(default=None, ge=0, le=200)
 

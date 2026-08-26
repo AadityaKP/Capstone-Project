@@ -10,7 +10,7 @@
 // {ok:false, offline:true} and render the spec §17.6 honest failure states —
 // the UI never fabricates an analysis.
 
-import { virtualHeadcount, deriveCac, CROWDEDNESS, MATURITY } from "./derive.js";
+import { deriveCac, CROWDEDNESS, MATURITY } from "./derive.js";
 
 const BASE = "/api";
 
@@ -40,10 +40,10 @@ export async function health() {
 }
 
 // Founder inputs → the engine's ScenarioConfig shape (§5 mappings):
-// blended churn fills all three segments (§5.2); burn becomes virtual engine
-// headcount at $8k slots (§5.4); crowdedness maps to a competitor count;
-// maturity maps to a product-quality proxy. Macro fields stay at the engine's
-// "typical conditions" defaults and are labelled estimated in the UI.
+// blended churn fills all three segments (§5.2); costs go across as themselves;
+// crowdedness maps to a competitor count; maturity maps to a product-quality
+// proxy. Macro fields stay at the engine's "typical conditions" defaults and are
+// labelled estimated in the UI.
 export function buildAdvisePayload(company, month) {
   const v = month.values;
   const cac = deriveCac(v);
@@ -63,11 +63,13 @@ export function buildAdvisePayload(company, month) {
       churn_b2c: (v.churnB2c ?? v.churnMonthly) / 100,
       competitors: crowd.competitors,
       product_quality: maturity ? maturity.quality : 0.5,
-      // Burn reaches the engine as virtual headcount ($8k salary slots), because
-      // Boardroom estimates runway as headcount * 8000. A `monthly_burn_override`
-      // field used to be sent here too; nothing on the server ever read it, so it
-      // has been removed rather than left looking load-bearing.
-      initial_headcount: virtualHeadcount(v)
+      // Costs reach the engine as costs. They used to be converted into virtual
+      // headcount at $8k salary slots, which floored every small company at
+      // $8,000/month of burn and killed it in month 0 of every projection.
+      monthly_costs: v.costs ?? null,
+      // Headcount is now the founder's real team size and carries no money. It is
+      // optional at onboarding, so 1 when they did not say.
+      initial_headcount: Math.max(1, Math.round(company.headcountReal || 1))
     },
     history: (month.history || []).map((h) => ({
       mrr: h.mrr,

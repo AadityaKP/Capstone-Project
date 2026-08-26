@@ -5,6 +5,7 @@ import inspect
 import math
 from typing import List
 from boardroom.schemas import Proposal, NegotiationState, ScoreVector
+from env import business_logic
 from env.schemas import EnvState
 from oracle.action_modifier import ActionModifier
 from oracle.oracle import Oracle
@@ -576,7 +577,7 @@ class Boardroom:
         so the guard uses this instead. Left separate rather than fixing the
         original, which research runs depend on.
         """
-        burn = max(1.0, state.headcount * 8000.0)
+        burn = max(1.0, business_logic.monthly_burn(state))
         net_burn = burn - state.mrr
         if net_burn <= 0:
             return float("inf")
@@ -584,7 +585,7 @@ class Boardroom:
 
     @staticmethod
     def _estimate_runway_months(state: EnvState) -> float:
-        monthly_burn_estimate = max(1.0, float(state.headcount * 8000.0))
+        monthly_burn_estimate = max(1.0, business_logic.monthly_burn(state))
         return state.cash / monthly_burn_estimate
 
     def _make_refresh_snapshot(self, state: EnvState) -> OracleRefreshSnapshot:

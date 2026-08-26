@@ -17,12 +17,14 @@ from typing import Any
 
 from backend.advise_service import run_analysis
 
-SALARY_SLOT = 8000.0
-
 
 def profile(name, mrr, cash, costs, price, churn, cac=None, age=12, quality=0.5, competitors=5):
-    """A founder profile in the client's payload shape."""
-    headcount = max(1, int(round(costs / SALARY_SLOT)))
+    """A founder profile in the client's payload shape.
+
+    Costs travel as `monthly_costs`. They used to be divided into $8k salary
+    slots here, which is exactly the encoding this audit exists to catch and
+    could not, because the audit was speaking it too.
+    """
     return {
         "name": name,
         "payload": {
@@ -40,14 +42,14 @@ def profile(name, mrr, cash, costs, price, churn, cac=None, age=12, quality=0.5,
                 "churn_b2c": churn,
                 "competitors": competitors,
                 "product_quality": quality,
-                "initial_headcount": headcount,
+                "monthly_costs": costs,
+                "initial_headcount": 1,
             },
             "history": [],
         },
         "mrr": mrr,
         "cash": cash,
         "costs": costs,
-        "headcount": headcount,
     }
 
 

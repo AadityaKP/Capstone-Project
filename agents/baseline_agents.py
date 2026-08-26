@@ -1,4 +1,5 @@
 from typing import Dict, Any
+from env import business_logic
 from env.schemas import EnvState
 
 class BaseAgent:
@@ -24,7 +25,7 @@ class CFOAgent(BaseAgent):
     CFO Agent: Focuses on survival (runway), efficiency (Rule of 40), and pricing.
     """
     def act(self, state: EnvState) -> Dict[str, Any]:
-        monthly_burn_est = state.headcount * 8000
+        monthly_burn_est = business_logic.monthly_burn(state)
         runway = state.cash / max(monthly_burn_est, 1)
 
         hires = 0

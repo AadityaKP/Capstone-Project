@@ -2,6 +2,7 @@ import json
 from typing import Any
 
 from boardroom.schemas import Proposal
+from env import business_logic
 from env.schemas import EnvState
 from oracle.schemas import CausalGraphContext
 from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
@@ -101,7 +102,7 @@ class BatchedCausalProposalGenerator:
         avg_churn = (
             state.churn_enterprise + state.churn_smb + state.churn_b2c
         ) / 3.0
-        runway = state.cash / max(state.headcount * 8000.0, 1.0)
+        runway = state.cash / max(business_logic.monthly_burn(state), 1.0)
         ltv_cac = state.ltv / max(state.cac, 1.0)
         stress_node = next(
             (

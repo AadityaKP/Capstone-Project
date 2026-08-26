@@ -6,6 +6,13 @@ Everything below was verified against the code on this branch and reproduced by
 running the engine, not inferred from screenshots. Numbers in tables are measured
 output; appendix A says how to re-run any of them.
 
+**Status: steps 1 and 2 are done.** Sections 0-4 describe the state the product
+shipped in and are kept as the record of what was wrong; §2.1's four-configuration
+table is now reachable through the supported payload rather than by patching, so
+`founder_scale_probes.py configs` prints the before and after side by side. Steps
+3-6 are open. One defect not in the original analysis surfaced the moment step 2
+was switched on - see §2.2.
+
 ---
 
 ## 0. The reproduction
@@ -151,6 +158,50 @@ Measured, same founder, same seeds, four configurations:
 Anyone shipping the burn fix without the marketing fix will believe they have
 succeeded, because the charts will finally move.
 
+### 2.2 A loop that only exists once the curve is scale-aware
+
+Turning on `scale_aware_marketing` overflowed the float32 observation. It is not
+a numerical nuisance; it is a divergent feedback loop the absolute constants
+could not create, because `gamma` was drawn independently of anything on the
+state:
+
+```
+gamma = (acquirable / 2) * state.cac    <- gamma reads CAC
+   -> spend far left of gamma, response is a fraction of a customer
+   -> raw_cac = spend / 1e-50
+   -> state.cac explodes, gamma moves further right      <- and CAC writes gamma
+```
+
+Measured, $1/month of brand spend on the founder above:
+
+| month | cac | gamma |
+|---|---|---|
+| 0 | 50 | 500 |
+| 1 | 5.47e4 | 5.33e5 |
+| 2 | 1.05e15 | 9.99e15 |
+| 3 | 2.98e44 | 2.77e45 |
+| 4 | 1.22e128 | `OverflowError` from `hill_response` |
+
+The fix is not a clamp. `compute_cac` had two wrong branches, and both are about
+the same mistake - treating an unmeasurable month as a measurement:
+
+- a month that acquired a fraction of a customer returned `spend / 1e-50`, a
+  division artifact rather than a cost per customer;
+- a month that acquired nobody returned `0.0`, which wrote `cac = 0` and made
+  marketing look free the following month. That was a standing tailwind under
+  the `hold` arm, which spends nothing.
+
+So CAC is now re-estimated only in a month that actually acquired at least one
+customer; otherwise the previous estimate stands, which is also what a founder
+would say about a month in which nobody signed up. The guard is on exactly when
+the curve that closes the loop is on (`stable_cac` defaults to
+`scale_aware_marketing`), so research runs are untouched.
+
+`hill_response` still raises `OverflowError` for `gamma ** alpha` above roughly
+1e103. With the guard it is unreachable, so it is left alone and pinned by
+`test_without_the_guard_cac_is_the_runaway_this_prevents` rather than papered
+over.
+
 ---
 
 ## 3. R&D is multiplied by exactly zero
@@ -227,7 +278,7 @@ determining whether advice can be specific is discarded at the API boundary.
 Six steps. Steps 1 and 2 must land in the same commit; the rest are independently
 shippable, in order.
 
-### Step 1 — `monthly_burn` as a first-class field, one source of truth
+### Step 1 — `monthly_burn` as a first-class field, one source of truth &nbsp;· DONE
 
 The founder's costs become a real quantity instead of a quantised headcount.
 
@@ -280,9 +331,13 @@ Files: `env/schemas.py`, `env/business_logic.py`, `env/startup_env.py`,
 Effort: **M** code, **M** validation.
 Done when: a founder with $500/mo costs is charged $500/mo; the LLM prompt states
 their real burn; and `pytest tests/ -q` passes with `monthly_burn=None`
-reproducing every existing result byte-identically.
+reproducing every existing result byte-identically. **All three hold.** Seven
+call sites became one helper; the prompt now reads `- Monthly burn: 500`; and its
+runway clause was rewritten, because `_runway_months` returned the fragment
+`"cash-flow positive"` into `"{} months of cash"` - rare while every company
+was charged $8k/month, and the common case now that real costs arrive.
 
-### Step 2 — turn on scale-aware marketing in the product path (same commit)
+### Step 2 — turn on scale-aware marketing in the product path &nbsp;· DONE
 
 ```python
 # whatif_service._make_env
@@ -301,7 +356,16 @@ stored fixtures need regenerating in the same commit.
 
 Effort: **S** code, **M** validation.
 Done when: configuration C in §2.1 reproduces, and no arm returns more new MRR in
-a month than the company's entire revenue for a spend below 25% of MRR.
+a month than the company's entire revenue for a spend below 25% of MRR. **Both
+hold**, and the largest month-on-month median MRR gain on any arm is 15.4%. It
+also surfaced §2.2, which had to ship with it.
+
+Two things visible for the first time once runs survive past month 1: the
+`rule_based` arm now grows fastest ($6,886) while only 10% of its seeds survive,
+which is the over-spending comparator being correctly punished rather than
+winning; and the competitor shock at month 6 finally lands, at -12.8% / -12.1% /
+-5.8% against the same seeds. The shock parameter was never broken - it was
+unreachable.
 
 ### Step 3 — make R&D able to move product quality
 

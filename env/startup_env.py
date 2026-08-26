@@ -33,6 +33,18 @@ class StartupEnv(gym.Env):
         self.scale_aware_marketing = bool(
             self.initial_config.get("scale_aware_marketing", False)
         )
+        # Re-estimate CAC only in a month that actually acquired a customer.
+        # Defaults to scale_aware_marketing because that curve is what closes
+        # the loop: marketing_curve_params places gamma from state.cac, so a
+        # month with a fractional response writes an enormous CAC, the CAC
+        # pushes gamma further right, and the next response is smaller still.
+        # Measured on the rule-based arm of a 12-month projection, cac went
+        # 1.4e17 -> 9.0e43 in a single step and overflowed the float32
+        # observation. Under the absolute constants gamma never read state.cac,
+        # so the loop had no path to close and research runs are untouched.
+        self.stable_cac = bool(
+            self.initial_config.get("stable_cac", self.scale_aware_marketing)
+        )
         # Opt-in gross margin on recognised revenue. None reproduces the
         # original behaviour exactly - revenue booked to cash at 100% margin,
         # no cost of revenue deducted - so every recorded result is untouched.
@@ -132,6 +144,11 @@ class StartupEnv(gym.Env):
             price=float(self.initial_config.get("average_price", 50.0)),
             months_elapsed=0,
             headcount=int(self.initial_config.get("initial_headcount", 1)),
+            monthly_burn=(
+                None
+                if self.initial_config.get("monthly_burn") is None
+                else float(self.initial_config["monthly_burn"])
+            ),
             valuation_multiple=float(self.initial_config.get("valuation_multiple", 10.0)),
             unemployment=float(self.initial_config.get("unemployment", 4.0)),
             innovation_factor=float(self.initial_config.get("innovation_factor", 1.0)),
@@ -209,8 +226,17 @@ class StartupEnv(gym.Env):
         one_time_hiring_cost = action.hiring.hires * action.hiring.cost_per_employee
         business_logic.apply_hiring_cost(self.state, action.hiring) 
         self.state.headcount += action.hiring.hires
-        
-        salary_burn = self.state.headcount * 8000.0
+
+        # A hire adds ongoing payroll, not just a one-time cost. Under the
+        # headcount convention that happened for free, because burn was derived
+        # from headcount; once burn is a real number it has to be added
+        # explicitly, at the same salary slot the convention always used.
+        if self.state.monthly_burn is not None and action.hiring.hires > 0:
+            self.state.monthly_burn += (
+                action.hiring.hires * business_logic.SALARY_SLOT_USD
+            )
+
+        salary_burn = business_logic.monthly_burn(self.state)
         
         total_spend = action.marketing.spend + action.product.r_and_d_spend
         
@@ -218,8 +244,19 @@ class StartupEnv(gym.Env):
         
         if self.state.price > 0:
             estimated_new_users = new_mrr / self.state.price
-            raw_cac = business_logic.compute_cac(action.marketing.spend, estimated_new_users)
-            self.state.cac = business_logic.scale_cac_by_macro(raw_cac, self.state)
+            # A month that acquired a fraction of a customer has no
+            # cost-per-customer: `spend / 1e-50` is a division artifact, not a
+            # number about the business. compute_cac's other branch is no better
+            # - it writes cac=0 for a month with no acquisition at all, which
+            # makes marketing look free the month after. Either way the previous
+            # estimate is the honest carry-forward, and it is what a founder
+            # would say about a month in which nobody signed up.
+            measurable = estimated_new_users >= 1.0 and action.marketing.spend > 0
+            if measurable or not self.stable_cac:
+                raw_cac = business_logic.compute_cac(
+                    action.marketing.spend, estimated_new_users
+                )
+                self.state.cac = business_logic.scale_cac_by_macro(raw_cac, self.state)
         
         self.state.ltv = business_logic.compute_ltv(self.state.price, churn_rate)
 

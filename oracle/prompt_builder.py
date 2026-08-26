@@ -1,16 +1,27 @@
+from env import business_logic
 from env.schemas import EnvState
 from oracle.schemas import GraphContext, RetrievedMemoryCandidate, TrendContext
 
 
-def _runway_months(state: EnvState) -> str:
-    """Months of cash left at the engine's own burn convention (headcount slots
-    of $8k). Matches Boardroom._estimate_runway_months so prompt and guards
-    reason about the same number."""
-    burn = max(1.0, state.headcount * 8000.0)
+def _runway_clause(state: EnvState) -> str:
+    """Months of cash left at the company's monthly burn, as a whole clause.
+
+    Matches Boardroom._estimate_runway_months so the prompt and the guards
+    reason about the same number.
+
+    Two things used to be wrong here. The burn was computed as headcount slots
+    of $8k inline, so the prompt told the model a founder burning $500/month
+    was burning $8,000 and then asked it why the company was in trouble. And
+    the caller appended "months of cash" to whatever came back, so a
+    cash-flow-positive company produced "Runway: cash-flow positive months of
+    cash" - rare while every company was charged $8k/month, and the common case
+    now that real costs arrive.
+    """
+    burn = max(1.0, business_logic.monthly_burn(state))
     net_burn = burn - state.mrr
     if net_burn <= 0:
-        return "cash-flow positive"
-    return f"{state.cash / net_burn:.1f}"
+        return "cash-flow positive - revenue covers the current burn"
+    return f"{state.cash / net_burn:.1f} months of cash at the current burn"
 
 
 def build_prompt(
@@ -71,8 +82,8 @@ def build_prompt(
         # Off by default so research prompts stay byte-identical.
         *(
             [
-                f"- Monthly burn: {state.headcount * 8000.0:,.0f}",
-                f"- Runway: {_runway_months(state)} months of cash at the current burn",
+                f"- Monthly burn: {business_logic.monthly_burn(state):,.0f}",
+                f"- Runway: {_runway_clause(state)}",
                 f"- Company age: {state.months_elapsed} months",
             ]
             if include_burn_context

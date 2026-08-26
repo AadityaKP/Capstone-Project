@@ -30,6 +30,16 @@ class EnvState(BaseModel):
     months_elapsed: int = Field(default=0, ge=0, description="Time step / simulation month.")
     
     headcount: int = Field(default=1, ge=1, description="Number of full-time employees.")
+
+    monthly_burn: float | None = Field(
+        default=None,
+        ge=0.0,
+        description=(
+            "Fixed monthly operating cost ($). None means the real costs were not "
+            "supplied and the engine falls back to its headcount-slot convention "
+            "- see business_logic.monthly_burn."
+        ),
+    )
     
     valuation_multiple: float = Field(default=10.0, description="Current revenue valuation multiple (e.g. 10x ARR).")
     unemployment: float = Field(default=4.0, ge=0.0, le=100.0, description="National unemployment rate (%).")

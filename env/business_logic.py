@@ -15,6 +15,34 @@ def _stream(rng):
     return rng if rng is not None else random
 
 
+# The engine's original cost convention: one employee costs this much per month,
+# and headcount is the only thing that sets burn. Every subsystem needing a burn
+# figure reimplemented `headcount * 8000` locally - the physics, the boardroom,
+# the Oracle, the prompt builder and two agent modules - which made the constant
+# a protocol rather than a number, and made it impossible to change in one place.
+SALARY_SLOT_USD = 8000.0
+
+
+def monthly_burn(state: EnvState) -> float:
+    """The company's fixed monthly operating cost.
+
+    `state.monthly_burn` carries the founder's actual costs when a product
+    surface supplied them. None means "not supplied" and falls back to the
+    headcount-slot convention, so every recorded research run reproduces
+    byte-identically.
+
+    The fallback is not a rounding error at founder scale, which is the whole
+    reason this function exists. The client used to encode costs as
+    `max(1, round(max(costs - marketing, 8000) / 8000))`, so every company with
+    monthly costs between $0 and $12,000 was charged exactly $8,000 - sixteen
+    times over for a founder spending $500, which killed the company in month 0
+    of every projection regardless of which plan was being tested.
+    """
+    if state.monthly_burn is not None:
+        return float(state.monthly_burn)
+    return state.headcount * SALARY_SLOT_USD
+
+
 def interest_rate_shock(state: EnvState, prob: float = 0.1, rng=None) -> None:
     if _stream(rng).random() < prob:
         state.interest_rate += 1.5

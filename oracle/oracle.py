@@ -1,6 +1,7 @@
 from collections import deque
 import uuid
 
+from env import business_logic
 from env.schemas import EnvState
 from oracle.context import compute_trend_context, get_mrr_tier, snapshot_state
 from oracle.memory import MEMORY_HORIZON_MONTHS, OracleMemoryStore, classify_realized_outcome
@@ -358,7 +359,7 @@ class Oracle:
 
     @staticmethod
     def _estimate_runway_months(state: EnvState) -> float:
-        monthly_burn_estimate = max(1.0, float(state.headcount * 8000.0))
+        monthly_burn_estimate = max(1.0, business_logic.monthly_burn(state))
         return state.cash / monthly_burn_estimate
 
     def _identify_stress_node(self, state: EnvState) -> str:
