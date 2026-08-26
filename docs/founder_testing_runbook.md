@@ -134,8 +134,29 @@ Other flags: `-NoOllama` (skip the model and test the rules-only path from 4.2),
 `-NoBrowser`, `-Reload` (restart the API on backend `.py` changes), `-ApiPort` / `-UiPort`.
 Logs land in `.logs\api.out.log` and `.logs\ui.out.log`.
 
-If a port is already in use the script refuses to start rather than half-starting — free it
-or pass a different port.
+### "port 8000 is already in use"
+
+The script refuses to half-start, and names what is holding the port:
+
+```
+[fail] port 8000 is already in use - held by python3.13 (pid 22620)
+       It is answering /api/health, so this looks like a backend of ours
+       left over from an earlier run.
+```
+
+```bash
+.\start.ps1 -Force
+```
+
+`-Force` kills the holder and starts anyway. Use it rather than hunting the PID yourself,
+because **`taskkill` on the PID Windows reports will often say "not found" while the port
+stays busy.** That is not a broken machine. The connection table names the process that
+*created* the socket, and `uvicorn --reload` spawns a child — kill the parent and the child
+inherits the socket while the table goes on naming the dead parent. `-Force` kills the live
+children first, which is why it works where `taskkill` on the reported PID does not.
+
+You will hit this most often after closing a terminal without Ctrl+C, or after `-Reload`.
+To sidestep entirely: `.\start.ps1 -ApiPort 8010 -UiPort 5183`.
 
 ### The manual path
 
@@ -537,6 +558,8 @@ it again from `chroma_db/`.
 | Advice recommends more than MRR | Calibration scaling not applied | Check `absolute_scale()` in `backend/advise_service.py` |
 | No causal sentence in Evidence | Neo4j down, or graph empty | `neo4j_backup.py verify`; check `advisor_mode` is `oracle_v4_causal` |
 | `[CausalGraphStore] Neo4j unavailable` in backend log | Neo4j not running | Start Neo4j, or set `FOUNDER_ORACLE_MODE=oracle_v4` |
+| `port 8000 is already in use` | A previous run's backend is still alive | `.\start.ps1 -Force` |
+| `taskkill` says "process not found" but the port stays busy | The connection table names the socket's dead creator; a child inherited it | `.\start.ps1 -Force` kills the live children first. Find it manually with `Get-Process \| Where-Object ProcessName -match 'python\|node'` — note the name is `python3.13`, not `python.exe`, so filtering on `python.exe` finds nothing |
 | Clicks do nothing after a branch switch | Vite hot-reload got stuck mid-merge | Hard-reload the page |
 | Blank page, console shows duplicate `createRoot` | Dev-only HMR artifact | Harmless; hard-reload clears it |
 | **What-if panel missing entirely on :8000** | Browser cached the old `index.html`, which points at a bundle hash that no longer exists | **Ctrl+Shift+R.** Hit during verification of this build — the page loads and looks fine, the panel is simply absent. Confirm with `document.querySelector('script').src`: it should end in the hash printed by the last `npm run build` |

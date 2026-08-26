@@ -34,6 +34,12 @@
 .PARAMETER NoBrowser
     Do not open a browser window.
 
+.PARAMETER Force
+    Kill whatever is holding the ports and start anyway. Handles the case the
+    plain error cannot: when the PID in the connection table is already dead and
+    a child process inherited the socket, so taskkill on the named PID reports
+    "not found" while the port stays busy.
+
 .EXAMPLE
     .\start.ps1
     Dev mode. Open http://localhost:5173
@@ -53,6 +59,7 @@ param(
     [switch]$Reload,
     [switch]$NoOllama,
     [switch]$NoBrowser,
+    [switch]$Force,
     [int]$ApiPort = 8000,
     [int]$UiPort  = 5173
 )
@@ -103,6 +110,77 @@ function Wait-ForHttp {
     }
     Write-Bad "$Label did not answer at $Url within ${TimeoutSec}s"
     return $false
+}
+
+# Who actually holds a port, and is it one of ours.
+#
+# The connection table names the process that *created* the socket, which is not
+# always the process still holding it. uvicorn --reload spawns a child; kill the
+# parent and the child inherits the handle, but the table keeps naming the dead
+# parent. taskkill on that PID reports "not found" while the port stays busy - a
+# failure mode that reads like a broken machine instead of an orphaned process.
+function Get-PortHolder {
+    param([int]$Port)
+
+    $info = [pscustomobject]@{
+        Port         = $Port
+        ProcessId    = $null
+        Name         = $null
+        Stale        = $false
+        IsOurBackend = $false
+        LiveChildren = @()
+    }
+
+    $conn = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
+    if ($conn) {
+        $info.ProcessId = ($conn | Select-Object -First 1).OwningProcess
+        $process = Get-Process -Id $info.ProcessId -ErrorAction SilentlyContinue
+        if ($process) {
+            $info.Name = $process.ProcessName
+        } else {
+            $info.Stale = $true
+            # The live holder is usually a child of the dead PID.
+            $info.LiveChildren = @(
+                Get-CimInstance Win32_Process -Filter "ParentProcessId=$($info.ProcessId)" -ErrorAction SilentlyContinue
+            )
+        }
+    }
+
+    try {
+        $r = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/api/health" -UseBasicParsing -TimeoutSec 2
+        if ($r.StatusCode -eq 200) { $info.IsOurBackend = $true }
+    } catch { }
+
+    $info | Add-Member -MemberType ScriptMethod -Name Describe -Value {
+        $who = if ($this.Name) { "$($this.Name) (pid $($this.ProcessId))" }
+               elseif ($this.ProcessId) { "pid $($this.ProcessId), no longer running" }
+               else { 'an unidentified process' }
+        if ($this.LiveChildren.Count -gt 0) {
+            $kids = ($this.LiveChildren | ForEach-Object { "$($_.Name) pid $($_.ProcessId)" }) -join ', '
+            $who += " -> live child: $kids"
+        }
+        return $who
+    }
+    return $info
+}
+
+function Clear-Port {
+    param([int]$Port)
+    $holder = Get-PortHolder -Port $Port
+
+    # Children first: killing the parent can reparent them and lose the trail.
+    foreach ($child in $holder.LiveChildren) {
+        taskkill /PID $child.ProcessId /T /F 2>&1 | Out-Null
+    }
+    if ($holder.ProcessId) {
+        taskkill /PID $holder.ProcessId /T /F 2>&1 | Out-Null
+    }
+
+    foreach ($attempt in 1..10) {
+        Start-Sleep -Milliseconds 400
+        if (-not (Test-Port -Port $Port)) { return $true }
+    }
+    return -not (Test-Port -Port $Port)
 }
 
 # Under PowerShell, `Get-Command npm` resolves to npm.ps1 - an ExternalScript,
@@ -222,10 +300,38 @@ if (Test-Port -Port 7687) {
 
 foreach ($port in @($ApiPort, $UiPort)) {
     if ($port -eq $UiPort -and $Prod) { continue }
-    if (Test-Port -Port $port) {
-        Write-Bad "port $port is already in use. Stop whatever holds it, or pass -ApiPort / -UiPort"
+    if (-not (Test-Port -Port $port)) { continue }
+
+    $holder = Get-PortHolder -Port $port
+
+    if ($Force) {
+        Write-Warn2 "port $port held by $($holder.Describe()) - reclaiming (-Force)"
+        if (Clear-Port -Port $port) {
+            Write-Ok "port $port freed"
+            continue
+        }
+        Write-Bad "could not free port $port"
         exit 1
     }
+
+    Write-Bad "port $port is already in use - held by $($holder.Describe())"
+    if ($holder.IsOurBackend) {
+        Write-Host "         It is answering /api/health, so this looks like a backend of ours" -ForegroundColor Yellow
+        Write-Host "         left over from an earlier run." -ForegroundColor Yellow
+    }
+    if ($holder.Stale) {
+        # The common and confusing case. uvicorn --reload spawns a child; kill the
+        # parent and the child inherits the socket, but the connection table still
+        # names the dead parent. taskkill on that PID then says "not found" while
+        # the port stays busy, which looks like a broken machine rather than an
+        # orphaned process.
+        Write-Host "         The PID in the connection table no longer exists - a child process" -ForegroundColor Yellow
+        Write-Host "         inherited the socket. taskkill on that PID will say 'not found'." -ForegroundColor Yellow
+    }
+    Write-Host ""
+    Write-Host "         Reclaim it:   .\start.ps1 -Force" -ForegroundColor Yellow
+    Write-Host "         Or sidestep:  .\start.ps1 -ApiPort 8010 -UiPort 5183" -ForegroundColor Yellow
+    exit 1
 }
 
 # -------------------------------------------------------------- frontend ----
