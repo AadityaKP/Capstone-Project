@@ -20,7 +20,12 @@ import React, { useState } from "react";
 import { Activity, AlertTriangle, Loader2, Skull, Zap } from "lucide-react";
 import { money, pct } from "./derive.js";
 
-const POLICY_ORDER = ["recommended", "hold", "rule_based"];
+// The founder-facing comparison is the board's plan against doing nothing.
+// The API also returns `rule_based`, the heuristic C-suite from
+// agents/baseline_agents - a research comparator rather than a plan anyone is
+// offering, and one more line than this question needs. Add it back here to
+// render it; nothing on the server changed.
+const POLICY_ORDER = ["recommended", "hold"];
 
 // Recommended is the emphasis colour; the other two are deliberately quieter so
 // the comparison reads at a glance without implying the baselines are bad.
@@ -224,8 +229,9 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
           <h3><Activity size={16} /> What happens if you follow this plan</h3>
         </div>
         <p className="subtle">
-          Roll your current numbers forward {12} months under the board's plan, doing
-          nothing, and a standard playbook — same simulated conditions for all three.
+          Roll your current numbers forward {12} months under the board's plan and under
+          doing nothing — the same simulated conditions for both, so the plan is the only
+          thing that differs.
         </p>
         <button type="button" className="primary-button" onClick={onRun}>
           Run the projection
