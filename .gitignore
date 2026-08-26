@@ -4,7 +4,6 @@ venv/
 .venv/
 .tools/
 chroma_db/
-data/
 outputs/
 results/
 frontend/dist/
@@ -14,7 +13,14 @@ __pycache__/
 *.log
 node_modules/
 frontend/dist/
-data/
+# `data/*` rather than `data/`: git will not descend into an excluded directory,
+# so the negations below would not apply. The EDGAR ingestion script and its two
+# deliverables are tracked; the 71MB raw API cache, the local app database and
+# the regenerable CSV exports are not.
+data/*
+!data/ingest_edgar.py
+!data/coverage_report.md
+!data/edgar.db
 chroma_db_founder/
 backups/
 audit_*.json

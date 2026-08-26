@@ -3,6 +3,12 @@ numpy
 pydantic
 pandas
 matplotlib
+# experiments/thesis_analysis.py imports scipy for Mann-Whitney U and silently
+# falls back to a normal approximation with no tie correction when it is absent.
+# It was missing from this file while recorded results carry
+# method=scipy_mannwhitneyu, so the environment had already drifted away from
+# the one those results were produced in. Declared here to stop that recurring.
+scipy
 chromadb
 neo4j
 ollama

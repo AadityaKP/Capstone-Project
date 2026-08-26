@@ -411,3 +411,208 @@ variation.
 
 **None of these gaps blocks the current build.** They gate two future pieces of work:
 a trustworthy price lever, and regeneration of the memory corpus at founder scale.
+
+---
+
+# Revision 3 — 2026-08-26
+
+Dashboard completion (defect D5 and the D1/D3 residue), one derived calibration value,
+two gated engine flags, and a new external dataset. Everything below was verified by
+execution, not by reading.
+
+## R3.1 Gross margin — derived, not observed
+
+**Problem.** `startup_env.step()` does `state.cash += state.mrr`: revenue booked to cash at
+100% margin, no cost of revenue. Confirmed by execution — `cash_t1` equals
+`cash_t0 + mrr − salary` to the cent. Harmless in research runs where only relative
+comparisons matter; visibly wrong the moment a founder is shown a 12-month cash projection.
+
+**Fix.** `calibration.gross_margin_pct()` returns **83.5%**, with `confidence="derived"`.
+
+No source page prints a gross margin. What SaaS Capital 2026 p4 prints, for the $3–5M ARR
+band, is the four cost-of-revenue components: hosting 5% + DevOps 3% + pro-services CoGS 5%
++ other CoGS 3.5% = 16.5% of ARR. Summing printed components is arithmetic; calling the
+result *observed* would not be, so it is labelled `derived` and carries its own composition
+in `page_or_figure`. All four components must be observed or the whole figure is withheld —
+a partial CoGS sum overstates margin, which is the direction that flatters a cash
+projection, so it fails closed.
+
+`bands.json` still lists `gross_margin_pct` under `still_missing`, and that stays accurate:
+the figure is not printed. It is now derivable, which is a different claim.
+
+**Wiring.** `StartupEnv(initial_config={"gross_margin": ...})`. `None` reproduces the original
+behaviour exactly. Only the what-if projection sets it.
+
+## R3.2 Two gated engine flags, both proven behaviour-neutral
+
+| Flag | Default | Why |
+|---|---|---|
+| `gross_margin` | `None` | above |
+| `scheduled_shocks` | `True` | The hard shocks at months 24/48/72 are a fixture of the 120-month research episode. A founder at month 20 projecting a year forward would inherit one at month 4 of their forecast for no reason they could see. The what-if turns them off and says so. |
+
+**Identical-output proof.** Five episodes x 60 months of the `heuristic` policy through
+`simulation_runner.run_simulation`, SHA-256 of the full result payload, with and without
+every change in this revision:
+
+```
+with changes:    47b9ba5814e758414687b95d85a7562d3084c647ed5daf9cbb1adb7ed4cf170c
+without changes: 47b9ba5814e758414687b95d85a7562d3084c647ed5daf9cbb1adb7ed4cf170c
+```
+
+## R3.3 The seed fix, and the larger problem it does not solve
+
+`StartupEnv.reset(seed=N)` called `super().reset(seed=seed)`, which seeds `self.np_random` —
+an object the physics never touches. `env/business_logic.py` draws from the **global
+`random` module** throughout. Measured: two `reset(seed=42)` runs with identical actions
+produced different trajectories.
+
+`reset()` now seeds the module when given a seed. `simulation_runner.py` already did exactly
+this immediately afterwards, so this is provably a no-op for existing runs (see the hash
+above) and makes the documented contract true for new code.
+
+**This buys reproducibility, not isolation, and the distinction matters.** The stream is
+still global, and its per-step draw count is *state-dependent*: `apply_recession_cascade`
+draws only when `unemployment > 8 AND interest_rate > 7`. Measured — 7 draws/step normally,
+8 once that condition holds. Two policies reaching different macro states therefore
+desynchronise and stop sharing a world.
+
+Demonstrated: identical seed, identical actions, varying only how much RNG a *policy*
+consumed, competitor counts diverged 5 to 6 versus 5 to 9 over ten months.
+
+**Reach.** Over 120-month episodes the condition is met in **20 of 20 seeds**, first at a
+median of ~month 33 — inside the months 25–60 window `post_shock_avg_rule40` is computed
+over. Every cross-policy comparison in `results/` is therefore confounded: the policies were
+not run against the same worlds. **Not fixed here.** The fix changes `business_logic.py` and
+invalidates recorded results, so it is a decision, not a patch.
+
+**Why the what-if is nonetheless clean.** Over a 12-month horizon from founder-typical
+conditions the condition is reached in **0 of 50 rollouts** — it needs roughly three
+interest-rate and four unemployment shocks inside one year. `run_whatif` re-checks per
+request rather than trusting that measurement and returns `shock_tape_shared`; the UI says
+so when it is ever False.
+
+## R3.4 What-if projection — defect D5
+
+`backend/whatif_service.py`, `POST /api/whatif`, `frontend/src/whatif.jsx`.
+
+Three policies over the same horizon, seeds and shock tape: the board's plan held, the
+founder's current spend held, and the heuristic C-suite recomputed monthly. Four panels
+(MRR, cash, churn, Rule of 40) as median + 25–75 IQR band, a summary table, an optional
+competitor shock at month 6, and the caveat rendered directly beneath the charts.
+
+Pure simulation — the plan comes from an analysis the client already holds, so there is no
+LLM call. **50 seeds x 3 policies in 0.11 s** (0.29 s with the shock counterfactual),
+against the 30 s budget.
+
+Two defects found and fixed while building it:
+
+- **The rule-based arm ran unscaled.** `baseline_agents` dollar amounts are tuned for a
+  ~$50k-MRR company; against a $12k-MRR founder they proposed more marketing than the
+  company earned, and the arm "won" on revenue purely by burning cash it did not have. It
+  now takes `absolute_scale(mrr)`, the same G11 correction `Boardroom` already applies.
+  Scaled, it loses — and survives only 60% of runs.
+- **"Months to recover" reported 0 for a drawdown that never happened.**
+  `inject_hard_shock("competitor_surge")` cuts price and raises churn but removes no
+  revenue, so a growing company never dips below its pre-shock MRR. Recovery is now
+  reported only once a dip is actually observed, and the shock's cost is measured instead
+  by re-running each policy without it on the same seeds.
+
+## R3.5 Dashboard honesty fixes
+
+- **D3 — `monthly_burn_override` removed.** It was sent by the client, accepted by
+  `FounderConfig`, and read by nothing. Burn reaches the engine through virtual headcount,
+  which is correct; the dead field only made the contract look load-bearing.
+- **D1 residue — `trace.assumed_fields`.** `build_env_state` set 14 of 18 `EnvState` fields;
+  `valuation_multiple`, `unemployment`, `innovation_factor` and `months_in_depression` fell
+  to pydantic schema defaults — defaults invisible even in the code constructing the state,
+  so nothing could report them. They are now set explicitly, and the server enumerates
+  everything it assumed. The UI's "estimated inputs" count was hardcoded on the client and
+  could not see any of these four; it now reads the server's list. Verified on a live
+  analysis: six fields reported where the client previously showed one.
+- **A false caption.** "Expected, in simulation" described a single LLM enum
+  (`GROWTH|STAGNATION|DECLINE`) as "a scenario range from a calibrated simulation". No range
+  and no simulation were involved. Rewritten, and it now points at the projection, which is
+  the thing that claim was actually describing.
+
+## R3.6 Two findings recorded, not fixed
+
+- **`scale_aware_marketing` diverges CAC.** In the scale-aware path a dying company drives
+  `estimated_new_users` toward 0, so `raw_cac = spend / ~0` explodes; `gamma` is
+  `(acquirable/2) * CAC`, and `gamma ** alpha` then raises `OverflowError` for brand
+  (`alpha` up to 3.0). Latent — the flag is default-off and nothing in the product used it.
+  The what-if therefore runs on the default curve. There is no upper bound on CAC anywhere
+  in `business_logic`.
+- **The competitor shock is nearly inert on revenue.** `competitor_surge` sets
+  `competitors += 3` (5 to 8), but `compute_new_mrr` steps only at `>= 4` and `>= 10`, so
+  5 to 8 changes nothing; and in the default curve new MRR does not depend on price, so the
+  25% price cut does not reduce it either. Measured cost over 12 months: **-1.6% to -3.2%**
+  of terminal MRR. This is a property of the model, surfaced rather than hidden — the panel
+  reports "no drop" instead of inventing a recovery figure.
+
+## R3.7 SEC EDGAR panel — new dataset
+
+`data/ingest_edgar.py` produces `data/edgar.db`, `data/coverage_report.md`, plus CSV exports.
+
+**39 companies, 1,332 company-quarters with revenue, 2010Q2–2026Q2, 10,065 facts.**
+Structured XBRL `companyfacts` API only, no scraping, 8 req/s under SEC's published 10/s
+ceiling, `SEC_USER_AGENT` supplied by the operator. Every raw response is cached before
+parsing, so the database rebuilds offline in seconds and re-runs never re-hit the API.
+
+**Inclusion criterion, declared before screening:** S&M tagged separately from G&A (filers
+reporting only `SellingGeneralAndAdministrativeExpense` are excluded — marketing spend is
+genuinely unrecoverable from those filings, and any split we invented would be our
+assumption wearing an audited company's name), a standard revenue tag, and at least 16
+consecutive quarters with revenue, R&D and S&M all present. 2 of 41 candidates excluded.
+
+**Every row carries provenance**: the exact us-gaap tag, accession number, form, filing date
+and retrieval date. `tag` and `accession` are `NOT NULL` — a value cannot exist in the table
+without saying where it came from.
+
+**The Q4 problem, and why the fix is not imputation.** Filers do not report Q4 as a
+three-month figure: 10-Qs carry Q1 plus cumulative six- and nine-month spans, and the 10-K
+carries only the twelve-month year. Reading three-month facts alone yields Q1–Q2–Q3 and a
+permanent gap at Q4, capping every consecutive run at three quarters — which is exactly what
+the first build produced, passing only 4 of 41 candidates. Those quarters are recovered by
+differencing two reported year-to-date figures from the same fiscal year. That is exact
+arithmetic on filed numbers, not estimation, and each such row records its `derivation` and
+the accessions of **both** operands, so `WHERE derivation IS NULL` restricts any analysis to
+strictly as-filed values. 76% of rows are as-filed, 24% derived.
+
+**Verified against a known figure.** Twilio's four 2023 quarters, Q4 derived, sum to
+$4,153,945,000 against a reported FY2023 revenue of $4.154B, and the derived Q4 of $1.076B
+matches their reported Q4. Spot-checked ratios are independently plausible: CrowdStrike
+Rule-of-40 50.6, Datadog gross margin 80.9%, Asana 89.7%, Bandwidth 37.3% (CPaaS, correctly
+low).
+
+**Known biases, unchanged from the acquisition plan and still declared:** survivorship (only
+companies that reached IPO — the bankruptcy dynamic the simulator models is structurally
+absent), scale (~$100M+ ARR against the simulator's $50k MRR), and lifecycle stage. All
+comparisons must happen in the scale-free `ratios` view, never in absolute dollars.
+
+## R3.8 Environment drift
+
+`scipy` is **not installed** and is **not in `requirements.txt`**, so
+`experiments/thesis_analysis.significance_test` silently degrades to `_mann_whitney_fallback`
+— a normal approximation with no tie correction. Recorded results in
+`results/.../primary_significance_tests.csv` carry `method=scipy_mannwhitneyu`, meaning
+scipy was present when they were produced and is not now. Separately, those rows show
+`n_a=1, n_b=1, p=1.0`: one episode per arm, so the test was vacuous regardless of method.
+Neither is fixed here; both gate any statistical claim.
+
+## R3.9 How to verify this revision
+
+```bash
+venv\Scripts\python.exe -c "import calibration as c; g=c.gross_margin_pct(); print(g.value, g.confidence, g.page_or_figure)"
+```
+
+```bash
+venv\Scripts\python.exe -m pytest tests/ -q
+```
+
+```bash
+venv\Scripts\python.exe data/ingest_edgar.py --screen --build
+```
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/whatif -H "Content-Type: application/json" -d "{\"config\":{\"initial_mrr\":12000,\"initial_cash\":60000,\"average_price\":50}}"
+```

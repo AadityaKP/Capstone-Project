@@ -1,3 +1,5 @@
+import random
+
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
@@ -31,6 +33,18 @@ class StartupEnv(gym.Env):
         self.scale_aware_marketing = bool(
             self.initial_config.get("scale_aware_marketing", False)
         )
+        # Opt-in gross margin on recognised revenue. None reproduces the
+        # original behaviour exactly - revenue booked to cash at 100% margin,
+        # no cost of revenue deducted - so every recorded result is untouched.
+        # Product surfaces pass the calibrated figure; see calibration.gross_margin_pct.
+        gross_margin = self.initial_config.get("gross_margin")
+        self.gross_margin = None if gross_margin is None else float(gross_margin)
+        # The hard shocks at months 24/48/72 are a fixture of the 120-month
+        # research episode, not a property of the world. A founder projecting 12
+        # months from month 20 would inherit one at month 4 of their forecast for
+        # no reason they could see. Product surfaces turn them off; research runs
+        # leave this True and are unaffected.
+        self.scheduled_shocks = bool(self.initial_config.get("scheduled_shocks", True))
         
         self.action_space = spaces.Dict({
             "marketing": spaces.Dict({
@@ -59,6 +73,21 @@ class StartupEnv(gym.Env):
         
     def reset(self, seed=None, options=None) -> Tuple[np.ndarray, Dict[str, Any]]:
         super().reset(seed=seed)
+        # gym's super().reset seeds self.np_random, which the physics never uses:
+        # env/business_logic.py draws from the global `random` module throughout.
+        # Without this line env.reset(seed=N) does not reproduce, and callers have
+        # to know to seed the module themselves. simulation_runner.py already does
+        # exactly this immediately after reset, so re-seeding here is a no-op for
+        # every existing run and makes the documented contract true for new ones.
+        #
+        # This gives reproducibility, NOT isolation: the stream is still global and
+        # its per-step draw count is state-dependent (apply_recession_cascade only
+        # draws when unemployment > 8 and interest_rate > 7), so two policies that
+        # reach different macro states will desynchronise. Comparisons that need a
+        # shared shock tape must keep their horizon short enough to stay clear of
+        # that, and say so.
+        if seed is not None:
+            random.seed(seed)
         self.episode_seed = seed
         
         self.state = EnvState(
@@ -111,7 +140,7 @@ class StartupEnv(gym.Env):
         business_logic.consumer_confidence_shock(self.state)
         business_logic.competitive_entry_shock(self.state)
 
-        if self.state.months_elapsed in {24, 48, 72}:
+        if self.scheduled_shocks and self.state.months_elapsed in {24, 48, 72}:
             shock_cycle = ["competitor_surge", "rate_hike", "recession"]
             shock_type = shock_cycle[(self.episode_seed or 0) % len(shock_cycle)]
             shock_label = business_logic.inject_hard_shock(self.state, shock_type)
@@ -135,7 +164,10 @@ class StartupEnv(gym.Env):
 
         self.state.mrr = self.state.mrr * (1 - churn_rate) + new_mrr + expansion
 
-        self.state.cash += self.state.mrr
+        # Revenue lands in cash net of cost of revenue when a margin is configured.
+        # gross_margin=None keeps the original 100%-margin behaviour.
+        margin = 1.0 if self.gross_margin is None else self.gross_margin
+        self.state.cash += self.state.mrr * margin
 
         business_logic.apply_pricing_effect(self.state, action.pricing) 
         

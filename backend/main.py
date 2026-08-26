@@ -10,8 +10,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.database import connect, initialize_database, parse_json_fields, row_to_dict, utc_now
-from backend.schemas import AdviseRequest, ScenarioCreate, SimulationCreate
+from backend.schemas import AdviseRequest, ScenarioCreate, SimulationCreate, WhatIfRequest
 from backend.advise_service import ORACLE_MODE, run_analysis, store_analysis
+from backend.whatif_service import run_whatif
 from backend.simulation_service import (
     SUPPORTED_POLICIES,
     create_run,
@@ -108,6 +109,22 @@ def advise(payload: AdviseRequest) -> dict:
 
     analysis_id = store_analysis(payload.company_id, payload.month_index, result)
     return {"analysis": {**result, "id": analysis_id}}
+
+
+@app.post("/api/whatif")
+def whatif(payload: WhatIfRequest) -> dict:
+    """Twelve-month projection under three policies (D5).
+
+    Pure simulation: no LLM call, no Oracle, no memory write. The board's plan
+    arrives from an analysis the client already has, so this is CPU-only and
+    returns in well under a second for the default 50 seeds x 3 policies.
+    """
+    try:
+        return run_whatif(payload.model_dump())
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503, detail=f"Projection engine unavailable: {exc}"
+        ) from exc
 
 
 @app.get("/api/companies/{company_id}/analyses")

@@ -173,6 +173,44 @@ def spend_band_applies_to(arr: float) -> bool:
     return SPEND_BAND_ARR_MIN <= arr <= SPEND_BAND_ARR_MAX
 
 
+# The four cost-of-revenue line items in the $3-5M ARR breakdown. Gross margin
+# is not printed anywhere in the report, but its components are, and summing
+# printed components is arithmetic rather than estimation.
+COGS_COMPONENTS = ("hosting", "devops", "pro_services_cogs", "other_cogs")
+
+
+def gross_margin_pct() -> Calibrated:
+    """Gross margin % derived from the printed CoGS components.
+
+    confidence is "derived", never "observed": no source page prints a gross
+    margin figure. What the source prints is hosting 5% + DevOps 3% + pro
+    services CoGS 5% + other CoGS 3.5% of ARR, and 100 - 16.5 = 83.5.
+
+    All four components must be observed or the whole figure is withheld -
+    the same rule discretionary_spend_pct_of_mrr() applies. A partial CoGS sum
+    would overstate margin, which is the direction that flatters a cash
+    projection, so it fails closed.
+    """
+    parts = [department_spend_pct_of_arr(name) for name in COGS_COMPONENTS]
+    if not all(part.is_observed for part in parts):
+        return Calibrated(value=None, confidence="assumed")
+
+    cogs_pct = sum(float(part.value) for part in parts)
+    reference = parts[0]
+    composition = " + ".join(
+        f"{name} {float(part.value)}%" for name, part in zip(COGS_COMPONENTS, parts)
+    )
+    return Calibrated(
+        value=100.0 - cogs_pct,
+        confidence="derived",
+        publisher=reference.publisher,
+        report=reference.report,
+        year=reference.year,
+        page_or_figure=f"{reference.page_or_figure}; 100 - ({composition}) = {100.0 - cogs_pct}",
+        n=reference.n,
+    )
+
+
 def total_spend_pct_of_arr(funding: str = "bootstrapped") -> Calibrated:
     node = load().get("spend_benchmarks", {}).get("total_spend_pct_of_arr", {})
     raw = node.get(funding)

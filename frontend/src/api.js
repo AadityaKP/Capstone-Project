@@ -63,8 +63,11 @@ export function buildAdvisePayload(company, month) {
       churn_b2c: (v.churnB2c ?? v.churnMonthly) / 100,
       competitors: crowd.competitors,
       product_quality: maturity ? maturity.quality : 0.5,
-      initial_headcount: virtualHeadcount(v),
-      monthly_burn_override: v.costs
+      // Burn reaches the engine as virtual headcount ($8k salary slots), because
+      // Boardroom estimates runway as headcount * 8000. A `monthly_burn_override`
+      // field used to be sent here too; nothing on the server ever read it, so it
+      // has been removed rather than left looking load-bearing.
+      initial_headcount: virtualHeadcount(v)
     },
     history: (month.history || []).map((h) => ({
       mrr: h.mrr,
@@ -81,4 +84,22 @@ export async function advise(company, month) {
     method: "POST",
     body: JSON.stringify(buildAdvisePayload(company, month))
   });
+}
+
+// Twelve-month projection under three policies (D5). Pure simulation — no LLM
+// call — so it returns in well under a second and gets a short timeout rather
+// than the 120s the analysis needs. The board's plan is taken from an analysis
+// the client already holds, which is why this never re-asks the model.
+export async function whatif(company, month, analysis, { shockMode = false } = {}) {
+  const base = buildAdvisePayload(company, month);
+  return request("/whatif", {
+    method: "POST",
+    body: JSON.stringify({
+      company_age_months: base.company_age_months,
+      config: base.config,
+      recommended_action: analysis?.trace?.final_action ?? null,
+      current_marketing_spend: month.values.marketingSpend ?? null,
+      shock_mode: shockMode
+    })
+  }, 20_000);
 }

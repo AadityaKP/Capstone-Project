@@ -54,10 +54,20 @@ USE_CAUSAL_PROPOSALS = ORACLE_MODE == "oracle_v4_causal"
 # than on its usual multi-month cadence.
 ORACLE_FREQUENCY = 1
 
-# Engine defaults for macro conditions the founder is never asked for. Surfaced
-# in the UI as "estimated by the system", never as measurement.
+# Engine defaults for conditions the founder is never asked for. Surfaced in the
+# UI as "estimated by the system", never as measurement.
+#
+# The last four used to be omitted from build_env_state entirely and picked up
+# EnvState's own pydantic defaults instead. That is worse than a default: it is a
+# default invisible even in the code that builds the state, so nothing could
+# report it and the UI's "estimated inputs" count silently missed all four. They
+# are set explicitly here so assumed_fields() can enumerate them.
 DEFAULT_INTEREST_RATE = 3.0
 DEFAULT_CONSUMER_CONFIDENCE = 100.0
+DEFAULT_UNEMPLOYMENT = 4.0
+DEFAULT_VALUATION_MULTIPLE = 10.0
+DEFAULT_INNOVATION_FACTOR = 1.0
+DEFAULT_MONTHS_IN_DEPRESSION = 0
 
 # The boardroom's absolute spend floors are calibrated at this MRR (spec G11).
 CALIBRATION_MRR = 50_000.0
@@ -123,7 +133,43 @@ def build_env_state(payload: dict[str, Any]) -> EnvState:
         price=price,
         months_elapsed=int(_f(payload.get("company_age_months"), 0)),
         headcount=max(1, int(_f(config.get("initial_headcount"), 1))),
+        unemployment=DEFAULT_UNEMPLOYMENT,
+        valuation_multiple=DEFAULT_VALUATION_MULTIPLE,
+        innovation_factor=DEFAULT_INNOVATION_FACTOR,
+        months_in_depression=DEFAULT_MONTHS_IN_DEPRESSION,
     )
+
+
+def assumed_fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every EnvState field the founder did not supply, with its value and why.
+
+    The UI previously showed a hardcoded count of "estimated inputs" computed on
+    the client, which could not see the four macro fields the server filled in
+    and therefore undercounted them. This is the server saying what it actually
+    assumed, so the disclosure cannot drift from the behaviour.
+    """
+    config = payload.get("config") or {}
+    assumed: list[dict[str, Any]] = []
+
+    def add(field: str, value: Any, why: str) -> None:
+        assumed.append({"field": field, "value": value, "why": why})
+
+    if config.get("interest_rate") is None:
+        add("Interest rate", f"{DEFAULT_INTEREST_RATE}%", "not asked at onboarding; typical conditions")
+    if config.get("consumer_confidence") is None:
+        add("Consumer confidence", DEFAULT_CONSUMER_CONFIDENCE, "not asked at onboarding; index where 100 is neutral")
+    add("Unemployment", f"{DEFAULT_UNEMPLOYMENT}%", "not asked at onboarding; typical conditions")
+    add("Valuation multiple", f"{DEFAULT_VALUATION_MULTIPLE}x ARR", "not asked at onboarding; engine default")
+    add("Innovation factor", DEFAULT_INNOVATION_FACTOR, "no scarring assumed at the start of an analysis")
+
+    if config.get("cac") is None:
+        add("Acquisition cost", "$50", "not supplied and not derivable from marketing spend and new customers")
+    if config.get("ltv") is None:
+        add("Lifetime value", "price / monthly churn", "derived from your own numbers, never asked")
+    if not any(config.get(k) is not None for k in ("churn_enterprise", "churn_smb", "churn_b2c")):
+        add("Churn split", "one blended rate applied to all three segments",
+            "the engine models enterprise, SMB and consumer churn separately; your blended figure fills all three, so the average it uses is exactly your number")
+    return assumed
 
 
 def _replay_history(boardroom: Boardroom, state: EnvState, history: list[dict]) -> int:
@@ -260,6 +306,7 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         else None
     )
     trace["final_action"] = final_action
+    trace["assumed_fields"] = assumed_fields(payload)
     trace["history_months_replayed"] = months_replayed
     trace["absolute_scale"] = scale
     trace["graph_summary"] = _graph_summary(trace)

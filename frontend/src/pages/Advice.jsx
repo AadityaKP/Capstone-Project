@@ -12,6 +12,8 @@ import {
   ConfidenceStrip, RiskBullets, SimulatedTag
 } from "../components.jsx";
 import { deriveCac, deriveLtv, monthName, runwayMonths } from "../derive.js";
+import WhatIfPanel from "../whatif.jsx";
+import { whatif as fetchWhatIf } from "../api.js";
 
 function Expandable({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -37,6 +39,36 @@ export default function Advice({ navigate, params }) {
 
   const planCards = useMemo(() => buildPlanCards(analysis, month), [analysis, month]);
 
+  // What-if projection (D5). Run on demand rather than with the analysis: it is
+  // a separate question, and firing it automatically would spend the founder's
+  // attention on a counterfactual before they have read the actual advice.
+  const [whatIf, setWhatIf] = useState(null);
+  const [whatIfLoading, setWhatIfLoading] = useState(false);
+  const [whatIfError, setWhatIfError] = useState(null);
+  const [shockMode, setShockMode] = useState(false);
+
+  async function runWhatIf(shock) {
+    setWhatIfLoading(true);
+    setWhatIfError(null);
+    const response = await fetchWhatIf(state.company, month, analysis, { shockMode: shock });
+    setWhatIfLoading(false);
+    if (response.ok) {
+      setWhatIf(response.data);
+    } else {
+      setWhatIfError(
+        response.offline
+          ? "Projection service unreachable — the numbers above are unaffected."
+          : response.error
+      );
+    }
+  }
+
+  function toggleShock() {
+    const next = !shockMode;
+    setShockMode(next);
+    if (whatIf) runWhatIf(next);
+  }
+
   if (!analysis || !month) {
     return (
       <section className="empty-state">
@@ -59,7 +91,14 @@ export default function Advice({ navigate, params }) {
   const v = month.values;
   const cac = deriveCac(v);
   const known = [v.mrr, v.cash, v.costs, v.price, v.churnMonthly, v.newCustomers, v.marketingSpend, cac.value, deriveLtv(v), runwayMonths(v)];
-  const estimatedCount = (cac.source === "estimated" ? 1 : 0) + (state.company?.maturity ? 0 : 1) + 1; // +1 market conditions
+  // The server reports what it actually assumed (trace.assumed_fields). The old
+  // client-side count could not see the macro fields the server fills in and so
+  // understated them; it stays only as a fallback for analyses stored before
+  // that field existed.
+  const assumedFields = trace.assumed_fields || null;
+  const estimatedCount = assumedFields
+    ? assumedFields.length
+    : (cac.source === "estimated" ? 1 : 0) + (state.company?.maturity ? 0 : 1) + 1;
 
   const decisions = month.decisions || [];
   const decisionFor = (domain) => decisions.find((d) => d.domain === domain) || null;
@@ -136,6 +175,16 @@ export default function Advice({ navigate, params }) {
         ))}
       </div>
 
+      {/* D5 — what taking this plan actually does, against two baselines */}
+      <WhatIfPanel
+        result={whatIf}
+        loading={whatIfLoading}
+        error={whatIfError}
+        onRun={() => runWhatIf(shockMode)}
+        shockMode={shockMode}
+        onToggleShock={toggleShock}
+      />
+
       {/* L3 */}
       <Expandable title="Why this plan">
         <FocusBar weights={weights} />
@@ -152,11 +201,37 @@ export default function Advice({ navigate, params }) {
         <EvidenceList analysis={analysis} />
       </Expandable>
 
+      {/* Nothing silently assumed: every field the founder did not supply, with
+          the value used and why, as reported by the server that used it. */}
+      {assumedFields && assumedFields.length > 0 && (
+        <Expandable title={`Assumed values (${assumedFields.length})`}>
+          <p className="subtle">
+            You didn't give us these, so the board used the values below. Anything here
+            that you actually know is worth entering — it changes the advice.
+          </p>
+          <ul className="wi-assumptions">
+            {assumedFields.map((a) => (
+              <li key={a.field}>
+                <strong>{a.field}:</strong> {String(a.value)}
+                <span className="wi-assumption-detail">{a.why}</span>
+              </li>
+            ))}
+          </ul>
+        </Expandable>
+      )}
+
       {/* L5 (qualitative in MVP) */}
       {brief?.expected_outcome && (
         <Expandable title="Expected, in simulation">
           <p className="outcome-line">{expectedOutcomeCopy(brief.expected_outcome)}</p>
-          <p className="subtle"><SimulatedTag /> — a scenario range from a calibrated simulation, not a forecast of your company.</p>
+          {/* This is a single qualitative label the model returns alongside the
+              brief — not a simulated range. The earlier copy here described it as
+              "a scenario range from a calibrated simulation", which was the
+              projection panel's claim, not this one's. The projection is above. */}
+          <p className="subtle">
+            <SimulatedTag /> — the board's one-line read on the next 6–12 months, not a
+            forecast of your company. For a modelled range, see the projection above.
+          </p>
         </Expandable>
       )}
 

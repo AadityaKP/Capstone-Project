@@ -56,7 +56,9 @@ class FounderConfig(BaseModel):
     competitors: int = Field(default=5, ge=0)
     product_quality: float = Field(default=0.5, ge=0, le=1)
     initial_headcount: int = Field(default=1, ge=1, le=10000)
-    monthly_burn_override: float | None = Field(default=None, ge=0)
+    # `monthly_burn_override` was accepted here and read by nothing. Burn reaches
+    # the engine through initial_headcount instead (client-side virtualHeadcount,
+    # $8k salary slots), which Boardroom already uses for its runway estimate.
     interest_rate: float | None = Field(default=None, ge=0, le=100)
     consumer_confidence: float | None = Field(default=None, ge=0, le=200)
 
@@ -73,3 +75,21 @@ class AdviseRequest(BaseModel):
     month_index: int = Field(default=0, ge=0)
     config: FounderConfig
     history: list[FounderHistoryEntry] = Field(default_factory=list)
+
+
+class WhatIfRequest(BaseModel):
+    """Roll the founder's state forward under competing policies (D5).
+
+    `recommended_action` is the board's plan from an analysis the client already
+    holds, so this endpoint needs no LLM call and returns in well under a second.
+    Omitting it makes the recommended arm a no-op, which is honest but pointless
+    - the client only offers this once an analysis exists.
+    """
+
+    company_age_months: int = Field(default=0, ge=0)
+    config: FounderConfig
+    recommended_action: dict | None = None
+    current_marketing_spend: float | None = Field(default=None, ge=0)
+    horizon_months: int = Field(default=12, ge=1, le=36)
+    n_seeds: int = Field(default=50, ge=10, le=500)
+    shock_mode: bool = False
