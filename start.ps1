@@ -3,10 +3,18 @@
     Bring up the founder product and leave it running.
 
 .DESCRIPTION
-    The frontend is not useful on its own - every analysis goes through the API,
-    and the API needs Ollama. So this starts the whole stack, checks each piece is
-    actually answering before it says so, and shuts all of it down together on
-    Ctrl+C.
+    The frontend is not useful on its own - every analysis goes through the API.
+    So this starts the whole stack, checks each piece is actually answering before
+    it says so, and shuts all of it down together on Ctrl+C.
+
+    ON THIS BRANCH (demo-offline) the API does not need Ollama or Neo4j. Recorded
+    answers cover the demo dataset and a model-free board covers everything else,
+    so the whole product runs on a laptop with neither service:
+
+        .\start.ps1 -Prod -NoOllama
+
+    See docs/demo_walkthrough.md for the dataset and what each screen shows.
+    Set FOUNDER_DEMO_FIXTURES=0 to force the live stack back on.
 
     Two modes:
 
@@ -27,9 +35,10 @@
     mid-demo.
 
 .PARAMETER NoOllama
-    Skip the Ollama check and start. The stack still runs; analyses come back
-    with llm_ok=false and the UI shows its rules-only state, which is a
-    legitimate thing to test (runbook 4.2).
+    Skip the Ollama check and start. On this branch that is the normal way to
+    demonstrate: the demo dataset replays recorded answers with llm_ok=true, and
+    any other numbers get a real model-free analysis with llm_ok=false and the
+    UI's honest rules-only banner (runbook 4.2).
 
 .PARAMETER NoBrowser
     Do not open a browser window.
@@ -309,7 +318,7 @@ if (-not $NoOllama) {
         Write-Warn2 "could not query ollama - analyses will be rules-only"
     }
 } else {
-    Write-Warn2 "-NoOllama: skipping. Analyses will return llm_ok=false"
+    Write-Warn2 "-NoOllama: skipping. Recorded demo answers replay; anything else runs model-free (llm_ok=false)"
 }
 
 # Neo4j is optional and the backend degrades on its own, so this is information

@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.database import connect, initialize_database, parse_json_fields, row_to_dict, utc_now
 from backend.schemas import AdviseRequest, ScenarioCreate, SimulationCreate, WhatIfRequest
+from backend import demo_fixtures
 from backend.advise_service import ORACLE_MODE, run_analysis, store_analysis
 from backend.whatif_service import run_whatif
 from backend.simulation_service import (
@@ -53,6 +54,8 @@ def health() -> dict:
         "database": "sqlite",
         "simulation_engine": "ready",
         "advisor_mode": ORACLE_MODE,
+        # Whether this instance can answer without Ollama and Neo4j, and how.
+        "demo_fixtures": demo_fixtures.enabled(),
     }
 
 
@@ -99,13 +102,26 @@ def advise(payload: AdviseRequest) -> dict:
             ),
         )
 
-    try:
-        result = run_analysis(payload.model_dump())
-    except Exception as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Analysis engine unavailable: {exc}",
-        ) from exc
+    body = payload.model_dump()
+
+    if demo_fixtures.enabled():
+        # Offline demonstration. Recorded answers for the demo dataset, and a
+        # real but model-free board run for anything else. The live path is
+        # never reached, deliberately: run_analysis does not raise when Ollama
+        # and Neo4j are down, it spends about six seconds failing to connect
+        # and then degrades into its own fallback - so "try live, catch the
+        # error" would have shown that degraded answer instead of the
+        # recording, slowly, with a stack of connection warnings in the log.
+        # Set FOUNDER_DEMO_FIXTURES=0 for the live stack.
+        result = demo_fixtures.lookup(body) or demo_fixtures.offline_analysis(body)
+    else:
+        try:
+            result = run_analysis(body)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Analysis engine unavailable: {exc}",
+            ) from exc
 
     analysis_id = store_analysis(payload.company_id, payload.month_index, result)
     return {"analysis": {**result, "id": analysis_id}}
