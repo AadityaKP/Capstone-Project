@@ -1,7 +1,8 @@
 {
  "name": "kettle_month_2",
  "signature": "age=16|initial_mrr=12800.0000|initial_cash=92000.0000|monthly_costs=16400.0000|average_price=56.0000|cac=125.0000|churn_smb=0.0290|competitors=5.0000|product_quality=0.5000|initial_headcount=2.0000",
- "recorded_at": "2026-08-26T15:48:33.164592+00:00",
+ "sim_profile": "review2",
+ "recorded_at": "2026-08-26T17:12:54.648125+00:00",
  "inputs": {
   "company_name": "Kettle Analytics",
   "initial_mrr": 12800,
@@ -26,31 +27,35 @@
    "macro_condition": "EXPANSION",
    "expected_outcome": "GROWTH",
    "key_risks": [
-    "Churn rate is below benchmark, but increasing slightly"
+    "High MRR growth may lead to complacency",
+    "Increasing competition from 5 competitors"
    ],
    "key_opportunities": [
-    "Strong MRR growth, increasing by 16.4% MoM"
+    "Strong customer retention with 0.029 avg churn",
+    "Increasing MRR by 16.4% MoM"
    ],
    "recommended_focus": [
-    "Monitor and optimize churn rate, continue to invest in growth initiatives"
+    "Continuously monitor and improve customer experience",
+    "Invest in innovation to stay ahead of competition"
    ],
    "confidence": 0.85,
    "parse_ok": true
   },
   "trace": {
    "month": 16,
-   "oracle_mode": "oracle_v4_causal",
+   "oracle_mode": "oracle_v3",
    "used_oracle": true,
-   "refresh_reason": "cadence",
+   "refresh_reason": "initial",
    "brief_source": "llm",
    "cache_key": [
-    "oracle_v4_causal",
+    "oracle_v3",
     "0",
     "1",
     "5",
     "10",
     "INCREASING",
-    "NORMAL"
+    "NORMAL",
+    "none"
    ],
    "shock_label": null,
    "base_weights": {
@@ -73,119 +78,49 @@
     "macro_condition": "EXPANSION",
     "expected_outcome": "GROWTH",
     "key_risks": [
-     "Churn rate is below benchmark, but increasing slightly"
+     "High MRR growth may lead to complacency",
+     "Increasing competition from 5 competitors"
     ],
     "key_opportunities": [
-     "Strong MRR growth, increasing by 16.4% MoM"
+     "Strong customer retention with 0.029 avg churn",
+     "Increasing MRR by 16.4% MoM"
     ],
     "recommended_focus": [
-     "Monitor and optimize churn rate, continue to invest in growth initiatives"
+     "Continuously monitor and improve customer experience",
+     "Invest in innovation to stay ahead of competition"
     ],
     "confidence": 0.85,
     "parse_ok": true
    },
    "memory_count": 0,
    "retrieved_memories": [],
-   "proposal_source": "llm",
+   "proposal_source": "agents",
    "proposal_error": null,
-   "causal_stress_node": "Cash_Shortage",
-   "stress_persistence_months": 1,
+   "causal_stress_node": null,
+   "stress_persistence_months": 0,
    "previous_final_action": null,
-   "causal_contexts": {
-    "CFO": {
-     "role": "CFO",
-     "stress_node": "Cash_Shortage",
-     "chain_summary": "Cash_Shortage -MAY_CAUSE-> Runway_Depletion; Cash_Shortage -MAY_CAUSE-> Hiring_Freeze_Recommended; Cash_Shortage -OBSERVED_WITH-> marketing_high|rd_high|hires_0|price_flat",
-     "root_cause_node": "Runway_Depletion",
-     "confidence": 0.6933333333333334,
-     "raw_triples": [
-      [
-       "Cash_Shortage",
-       "MAY_CAUSE",
-       "Runway_Depletion"
-      ],
-      [
-       "Cash_Shortage",
-       "MAY_CAUSE",
-       "Hiring_Freeze_Recommended"
-      ],
-      [
-       "Cash_Shortage",
-       "OBSERVED_WITH",
-       "marketing_high|rd_high|hires_0|price_flat"
-      ]
-     ]
-    },
-    "CMO": {
-     "role": "CMO",
-     "stress_node": "Cash_Shortage",
-     "chain_summary": "Cash_Shortage -MAY_CAUSE-> Marketing_Spend_Cut; Cash_Shortage -OBSERVED_WITH-> marketing_high|rd_high|hires_0|price_flat; Cash_Shortage -OBSERVED_WITH-> marketing_high|rd_high|hires_1|price_down",
-     "root_cause_node": "Marketing_Spend_Cut",
-     "confidence": 0.56,
-     "raw_triples": [
-      [
-       "Cash_Shortage",
-       "MAY_CAUSE",
-       "Marketing_Spend_Cut"
-      ],
-      [
-       "Cash_Shortage",
-       "OBSERVED_WITH",
-       "marketing_high|rd_high|hires_0|price_flat"
-      ],
-      [
-       "Cash_Shortage",
-       "OBSERVED_WITH",
-       "marketing_high|rd_high|hires_1|price_down"
-      ]
-     ]
-    },
-    "CPO": {
-     "role": "CPO",
-     "stress_node": "Cash_Shortage",
-     "chain_summary": "Cash_Shortage -MAY_CAUSE-> Product_Investment_Delay; Cash_Shortage -OBSERVED_WITH-> marketing_high|rd_high|hires_0|price_flat; Cash_Shortage -OBSERVED_WITH-> marketing_high|rd_high|hires_1|price_down",
-     "root_cause_node": "Product_Investment_Delay",
-     "confidence": 0.5333333333333333,
-     "raw_triples": [
-      [
-       "Cash_Shortage",
-       "MAY_CAUSE",
-       "Product_Investment_Delay"
-      ],
-      [
-       "Cash_Shortage",
-       "OBSERVED_WITH",
-       "marketing_high|rd_high|hires_0|price_flat"
-      ],
-      [
-       "Cash_Shortage",
-       "OBSERVED_WITH",
-       "marketing_high|rd_high|hires_1|price_down"
-      ]
-     ]
-    }
-   },
+   "causal_contexts": {},
    "proposals": [
     {
      "agent": "CFO",
-     "objective": "Reduce Cash_Shortage by increasing hiring and pricing power",
+     "objective": "Preserve runway and improve efficiency",
      "actions": {
       "hiring": {
-       "hires": 1,
+       "hires": 0,
        "cost_per_employee": 10000.0
       },
       "pricing": {
-       "price_change_pct": 0.01
+       "price_change_pct": 0.0
       }
      },
-     "expected_impact": "Increase runway by 1-2 months",
+     "expected_impact": "Lower burn, improved survival probability",
      "risks": [
-      "Hiring freeze if Cash_Shortage persists"
+      "Slower growth"
      ],
-     "rationale": "Cash_Shortage is observed with marketing_high, rd_high, hires_0, and price_flat. Increasing hiring and maintaining current pricing should help alleviate Cash_Shortage.",
-     "causal_confidence": 0.6525000000000001,
+     "rationale": null,
+     "causal_confidence": null,
      "base_score": 0.47973729580573954,
-     "final_confidence": 0.5016852770888521,
+     "final_confidence": 0.47973729580573954,
      "score_vector": {
       "efficiency": 0.38333333333333336,
       "growth": 1.0,
@@ -195,21 +130,22 @@
     },
     {
      "agent": "CMO",
-     "objective": "Reduce Cash_Shortage by optimizing marketing spend",
+     "objective": "Maximize growth under CAC constraints",
      "actions": {
       "marketing": {
-       "spend": 2000.0,
-       "channel": "ppc"
+       "spend": 20000.0,
+       "channel": "brand"
       }
      },
-     "expected_impact": "Reduce marketing spend by 20-30%",
+     "expected_impact": "Increased MRR growth",
      "risks": [
-      "Marketing spend cut may impact growth"
+      "Higher CAC",
+      "Burn risk"
      ],
-     "rationale": "Cash_Shortage is observed with marketing_high, rd_high, hires_0, and price_flat. Reducing marketing spend may help alleviate Cash_Shortage.",
-     "causal_confidence": 0.56,
+     "rationale": null,
+     "causal_confidence": null,
      "base_score": 0.47973729580573954,
-     "final_confidence": 0.48837256713024285,
+     "final_confidence": 0.47973729580573954,
      "score_vector": {
       "efficiency": 0.38333333333333336,
       "growth": 1.0,
@@ -219,20 +155,20 @@
     },
     {
      "agent": "CPO",
-     "objective": "Reduce Cash_Shortage by delaying product investment",
+     "objective": "Reduce churn and improve retention",
      "actions": {
       "product": {
-       "r_and_d_spend": 0.0
+       "r_and_d_spend": 4000.0
       }
      },
-     "expected_impact": "Delay product investment by 1-2 months",
+     "expected_impact": "Higher NRR and lower churn",
      "risks": [
-      "Delayed product investment may impact growth"
+      "High R&D cost"
      ],
-     "rationale": "Cash_Shortage is observed with marketing_high, rd_high, hires_0, and price_flat. Delaying product investment may help alleviate Cash_Shortage.",
-     "causal_confidence": 0.5325,
+     "rationale": null,
+     "causal_confidence": null,
      "base_score": 0.47973729580573954,
-     "final_confidence": 0.48441473443984545,
+     "final_confidence": 0.47973729580573954,
      "score_vector": {
       "efficiency": 0.38333333333333336,
       "growth": 1.0,
@@ -243,65 +179,57 @@
    ],
    "pre_modifier_action": {
     "marketing": {
-     "spend": 2000.0,
-     "channel": "ppc"
+     "spend": 20000.0,
+     "channel": "brand"
     },
     "hiring": {
-     "hires": 1,
+     "hires": 0,
      "cost_per_employee": 10000.0
     },
     "pricing": {
-     "price_change_pct": 0.01
+     "price_change_pct": 0.0
     },
     "product": {
-     "r_and_d_spend": 0.0
+     "r_and_d_spend": 4696.0
     }
    },
    "post_modifier_action": {
     "marketing": {
-     "spend": 3276.0000000000005,
-     "channel": "ppc"
+     "spend": 32760.000000000004,
+     "channel": "brand"
     },
     "hiring": {
-     "hires": 1,
+     "hires": 0,
      "cost_per_employee": 10000.0
     },
     "pricing": {
-     "price_change_pct": 0.01
+     "price_change_pct": 0.0
     },
     "product": {
-     "r_and_d_spend": 0.0
+     "r_and_d_spend": 3993.9480000000003
     }
    },
    "final_action": {
     "marketing": {
-     "spend": 3196.4020962363034,
-     "channel": "ppc"
+     "spend": 27600.0,
+     "channel": "brand"
     },
     "hiring": {
-     "hires": 1,
+     "hires": 0,
      "cost_per_employee": 10000.0
     },
     "pricing": {
-     "price_change_pct": 0.01
+     "price_change_pct": 0.0
     },
     "product": {
-     "r_and_d_spend": 4995.597903763697
+     "r_and_d_spend": 20000.0
     }
    },
    "action_modifier_applied": true,
    "marketing_spend_change_pct": 63.800000000000026,
-   "rd_spend_change_pct": 0.0,
+   "rd_spend_change_pct": -14.949999999999994,
    "hires_change": 0,
-   "spend_ceiling": {
-    "ceiling_usd": 8192,
-    "applied": true,
-    "scaled_by": 0.976,
-    "median_pct_of_mrr": 32.0,
-    "source": "SaaS Capital, 2026 Spending Benchmarks for Private B2B SaaS Companies, 2026",
-    "source_band": "$3-5M ARR",
-    "extrapolated": true
-   },
+   "spend_ceiling": null,
    "churn_benchmark": {
     "median_monthly_pct": 3.65,
     "company_monthly_pct": 2.9,
@@ -341,6 +269,12 @@
      "correctable": false
     },
     {
+     "field": "Monthly costs",
+     "value": "$8,000 per person on the team",
+     "why": "the review2 research profile charges the engine's salary-slot convention, so the supplied figure is not applied",
+     "correctable": false
+    },
+    {
      "field": "Lifetime value",
      "value": "price / monthly churn",
      "why": "derived from your own numbers, never asked",
@@ -348,36 +282,25 @@
     }
    ],
    "history_months_replayed": 1,
-   "absolute_scale": 0.256,
-   "graph_summary": {
-    "stress_node": "Cash_Shortage",
-    "observed": [],
-    "expected": [
-     "Runway_Depletion",
-     "Hiring_Freeze_Recommended",
-     "Marketing_Spend_Cut",
-     "Product_Investment_Delay"
-    ],
-    "confidence": 0.5955555555555555,
-    "roles": 3
-   }
+   "absolute_scale": 1.0,
+   "graph_summary": null
   },
   "display": {
    "confidence": {
     "band": "Low",
     "model_band": "High",
-    "assumed_count": 6,
-    "sentence": "Low confidence - 6 of these numbers are estimates, not yours",
+    "assumed_count": 7,
+    "sentence": "Low confidence - 7 of these numbers are estimates, not yours",
     "capped": true
    },
-   "runway": "26 months of cash at current costs",
-   "spend_ratio": "You spend $1.92 for every $1 of revenue",
+   "runway": "29 months of cash at current costs",
+   "spend_ratio": "You spend $4.97 for every $1 of revenue",
    "show_rule_of_40": false,
-   "monthly_burn": 16400.0,
-   "monthly_burn_supplied": true
+   "monthly_burn": 16000.0,
+   "monthly_burn_supplied": false
   },
   "llm_ok": true,
-  "oracle_mode": "oracle_v4_causal",
-  "created_at": "2026-08-26T15:48:33.163903+00:00"
+  "oracle_mode": "oracle_v3",
+  "created_at": "2026-08-26T17:12:54.647504+00:00"
  }
 }
