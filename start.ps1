@@ -219,10 +219,32 @@ function Stop-All {
             if (-not $process.HasExited) {
                 # taskkill /T so uvicorn's reloader child and npm's node child go
                 # too; Stop-Process alone orphans them and the port stays held.
-                taskkill /PID $process.Id /T /F | Out-Null
+                taskkill /PID $process.Id /T /F 2>&1 | Out-Null
             }
         } catch {
             Write-Warn2 "could not stop PID $($process.Id)"
+        }
+    }
+
+    # Killing tracked PIDs is not enough on its own. npm.cmd is a shim: it spawns
+    # node and exits immediately, so by shutdown time the tracked PID is long
+    # dead, its child has been reparented, and `taskkill /T` on the dead PID
+    # finds nothing to kill. The real server survives, still holding the port -
+    # which is exactly how a later run ends up reporting "port already in use"
+    # against a PID that no longer exists.
+    #
+    # So finish the job against the ports themselves. Anything still listening
+    # here is ours: the preflight check refuses to start when these ports are
+    # occupied, so nothing else can have claimed them since.
+    $ports = @($ApiPort)
+    if (-not $Prod) { $ports += $UiPort }
+    foreach ($port in $ports) {
+        if (Test-Port -Port $port) {
+            if (Clear-Port -Port $port) {
+                Write-Ok "released port $port"
+            } else {
+                Write-Warn2 "port $port is still held - run: .\start.ps1 -Force"
+            }
         }
     }
     Write-Host "Stopped." -ForegroundColor Yellow
@@ -414,14 +436,25 @@ try {
     if (-not $NoBrowser) { Start-Process $appUrl | Out-Null }
 
     # Hold the console so Ctrl+C reaches the finally block below. Also notices if
-    # a child dies on its own rather than sitting on a stack that is half up.
+    # a service dies on its own rather than sitting on a stack that is half up.
+    #
+    # Watch the PORTS, not the tracked processes. npm.cmd is a launcher shim: it
+    # spawns node and exits straight away, so a process-liveness check sees it
+    # "exit" seconds after Vite comes up and tears down a perfectly healthy
+    # stack - then leaves the real node and uvicorn orphaned, holding the ports,
+    # which is how the next run inherits a phantom "port already in use".
+    #
+    # Whether the ports still answer is the thing actually worth knowing, and it
+    # does not care how many shims sit between this script and the server.
     while ($true) {
-        Start-Sleep -Seconds 2
-        foreach ($process in $script:Started) {
-            if ($process.HasExited) {
-                Write-Bad "a service exited (PID $($process.Id), code $($process.ExitCode)) - check .logs\"
-                return
-            }
+        Start-Sleep -Seconds 3
+        if (-not (Test-Port -Port $ApiPort)) {
+            Write-Bad "api stopped answering on $ApiPort - check .logs\api.err.log"
+            return
+        }
+        if (-not $Prod -and -not (Test-Port -Port $UiPort)) {
+            Write-Bad "vite stopped answering on $UiPort - check .logs\ui.err.log"
+            return
         }
     }
 } finally {
