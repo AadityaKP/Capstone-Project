@@ -11,7 +11,8 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.database import connect, initialize_database, parse_json_fields, row_to_dict, utc_now
 from backend.schemas import AdviseRequest, ScenarioCreate, SimulationCreate, WhatIfRequest
-from backend.advise_service import ORACLE_MODE, run_analysis, store_analysis
+from backend.advise_service import run_analysis, store_analysis
+from backend.sim_profile import get_oracle_mode, get_profile
 from backend.whatif_service import run_whatif
 from backend.simulation_service import (
     SUPPORTED_POLICIES,
@@ -52,7 +53,8 @@ def health() -> dict:
         "status": "ok",
         "database": "sqlite",
         "simulation_engine": "ready",
-        "advisor_mode": ORACLE_MODE,
+        "advisor_mode": get_oracle_mode(),
+        "sim_profile": get_profile(),
     }
 
 

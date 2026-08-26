@@ -5,10 +5,11 @@ single EnvState from the founder's own numbers, replays their history through
 Oracle.observe_state so trend context is real, then calls Boardroom.decide()
 once and stores the resulting brief + decision trace.
 
-Memory isolation: founder analyses read and write a *copy* of the research
-corpus (chroma_db_founder) so live usage cannot contaminate the thesis
-memories. CHROMA_PATH is set before the Oracle is constructed, because
-OracleMemoryStore resolves its path at construction time.
+Which engine configuration runs is decided by SIM_PROFILE (backend/sim_profile):
+`review2` (default) uses the Review 2 research setup - oracle_v3 against the
+repo chroma_db, no founder scaling or guards. `founder` restores the founder
+product setup, where analyses read and write a *copy* of the research corpus
+(chroma_db_founder) so live usage cannot contaminate the thesis memories.
 """
 
 from __future__ import annotations
@@ -17,43 +18,28 @@ import os
 import uuid
 from typing import Any
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FOUNDER_CHROMA_PATH = os.environ.get(
-    "FOUNDER_CHROMA_PATH", os.path.join(ROOT_DIR, "chroma_db_founder")
-)
-
 from agents.causal_proposal_agents import BatchedCausalProposalGenerator
 from agents.llm_client import create_llm_client
 from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
 from boardroom.boardroom import Boardroom
 from env import business_logic
 from env.schemas import EnvState
-from oracle.memory import OracleMemoryStore
 from oracle.oracle import Oracle
 
-from backend import founder_view
+from backend import founder_view, sim_profile
 from backend.database import connect, utc_now
 import calibration as cal
 
-# The founder product runs oracle_v4_causal with batched causal proposals.
-#
-# Mode choice matters here. Plain oracle_v4_causal reads the graph only through
-# build_graph_context(), which returns empty without an active shock - and a
-# founder's monthly review has no shock - so the graph would contribute nothing.
-# The batched causal generator instead queries role-specific evidence keyed on a
-# stress node derived from the founder's own numbers (Cash_Shortage,
-# Churn_Spike, CAC_Pressure...), which needs no shock and grounds every
-# analysis.
-#
-# This path is read-only against Neo4j: graph writes require an active shock
-# label or Oracle.end_episode(), and one Boardroom.decide() triggers neither.
-# Set FOUNDER_ORACLE_MODE=oracle_v4 to run without Neo4j entirely.
-ORACLE_MODE = os.getenv("FOUNDER_ORACLE_MODE", "oracle_v4_causal")
-USE_CAUSAL_PROPOSALS = ORACLE_MODE == "oracle_v4_causal"
+ROOT_DIR = sim_profile.ROOT_DIR
 
-# One analysis per request, so the Oracle must refresh on every call rather
-# than on its usual multi-month cadence.
-ORACLE_FREQUENCY = 1
+# Which engine configuration runs is decided by SIM_PROFILE (see
+# backend/sim_profile.py). These names stay importable here because tests and
+# callers historically read them from this module; they are the *founder*
+# profile's values, and run_analysis itself asks sim_profile at call time.
+FOUNDER_CHROMA_PATH = sim_profile.FOUNDER_CHROMA_PATH
+ORACLE_MODE = sim_profile.FOUNDER_ORACLE_MODE
+USE_CAUSAL_PROPOSALS = ORACLE_MODE == "oracle_v4_causal"
+ORACLE_FREQUENCY = sim_profile.FOUNDER_ORACLE_FREQUENCY
 
 # Engine defaults for conditions the founder is never asked for. Surfaced in the
 # UI as "estimated by the system", never as measurement.
@@ -71,11 +57,11 @@ DEFAULT_INNOVATION_FACTOR = 1.0
 DEFAULT_MONTHS_IN_DEPRESSION = 0
 
 # The boardroom's absolute spend floors are calibrated at this MRR (spec G11).
-CALIBRATION_MRR = 50_000.0
+CALIBRATION_MRR = sim_profile.CALIBRATION_MRR
 
 # CFOAgent's own rule: no hiring under 24 months of runway. Enforced on the
 # final action because an LLM proposal generator does not inherit it.
-HIRING_RUNWAY_GUARD_MONTHS = 24.0
+HIRING_RUNWAY_GUARD_MONTHS = sim_profile.HIRING_RUNWAY_GUARD_MONTHS
 
 # How far above the published median a plan's discretionary spend may sit before
 # it stops being advice and starts being a way to run out of money. The median
@@ -84,16 +70,9 @@ HIRING_RUNWAY_GUARD_MONTHS = 24.0
 DISCRETIONARY_SPEND_MEDIAN_MULTIPLE = 2.0
 
 
-def absolute_scale(mrr: float) -> float:
-    """Scale factor for the boardroom's absolute floors (G11).
-
-    Clamped to <= 1.0 so companies at or above the calibration point keep the
-    validated behaviour untouched; only smaller companies scale down. Floored
-    at 0.05 so a pre-revenue company still gets a non-zero plan.
-    """
-    if mrr <= 0:
-        return 0.05
-    return min(1.0, max(0.05, mrr / CALIBRATION_MRR))
+# Moved to sim_profile so profile resolution has no import cycle; re-exported
+# because whatif_service and tests import it from here.
+absolute_scale = sim_profile.absolute_scale
 
 
 def _f(value: Any, fallback: float) -> float:
@@ -144,9 +123,12 @@ def build_env_state(payload: dict[str, Any]) -> EnvState:
         price=price,
         months_elapsed=int(_f(payload.get("company_age_months"), 0)),
         headcount=max(1, int(_f(config.get("initial_headcount"), 1))),
+        # Under the review2 profile monthly_burn stays None so every burn
+        # consumer falls back to the headcount-slot convention, exactly as in
+        # every recorded research run (see sim_profile.apply_monthly_burn).
         monthly_burn=(
             None
-            if config.get("monthly_costs") is None
+            if config.get("monthly_costs") is None or not sim_profile.apply_monthly_burn()
             else max(0.0, float(config["monthly_costs"]))
         ),
         unemployment=DEFAULT_UNEMPLOYMENT,
@@ -191,6 +173,12 @@ def assumed_fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "not supplied, so the engine falls back to its own salary-slot convention; "
             "your real monthly costs change the plan more than any other number",
             correctable=True)
+    elif not sim_profile.apply_monthly_burn():
+        # The figure was supplied but the review2 profile runs the research
+        # physics, which charge the salary-slot convention regardless.
+        add("Monthly costs", "$8,000 per person on the team",
+            "the review2 research profile charges the engine's salary-slot "
+            "convention, so the supplied figure is not applied")
     if config.get("cac") is None:
         add("Acquisition cost", "$50",
             "not supplied and not derivable from marketing spend and new customers",
@@ -267,30 +255,30 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     """One analysis. Returns brief, decision trace and an honest llm_ok flag."""
     state = build_env_state(payload)
 
-    scale = absolute_scale(state.mrr)
+    oracle_mode = sim_profile.get_oracle_mode()
+    scale = sim_profile.get_agent_scale(state.mrr)
 
-    # Memory isolation is injected, not inherited from CHROMA_PATH: .env.example
-    # recommends pointing that at the research corpus, and a founder analysis
-    # must never write there regardless of how the environment is configured.
     # Published median churn for this company's price point, if a source covers
     # it. None when it does not, in which case the prompt simply omits the line
-    # rather than showing an invented comparison.
+    # rather than showing an invented comparison. Only the founder profile
+    # feeds it to the Oracle; the review2 research prompt stays byte-identical.
     churn_benchmark = cal.monthly_churn(state.price, kind="gross")
 
+    # founder: memory isolation is injected, not inherited from CHROMA_PATH -
+    # a founder analysis must never write to the research corpus. review2: no
+    # extra kwargs, so the Oracle builds its store against the repo chroma_db
+    # exactly as the batch runner's oracle_v3 arm does.
     oracle = Oracle(
-        mode=ORACLE_MODE,
-        memory_store=OracleMemoryStore(
-            run_id=str(uuid.uuid4()),
-            chroma_path=FOUNDER_CHROMA_PATH,
-        ),
-        include_burn_context=True,
-        churn_benchmark_pct=(
-            churn_benchmark.value * 100.0 if churn_benchmark.is_observed else None
+        mode=oracle_mode,
+        **sim_profile.get_oracle_kwargs(
+            churn_benchmark_pct=(
+                churn_benchmark.value * 100.0 if churn_benchmark.is_observed else None
+            ),
         ),
     )
 
     proposal_generator = None
-    if USE_CAUSAL_PROPOSALS:
+    if sim_profile.use_causal_proposals():
         proposal_generator = BatchedCausalProposalGenerator(
             create_llm_client("ollama", "llama3.1:8b"),
             scale=scale,
@@ -303,12 +291,11 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
             CPOProposalAgent(scale=scale),
         ],
         use_oracle=True,
-        oracle_mode=ORACLE_MODE,
-        oracle_frequency=ORACLE_FREQUENCY,
+        oracle_mode=oracle_mode,
+        oracle_frequency=sim_profile.get_oracle_frequency(),
         oracle_instance=oracle,
         proposal_generator=proposal_generator,
-        scale_absolutes=scale,
-        hiring_runway_guard_months=HIRING_RUNWAY_GUARD_MONTHS,
+        **sim_profile.get_boardroom_kwargs(state.mrr),
     )
     boardroom.start_episode(episode_seed=None)
 
@@ -324,7 +311,13 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
 
     trace = dict(trace)
     final_action = trace.get("final_action") or action
-    trace["spend_ceiling"] = _apply_spend_ceiling(final_action, state)
+    # The calibrated spend cap is a founder-product guard; Review 2 never
+    # modified the boardroom's decision. The key survives (null) either way.
+    trace["spend_ceiling"] = (
+        _apply_spend_ceiling(final_action, state)
+        if sim_profile.apply_spend_ceiling()
+        else None
+    )
     trace["churn_benchmark"] = (
         {
             "median_monthly_pct": round(churn_benchmark.value * 100.0, 2),
@@ -369,7 +362,7 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         "trace": trace,
         "display": display,
         "llm_ok": llm_ok,
-        "oracle_mode": ORACLE_MODE,
+        "oracle_mode": oracle_mode,
         "created_at": utc_now(),
     }
 
