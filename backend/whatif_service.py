@@ -43,12 +43,12 @@ import numpy as np
 
 import calibration as cal
 from agents.baseline_agents import CFOAgent, CMOAgent, CPOAgent
-from backend import founder_view
+from backend import founder_view, sim_profile
 from env import business_logic
 from env.schemas import EnvState
 from env.startup_env import StartupEnv
 
-from backend.advise_service import absolute_scale, build_env_state
+from backend.advise_service import build_env_state
 
 HORIZON_MONTHS = 12
 N_SEEDS = 50
@@ -121,11 +121,15 @@ def _rule_based_action(state: EnvState, scale: float) -> dict[str, Any]:
 
 
 def _make_env(state: EnvState, gross_margin: float | None) -> StartupEnv:
-    """The environment a founder is projected in.
+    """The environment the projection runs in, resolved by SIM_PROFILE.
 
-    `scale_aware_marketing` is on here and off in research runs, and it had to
-    ship in the same change as the burn fix rather than after it. Measured on a
-    $2,500-MRR founder, same seeds, recommended arm:
+    review2: StartupEnv() with empty config - the batch runner's own defaults
+    (120-month cap, scheduled shocks on, absolute constants, 100% margin).
+
+    founder: the founder physics. `scale_aware_marketing` is on there and off
+    in research runs, and it had to ship in the same change as the burn fix
+    rather than after it. Measured on a $2,500-MRR founder, same seeds,
+    recommended arm:
 
         as shipped               $3,404 flat,  0% survival
         real burn only          $10,802,     100% survival
@@ -140,15 +144,7 @@ def _make_env(state: EnvState, gross_margin: float | None) -> StartupEnv:
     wrong one, which is worse. See marketing_curve_params for the reparameterised
     curve and docs/founder_scale_fix_plan.md for the full measurement.
     """
-    return StartupEnv(
-        initial_config={
-            "max_months": 10_000,          # horizon is controlled by the caller
-            "scheduled_shocks": False,     # research fixture, not founder physics
-            "scale_aware_marketing": True, # see above - ships with the burn fix
-            "scale_aware_rnd": True,       # R&D that can move the product at all
-            "gross_margin": gross_margin,
-        }
-    )
+    return StartupEnv(initial_config=sim_profile.get_env_kwargs(gross_margin=gross_margin))
 
 
 def _rollout(
@@ -290,12 +286,18 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
 
     base_state = build_env_state(payload)
 
+    # `margin` is the calibrated source (kept for the assumptions disclosure);
+    # what the environment actually applies is profile-resolved - None under
+    # review2, where revenue books to cash at 100% margin as in research runs.
     margin = cal.gross_margin_pct()
-    gross_margin = (float(margin.value) / 100.0) if margin.value is not None else None
+    gross_margin = sim_profile.get_applied_gross_margin()
 
     recommended = _clean_action(payload.get("recommended_action"))
 
-    supplied_costs = (payload.get("config") or {}).get("monthly_costs")
+    # What the engine is actually charging, not what the payload carried: under
+    # review2 a supplied monthly_costs is not applied (build_env_state leaves
+    # monthly_burn None) and the disclosure must not claim otherwise.
+    supplied_costs = base_state.monthly_burn
 
     # The do-nothing arm holds what the founder is spending today. Marketing
     # spend is an optional onboarding field; when it is absent the arm holds at
@@ -305,7 +307,7 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
     if current_marketing is not None:
         hold["marketing"]["spend"] = max(0.0, float(current_marketing))
 
-    scale = absolute_scale(base_state.mrr)
+    scale = sim_profile.get_agent_scale(base_state.mrr)
 
     results: dict[str, Any] = {}
     cascade_seen = False
@@ -405,7 +407,7 @@ def run_whatif(payload: dict[str, Any]) -> dict[str, Any]:
         "recommended_action": recommended,
         "caveat": CAVEAT,
         "assumptions": _assumptions(margin, current_marketing, shock,
-                                    base_state, supplied_costs),
+                                    base_state, supplied_costs, gross_margin),
         # False means the policies stopped sharing a world and the comparison is
         # no longer clean. Surfaced, never silently swallowed.
         "shock_tape_shared": not cascade_seen,
@@ -418,6 +420,7 @@ def _assumptions(
     shock: bool,
     base_state: EnvState,
     supplied_costs: float | None,
+    applied_margin: float | None = None,
 ) -> list[dict[str, Any]]:
     """Every modelling choice this projection rests on, stated in full."""
     items: list[dict[str, Any]] = [
@@ -441,10 +444,15 @@ def _assumptions(
         },
         {
             "field": "Gross margin",
-            "value": f"{margin.value}%" if margin.value is not None else "not applied",
-            "basis": margin.confidence,
-            "source": margin.citation(),
-            "detail": margin.page_or_figure,
+            "value": f"{margin.value}%" if applied_margin is not None else "not applied",
+            "basis": margin.confidence if applied_margin is not None else "assumption",
+            "source": margin.citation() if applied_margin is not None else None,
+            "detail": (
+                margin.page_or_figure
+                if applied_margin is not None
+                else "the review2 research profile books revenue to cash at 100% "
+                     "margin, as every recorded research run does"
+            ),
         },
         {
             "field": "Price",
@@ -468,12 +476,16 @@ def _assumptions(
         },
         {
             "field": "Scheduled research shocks",
-            "value": "disabled",
+            "value": "disabled" if sim_profile.is_founder() else "enabled",
             "basis": "assumption",
             "source": None,
             "detail": (
                 "The engine's fixed shocks at months 24/48/72 belong to the 120-month "
                 "research episode and would otherwise land inside a founder's horizon."
+                if sim_profile.is_founder()
+                else "The review2 research profile keeps the engine's fixed shocks at "
+                     "months 24/48/72; one lands inside the projection window when the "
+                     "company's age crosses those months."
             ),
         },
     ]
