@@ -30,3 +30,6 @@ audit_*.json
 *.pdf
 calibration/sources/
 variance_*.json
+
+# Runtime logs from start.ps1
+.logs/

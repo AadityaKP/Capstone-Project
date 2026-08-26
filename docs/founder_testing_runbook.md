@@ -101,6 +101,45 @@ Expected: `UNCHANGED - the graph was not written to.` To roll back,
 
 ## Part 1 — Start the stack
 
+### The fast path — one command
+
+```bash
+.\start.ps1
+```
+
+Starts Ollama if it is not already up, checks the model is pulled, starts the API, waits
+until `/api/health` actually answers, starts Vite, waits for that too, and opens the
+browser. **Ctrl+C stops all of it** — including uvicorn's and npm's child processes, which
+`Stop-Process` alone would orphan while they kept holding the ports.
+
+If script execution is blocked on this machine:
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+For a demo, serve everything from one port instead — no Vite, no proxy, no chance of the
+two halves disagreeing:
+
+```bash
+.\start.ps1 -Prod
+```
+
+`-Prod` always rebuilds, deliberately: a stale `frontend/dist` is the worst failure mode
+here because it is completely silent — the page loads, looks correct, and runs the previous
+build's JavaScript. Even so, hard-reload (**Ctrl+Shift+R**) after a rebuild, because your
+*browser* caches `index.html` and will keep requesting the old bundle hash.
+
+Other flags: `-NoOllama` (skip the model and test the rules-only path from 4.2),
+`-NoBrowser`, `-Reload` (restart the API on backend `.py` changes), `-ApiPort` / `-UiPort`.
+Logs land in `.logs\api.out.log` and `.logs\ui.out.log`.
+
+If a port is already in use the script refuses to start rather than half-starting — free it
+or pass a different port.
+
+### The manual path
+
+Worth knowing, because when the script fails these are the two commands it was running.
 Two terminals, both from the repository root.
 
 **Terminal 1 — backend:**
