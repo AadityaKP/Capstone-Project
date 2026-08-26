@@ -1,6 +1,6 @@
 # Demo walkthrough — no Ollama, no Neo4j, Review 2 physics
 
-This branch (`demo-offline-review2`) runs the founder product with neither the
+This branch (`demo-review3`) runs the founder product with neither the
 model server nor the graph database, on the **review2** simulation profile —
 the exact engine configuration of the Review 2 thesis experiments (`oracle_v3`,
 repo `chroma_db`, unscaled research floors, salary-slot burn, scheduled
