@@ -282,8 +282,12 @@ class Oracle:
         trend_context: TrendContext | None = None,
         memories: list[RetrievedMemoryCandidate] | None = None,
     ) -> tuple[str, ...]:
-        if trend_context is None:
-            trend_context, _, _, _ = self.get_context(state)
+        if trend_context is None or memories is None:
+            resolved_trend_context, resolved_memories, _, _ = self.get_context(state)
+            if trend_context is None:
+                trend_context = resolved_trend_context
+            if memories is None:
+                memories = resolved_memories
 
         mrr_bracket = int(state.mrr / 50_000)
         runway_bracket = int(self._estimate_runway_months(state) / 3)
@@ -299,6 +303,7 @@ class Oracle:
             str(confidence_bracket),
             trend_context.mrr_trend.value,
             shock_flag,
+            self._build_memory_signature(memories),
         )
 
     def end_episode(self, episode_metrics: dict | None = None) -> None:
@@ -361,6 +366,19 @@ class Oracle:
     def _estimate_runway_months(state: EnvState) -> float:
         monthly_burn_estimate = max(1.0, business_logic.monthly_burn(state))
         return state.cash / monthly_burn_estimate
+
+    def _build_memory_signature(self, memories: list[RetrievedMemoryCandidate] | None) -> str:
+        if self.mode != "oracle_v3" or not memories:
+            return "none"
+
+        signature_parts = []
+        for memory in memories[:2]:
+            metadata = memory.metadata or {}
+            source_month = metadata.get("source_month", "na")
+            realized_outcome = metadata.get("realized_outcome", "UNKNOWN")
+            signature_parts.append(f"{source_month}:{realized_outcome}")
+
+        return "|".join(signature_parts) if signature_parts else "none"
 
     def _identify_stress_node(self, state: EnvState) -> str:
         avg_churn = (
