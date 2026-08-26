@@ -19,6 +19,14 @@ from backend import demo_fixtures
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+@pytest.fixture(autouse=True)
+def _review2_profile(monkeypatch):
+    """This branch's recordings are review2 captures and the demo ships with
+    the default review2 profile, so its tests run under it too (conftest pins
+    founder for the founder suites)."""
+    monkeypatch.setenv("SIM_PROFILE", "review2")
+
+
 def payload(mrr, cash, costs, price, churn_pct, marketing, new_customers, age, team=2):
     """The shape frontend/src/api.js buildAdvisePayload sends."""
     return {
@@ -103,8 +111,10 @@ def test_unrecorded_numbers_still_get_a_real_analysis():
         payload(7_400, 40_000, 9_800, 48, 5.1, 1_900, 15, age=12))
     assert result["source"] == "offline"
     assert result["trace"]["final_action"]["marketing"]["spend"] >= 0
-    # $40,000 of cash against $9,800 of costs on $7,400 of revenue = 16.7 months.
-    assert result["display"]["runway"] == "17 months of cash at current costs"
+    # review2 charges the salary-slot convention, not the supplied $9,800:
+    # burn 2 x $8,000 = $16,000, net of $7,400 revenue = $8,600/mo against
+    # $40,000 of cash = 4.7 months.
+    assert result["display"]["runway"] == "5 months of cash at current costs"
 
 
 def test_the_offline_board_never_claims_a_model_spoke():

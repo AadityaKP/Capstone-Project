@@ -101,8 +101,16 @@ def lookup(payload: dict[str, Any]) -> dict[str, Any] | None:
     """
     if not enabled():
         return None
+    from backend import sim_profile
+
     want = signature(payload)
     for fixture in _load_all():
+        # A recording is only a truthful replay under the profile that produced
+        # it: a founder-profile server must not hand back review2 answers or
+        # vice versa. Legacy recordings predate the stamp and came from the
+        # founder stack.
+        if fixture.get("sim_profile", "founder") != sim_profile.get_profile():
+            continue
         if fixture.get("signature") == want:
             analysis = dict(fixture["analysis"])
             analysis["created_at"] = utc_now()
@@ -114,6 +122,8 @@ def lookup(payload: dict[str, Any]) -> dict[str, Any] | None:
 
 def save(name: str, payload: dict[str, Any], analysis: dict[str, Any]) -> str:
     """Write one recording. Used by record_demo_fixtures.py, never at runtime."""
+    from backend import sim_profile
+
     os.makedirs(FIXTURE_DIR, exist_ok=True)
     path = _fixture_path(name)
     with open(path, "w", encoding="utf-8") as handle:
@@ -121,6 +131,7 @@ def save(name: str, payload: dict[str, Any], analysis: dict[str, Any]) -> str:
             {
                 "name": name,
                 "signature": signature(payload),
+                "sim_profile": sim_profile.get_profile(),
                 "recorded_at": utc_now(),
                 "inputs": payload.get("config"),
                 "company_age_months": payload.get("company_age_months"),
@@ -219,23 +230,22 @@ def offline_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     """
     # Imported here rather than at module scope: advise_service pulls in the
     # memory store, and the point of this path is to touch as little as possible.
-    from backend.advise_service import (
-        HIRING_RUNWAY_GUARD_MONTHS, absolute_scale, assumed_fields, build_env_state,
-    )
-    from backend import founder_view
+    from backend.advise_service import assumed_fields, build_env_state
+    from backend import founder_view, sim_profile
     from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOProposalAgent
     from boardroom.boardroom import Boardroom
     from env import business_logic
 
     state = build_env_state(payload)
-    scale = absolute_scale(state.mrr)
+    # Same profile resolution as the live path: review2 runs the unscaled
+    # research board with no founder guards, founder keeps the scaled floors.
+    scale = sim_profile.get_agent_scale(state.mrr)
 
     board = Boardroom(
         [CFOProposalAgent(scale=scale), CMOProposalAgent(scale=scale),
          CPOProposalAgent(scale=scale)],
         use_oracle=False,
-        scale_absolutes=scale,
-        hiring_runway_guard_months=HIRING_RUNWAY_GUARD_MONTHS,
+        **sim_profile.get_boardroom_kwargs(state.mrr),
     )
     board.start_episode(episode_seed=None)
     action = board.decide(state)
