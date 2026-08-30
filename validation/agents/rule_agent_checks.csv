@@ -1,0 +1,11 @@
+check,input,expected,got,ok
+CFO hires iff runway>24 & LTV/CAC>=3,960000,1,1.0,True
+CFO hires iff runway>24 & LTV/CAC>=3,320000,0,0.0,True
+CFO blocks hire when LTV/CAC<3,ratio2.5,0,0.0,True
+CMO spend steps with LTV/CAC,5.0,20000,20000.0,True
+CMO spend steps with LTV/CAC,2.5,10000,10000.0,True
+CMO spend steps with LTV/CAC,1.5,2000,2000.0,True
+CPO R&D steps with churn,0.06,15000,15000.0,True
+CPO R&D steps with churn,0.03,8000,8000.0,True
+CPO R&D steps with churn,0.01,3000,3000.0,True
+CPO halves R&D when cash<200k,100000,7500,7500.0,True

@@ -1,0 +1,4 @@
+check,stat
+growth_outlook worsens as MRR delta falls (exploratory),spearman=+0.96
+R&D multiplier rises with churn delta (exploratory),constant
+"risk ordinal, shock vs no shock (exploratory)",0.0 -> 1.0

@@ -1,0 +1,15 @@
+sweep,level,shock,risk,growth,innovation,macro,mkt_mult,rd_mult,hires_out
+mrr_trend_delta,10.0,,LOW,ACCELERATING,LOW,EXPANSION,1.6380000000000001,0.8505,2
+mrr_trend_delta,5.0,,LOW,ACCELERATING,LOW,EXPANSION,1.6380000000000001,0.8505,2
+mrr_trend_delta,0.0,,LOW,STABLE,LOW,EXPANSION,1.26,0.8505,2
+mrr_trend_delta,-5.0,,LOW,STABLE,LOW,EXPANSION,1.26,0.8505,2
+mrr_trend_delta,-15.0,,LOW,DECLINING,LOW,NEUTRAL,0.72,0.81,2
+mrr_trend_delta,-30.0,,MEDIUM,DECLINING,MEDIUM,NEUTRAL,0.51,1.1,1
+churn_delta,0.0,,LOW,STABLE,LOW,EXPANSION,1.26,0.8505,2
+churn_delta,0.01,,LOW,STABLE,LOW,EXPANSION,1.26,0.8505,2
+churn_delta,0.02,,LOW,STABLE,LOW,EXPANSION,1.26,0.8505,2
+churn_delta,0.03,,LOW,STABLE,LOW,EXPANSION,1.26,0.8505,2
+shock_alert,0.0,,LOW,STABLE,LOW,EXPANSION,1.26,0.8505,2
+shock_alert,1.0,"COMPETITOR_SURGE: 3 new entrants, forced price cut, SMB churn +50%",MEDIUM,STABLE,MEDIUM,NEUTRAL,0.85,1.1,1
+shock_alert,1.0,"RATE_HIKE: +400bps, valuation -40%, confidence crash",MEDIUM,STABLE,MEDIUM,NEUTRAL,0.85,1.1,1
+shock_alert,1.0,"RECESSION: confidence=55, unemployment spike, B2C churn doubled",MEDIUM,STABLE,MEDIUM,NEUTRAL,0.85,1.1,1

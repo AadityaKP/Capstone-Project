@@ -1,0 +1,5 @@
+sweep,expectation,spearman_rho,threshold,pass
+runway_down,risk rises as cash falls,0.0,0.5,False
+churn_up,R&D multiplier rises with churn,0.0,0.5,False
+confidence_down,marketing multiplier falls with confidence,0.0,0.5,False
+competitors_up,risk rises with competitors,0.0,0.5,False
