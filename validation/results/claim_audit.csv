@@ -1,0 +1,23 @@
+claim,original_value,raw_source,reproduced_value,baseline,sample_size,statistical_method,status,note
+FULL survival % (boardroom),97.33,primary_episode_metrics.csv (FULL),97.33,boardroom,75,share of Time Limit episodes,REPRODUCED,
+FULL survival % (oracle_v1),98.67,primary_episode_metrics.csv (FULL),98.67,boardroom,75,share of Time Limit episodes,REPRODUCED,
+FULL survival % (oracle_v3),98.67,primary_episode_metrics.csv (FULL),98.67,boardroom,75,share of Time Limit episodes,REPRODUCED,
+FULL mean final MRR (boardroom),1389958.13,primary_episode_metrics.csv (FULL),1389958.13,boardroom,75,mean,REPRODUCED,
+FULL mean final MRR (oracle_v1),2350117.3,primary_episode_metrics.csv (FULL),2350117.3,boardroom,75,mean,REPRODUCED,
+FULL mean final MRR (oracle_v3),2251580.38,primary_episode_metrics.csv (FULL),2251580.38,boardroom,75,mean,REPRODUCED,
+FULL MWU post_shock_avg_rule40 boardroom vs oracle_v1,"U=1084.0, p=8.3e-11",primary_significance_tests.csv,"U=4541.0, p=8.3e-11",boardroom,75/75,Mann-Whitney U two-sided (unpaired; design was paired),REPRODUCED,unpaired test on a seed-matched design understates power; see A2/A3 re-analysis
+FULL MWU final_mrr boardroom vs oracle_v1,"U=2143.0, p=0.0119",primary_significance_tests.csv,"U=3482.0, p=0.0119",boardroom,75/75,Mann-Whitney U two-sided (unpaired; design was paired),REPRODUCED,unpaired test on a seed-matched design understates power; see A2/A3 re-analysis
+FULL MWU post_shock_avg_rule40 boardroom vs oracle_v3,"U=1181.0, p=8.76e-10",primary_significance_tests.csv,"U=4444.0, p=8.76e-10",boardroom,75/75,Mann-Whitney U two-sided (unpaired; design was paired),REPRODUCED,unpaired test on a seed-matched design understates power; see A2/A3 re-analysis
+FULL MWU final_mrr boardroom vs oracle_v3,"U=2195.0, p=0.0204",primary_significance_tests.csv,"U=3430.0, p=0.0204",boardroom,75/75,Mann-Whitney U two-sided (unpaired; design was paired),REPRODUCED,unpaired test on a seed-matched design understates power; see A2/A3 re-analysis
+FULL recovered shock % (boardroom),67.56,primary_recovery_events.csv,67.56,boardroom,225,share recovered,REPRODUCED,
+FULL recovered shock % (oracle_v1),76.0,primary_recovery_events.csv,76.0,boardroom,225,share recovered,REPRODUCED,
+FULL recovered shock % (oracle_v3),76.89,primary_recovery_events.csv,76.89,boardroom,225,share recovered,REPRODUCED,
+CONF survival % (boardroom),98.0,primary_episode_metrics.csv (CONF),98.0,boardroom,50,share of Time Limit episodes,REPRODUCED,
+CONF survival % (oracle_v1),100.0,primary_episode_metrics.csv (CONF),100.0,boardroom,50,share of Time Limit episodes,REPRODUCED,
+CONF survival % (oracle_v3),100.0,primary_episode_metrics.csv (CONF),100.0,boardroom,50,share of Time Limit episodes,REPRODUCED,
+CONF survival % (oracle_v4),100.0,primary_episode_metrics.csv (CONF),100.0,boardroom,50,share of Time Limit episodes,REPRODUCED,
+CONF survival % (oracle_v4_causal),100.0,primary_episode_metrics.csv (CONF),100.0,boardroom,50,share of Time Limit episodes,REPRODUCED,
+oracle_v4 differs from oracle_v3 (CONF),implied by running both arms,primary_episode_metrics.csv (CONF),median final MRR differs by $0.00; per-seed corr=1.000000,oracle_v3,50/50,median comparison,UNSUPPORTED,any v3-vs-v4 distinction claim is unsupported by this run
+FULL total_reward oracle_v1 minus boardroom,not claimed (audit note),primary_episode_metrics.csv (FULL),-22.77,boardroom,75/75,mean difference,REPRODUCED,NEGATIVE: oracle reward is worse than boardroom; do not cite reward as improved
+FULL total_reward oracle_v3 minus boardroom,not claimed (audit note),primary_episode_metrics.csv (FULL),-20.72,boardroom,75/75,mean difference,REPRODUCED,NEGATIVE: oracle reward is worse than boardroom; do not cite reward as improved
+summary table without oracle_v3 row,screenshot variants exist,primary_summary_screenshot_no_oracle_v3.csv,row deleted vs canonical file,-,-,file diff,LEAKAGE-RISK,curated copy made 8 days post-run; cite canonical primary_summary.csv only

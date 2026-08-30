@@ -1,0 +1,2 @@
+test,n,episodes,accuracy,base_rate,majority_class,delta,ci95_lo,ci95_hi,verdict
+A6i_brief_expected_outcome_accuracy,2200,75,0.6455,0.4759,GROWTH,0.1695,0.1125,0.2246,PASS

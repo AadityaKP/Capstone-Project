@@ -1,0 +1,1 @@
+{"policy": "oracle_v1", "episodes": 20, "freq": 10, "env": {"deterministic_rng": true}, "wall_seconds": 3110.8, "llm_calls_total": 612}

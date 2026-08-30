@@ -5,7 +5,7 @@ venv/
 .tools/
 chroma_db/
 outputs/
-results/
+/results/
 frontend/dist/
 frontend/node_modules/
 __pycache__/

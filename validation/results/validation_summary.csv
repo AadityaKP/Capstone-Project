@@ -1,0 +1,43 @@
+test,dimension,arm,verdict,section
+E1,QoQ revenue growth distribution,boardroom,PASS,environment
+E2,growth persistence (lag-1 autocorr),boardroom,PARTIAL,environment
+E3,growth deceleration with scale,boardroom,PASS,environment
+E4,discretionary spend / revenue,boardroom,FAIL,environment
+E5,within-unit growth volatility,boardroom,PARTIAL,environment
+E1,QoQ revenue growth distribution,oracle_v1,PASS,environment
+E2,growth persistence (lag-1 autocorr),oracle_v1,PARTIAL,environment
+E3,growth deceleration with scale,oracle_v1,PASS,environment
+E4,discretionary spend / revenue,oracle_v1,FAIL,environment
+E5,within-unit growth volatility,oracle_v1,PARTIAL,environment
+E1,QoQ revenue growth distribution,oracle_v3,PASS,environment
+E2,growth persistence (lag-1 autocorr),oracle_v3,PARTIAL,environment
+E3,growth deceleration with scale,oracle_v3,PASS,environment
+E4,discretionary spend / revenue,oracle_v3,FAIL,environment
+E5,within-unit growth volatility,oracle_v3,PARTIAL,environment
+E7a,range validity: default churn vs ChartMogul band,config,PASS,environment
+E7b,range validity: gross margin,research profile,FAIL,environment
+E6,revenue drawdown/recovery (exploratory),boardroom (oracle_v3 similar),EXPLORATORY,environment
+A1 ladders (marketing),action effect,"same state+seed, action varied",PASS,agent
+"A2 paired, deterministic RNG",superiority to noop,noop,PASS,agent
+"A2 paired, deterministic RNG",superiority to random,random,PASS,agent
+"A2 paired, deterministic RNG",superiority to heuristic,heuristic,PASS,agent
+A4i documented thresholds,economic sensibility (rule layer),spec,PASS,agent
+A4ii one-variable level sweeps,state responsiveness (LLM levels),expected monotone direction,FAIL,agent
+A6i expected_outcome vs realized,retrieval-conditioned prediction,majority-class base rate,PASS,agent
+A3r paired re-analysis (final_mrr),"oracle value (oracle_v1, recorded)",boardroom,PASS,agent
+A3r paired re-analysis (post_shock_avg_rule40),"oracle value (oracle_v1, recorded)",boardroom,PASS,agent
+A3r paired re-analysis (final_mrr),"oracle value (oracle_v3, recorded)",boardroom,PASS,agent
+A3r paired re-analysis (post_shock_avg_rule40),"oracle value (oracle_v3, recorded)",boardroom,PASS,agent
+A3 matched-seed replication (final_mrr),oracle value (oracle_v1),boardroom,PASS,agent
+A3 matched-seed replication (post_shock_avg_rule40_25_60),oracle value (oracle_v1),boardroom,PASS,agent
+A3 matched-seed replication (final_mrr),oracle value (oracle_v3),boardroom,PASS,agent
+A3 matched-seed replication (post_shock_avg_rule40_25_60),oracle value (oracle_v3),boardroom,PASS,agent
+A3 matched-seed replication (final_mrr),oracle value (oracle_v3_no_memory),boardroom,PASS,agent
+A3 matched-seed replication (post_shock_avg_rule40_25_60),oracle value (oracle_v3_no_memory),boardroom,PASS,agent
+A3 v3 vs v3_no_memory (final_mrr),retrieval incremental value,oracle_v3_no_memory,PASS,agent
+A3 v3 vs v3_no_memory (post_shock_avg_rule40_25_60),retrieval incremental value,oracle_v3_no_memory,PASS,agent
+C1 hold-arm vs actual 4q growth,real-company retrodiction,actual EDGAR trajectory,FAIL,agent
+"C1 boardroom - hold, in-sim",real-company counterfactual (agent),hold (company's own spend),FAIL,agent
+A7 3x3 grid x 20 matched seeds,robustness (initial conditions),noop/random/heuristic,PASS,agent
+"A5 one-step deviation, 48-candidate grid",candidate-action regret,best grid candidate,EXPLORATORY,agent
+C2 stress-state observational split,real-company allocation direction,improved vs lagged halves,NULL,agent

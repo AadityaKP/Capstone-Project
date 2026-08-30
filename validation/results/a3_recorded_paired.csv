@@ -1,0 +1,5 @@
+comparison,metric,n,mean_diff,median_diff,ci95_lo,ci95_hi,hedges_g_paired,wilcoxon_p,positive_seeds,design
+oracle_v1 - boardroom,final_mrr,75,960159.1733372791,714681.6459860804,738719.5126252502,1192841.1432234703,0.9382990837986555,5.4980694109671593e-14,74,"paired (recorded FULL run, shared-world verified)"
+oracle_v1 - boardroom,post_shock_avg_rule40,75,10.571133045541538,11.230502767376422,9.670516387960902,11.412042772511855,2.729452867965311,5.724583916407233e-14,74,"paired (recorded FULL run, shared-world verified)"
+oracle_v3 - boardroom,final_mrr,75,861622.2531773356,609839.6609148902,659856.2941121572,1070013.176256654,0.929303462229489,5.2803729173201584e-14,75,"paired (recorded FULL run, shared-world verified)"
+oracle_v3 - boardroom,post_shock_avg_rule40,75,9.72714369193806,9.718585419142794,8.829260542193238,10.614237397325827,2.4226647766906035,5.2803729173201584e-14,75,"paired (recorded FULL run, shared-world verified)"
