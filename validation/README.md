@@ -51,6 +51,9 @@ python validation/analysis/make_figures.py
 python validation/analysis/figures_review.py         # review figure set F1-F11 -> figures/review/
                                                      # (writes f4_growth_vs_scale.csv,
                                                      #  f6_paired_diffs.csv; run a8 first)
+python validation/analysis/build_review_site.py      # self-contained presentation page ->
+                                                     # validation/review_site/index.html
+                                                     # (open by double-click; press P to present)
 ```
 
 LLM analyses used llama3.1:8b via local Ollama at temperature 0. A4/A3 outputs
