@@ -45,8 +45,12 @@ python validation/analysis/a7_robustness_grid.py     # Tier-2: 3x3 initial-condi
 python validation/analysis/a5_candidate_regret.py    # Tier-2: one-step candidate regret
 python validation/analysis/e6_drawdown_recovery.py   # Tier-2: drawdowns, sim vs EDGAR
 python validation/analysis/c2_allocation_consistency.py  # Tier-2: observational direction check
+python validation/analysis/a8_shock_recovery.py      # A8: post-shock R40 recovery CSVs (feeds F7)
 python validation/analysis/build_scorecards.py       # assembles scorecards + summary
 python validation/analysis/make_figures.py
+python validation/analysis/figures_review.py         # review figure set F1-F11 -> figures/review/
+                                                     # (writes f4_growth_vs_scale.csv,
+                                                     #  f6_paired_diffs.csv; run a8 first)
 ```
 
 LLM analyses used llama3.1:8b via local Ollama at temperature 0. A4/A3 outputs

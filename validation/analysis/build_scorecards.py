@@ -174,6 +174,27 @@ if a5_path.exists():
         "regret is marketing under-spend vs a curve C1 shows is over-generous - "
         "and grid-edge optima mean true regret is a lower bound")
 
+# ---- A8: post-shock Rule-of-40 recovery ----------------------------------
+a8_path = RES / "a8_shock_recovery.csv"
+if a8_path.exists():
+    a8 = pd.read_csv(a8_path)
+    a8 = a8[a8.shock_month == "all"]
+    def rate(src, pol):
+        return a8[(a8.source == src) & (a8.policy == pol)].recovery_rate.iloc[0]
+    add("shock handling", "A8 post-shock R40 recovery (24-month window)",
+        "boardroom", "A2 arms 50 seeds / A3 arms 20 seeds x 3 shocks",
+        f"oracle arms {rate('A3','oracle_v1'):.0%}-{rate('A3','oracle_v3_no_memory'):.0%} "
+        f"vs boardroom {rate('A2','boardroom'):.0%}",
+        f"recovery rates: noop {rate('A2','noop'):.0%}, heuristic {rate('A2','heuristic'):.0%}, "
+        f"boardroom {rate('A2','boardroom'):.0%}/{rate('A3','boardroom'):.0%}, "
+        f"oracle_v1 {rate('A3','oracle_v1'):.0%}, oracle_v3 {rate('A3','oracle_v3'):.0%}; "
+        "median time-to-recover 1-2 months for every policy",
+        "comparative (Rule-of-40 recovery, NOT revenue-peak recovery - see E6)",
+        "COMPARATIVE",
+        "the oracle advantage is in recovery RATE, not speed; consistent with the "
+        "recorded FULL-run recovery rates (76-80% vs 67-69%) and with A4's finding "
+        "that the brief channel responds at shock alerts")
+
 # ---- Tier-2: C2 allocation consistency ----------------------------------
 c2_path = RES / "c2_allocation_consistency.csv"
 if c2_path.exists():

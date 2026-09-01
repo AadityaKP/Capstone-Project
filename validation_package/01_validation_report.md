@@ -238,6 +238,19 @@ reversion). **Important for the paper:** the thesis's 76–80% "recovery" figure
 recovery — the two must never be conflated, and revenue-level recovery essentially
 does not happen in the simulator.
 
+**A8 — Post-shock Rule-of-40 recovery: COMPARATIVE.** Event-time analysis around the
+scheduled shocks (months 24/48/72) across the deterministic-RNG arms
+(`validation/results/a8_shock_r40_curves.csv`, `a8_shock_recovery.csv`; figure
+`validation/figures/review/f7_post_shock_r40_recovery.png`): within 24 months of a
+shock, the share of events regaining the *pre-shock Rule of 40* is 75–78% for the
+oracle arms vs 62–63% for boardroom (n=20 seeds × 3 shocks each), 43% heuristic and
+29% no-action (n=50 seeds × 3 shocks); median time-to-recover is 1–2 months for every
+policy, so the oracle advantage is in recovery *rate*, not speed. This is Rule-of-40
+recovery — a flow metric regaining its pre-shock level — **not** revenue-peak recovery,
+which essentially does not occur in the simulator (E6). Consistent with the recorded
+FULL-run recovery rates (76–80% vs 67–69%) and with §4.3's finding that the brief
+channel responds at shock alerts.
+
 **C2 — Allocation-direction consistency: NULL.** 97 stress company-quarters (growth
 < panel p25, spend intensity > median; 25 companies): improved and lagged halves show
 statistically indistinguishable allocation-intensity changes (p = 0.65 S&M, 0.86 R&D);

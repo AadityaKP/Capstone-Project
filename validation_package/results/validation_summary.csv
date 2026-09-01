@@ -40,4 +40,5 @@ C1 hold-arm vs actual 4q growth,real-company retrodiction,actual EDGAR trajector
 "C1 boardroom - hold, in-sim",real-company counterfactual (agent),hold (company's own spend),FAIL,agent
 A7 3x3 grid x 20 matched seeds,robustness (initial conditions),noop/random/heuristic,PASS,agent
 "A5 one-step deviation, 48-candidate grid",candidate-action regret,best grid candidate,EXPLORATORY,agent
+A8 post-shock R40 recovery (24-month window),shock handling,boardroom,COMPARATIVE,agent
 C2 stress-state observational split,real-company allocation direction,improved vs lagged halves,NULL,agent
