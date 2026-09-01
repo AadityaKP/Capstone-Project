@@ -1792,3 +1792,70 @@ code {
 }
 .wi-assumption-detail { color: var(--muted); font-size: 12px; }
 .wi-assumption-source { color: var(--muted); font-size: 11.5px; font-style: italic; }
+
+/* ---- review demo: compare screen + dataset tab (reuses the wi-* grammar) ---- */
+
+.rv-panel { display: grid; gap: 12px; }
+
+.rv-controls {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: end;
+}
+.rv-field { display: grid; gap: 4px; font-size: 12px; font-weight: 600; }
+.rv-field select, .rv-field input {
+  font: inherit; font-weight: 500; padding: 7px 9px;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  min-width: 130px;
+}
+.rv-field input { min-width: 80px; }
+
+.rv-progress {
+  display: flex; gap: 8px; align-items: flex-start; margin: 0;
+  font-size: 13px; color: var(--muted);
+}
+.rv-progress svg { flex: none; margin-top: 2px; }
+
+.wi-edgar-band { fill: rgba(118, 119, 131, 0.18); }
+.wi-edgar-median {
+  stroke: #767783; stroke-width: 1.2; stroke-dasharray: 4 3;
+}
+.wi-shock-label { font-size: 6.5px; fill: var(--amber); }
+.wi-legend i.rv-edgar-swatch {
+  height: 9px; border-radius: 2px;
+  background: rgba(118, 119, 131, 0.28);
+  border-top: 1.5px dashed #767783;
+}
+
+.rv-figure { margin: 0; display: grid; gap: 6px; }
+.rv-figure img {
+  width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px;
+  background: #fff;
+}
+.rv-figure figcaption { font-size: 12.5px; color: var(--muted); }
+
+.rv-dataset-lines {
+  margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px;
+  font-size: 13.5px;
+}
+.rv-benchmark-note {
+  margin: 0; font-size: 13.5px; font-weight: 600;
+  border-left: 3px solid var(--purple); padding-left: 10px;
+}
+
+/* ---- review demo v2: raw panel table + run tab ---- */
+
+.rv-header-line { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.rv-pager {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 12.5px; color: var(--muted); align-self: end; padding-bottom: 2px;
+}
+.rv-panel-table td, .rv-panel-table th { font-variant-numeric: tabular-nums; }
+.rv-panel-table td:first-child { font-weight: 600; }
+
+/* ---- run tab: per-company blocks ---- */
+.rv-company-block {
+  display: grid; gap: 12px;
+  border-top: 1px solid var(--line); padding-top: 14px;
+}
+.rv-company-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.rv-company-head strong { font-size: 15px; }
+.rv-company-head span { font-size: 12.5px; color: var(--muted); }

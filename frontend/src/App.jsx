@@ -6,8 +6,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  BrainCircuit, Building2, ChevronRight, History as HistoryIcon,
-  LayoutDashboard, PencilLine, Settings as SettingsIcon, Sparkles
+  BrainCircuit, Building2, ChevronRight, Database, FlaskConical,
+  History as HistoryIcon, LayoutDashboard, PencilLine, Play,
+  Settings as SettingsIcon, Sparkles
 } from "lucide-react";
 import "./styles.css";
 
@@ -23,19 +24,30 @@ import Advice from "./pages/Advice.jsx";
 import History from "./pages/History.jsx";
 import { CompanyView, UpdateRitual } from "./pages/Company.jsx";
 import Settings from "./pages/Settings.jsx";
+import Review from "./pages/Review.jsx";
+import Dataset from "./pages/Dataset.jsx";
+import Run from "./pages/Run.jsx";
 
 const NAV = [
   { id: "home", path: "/home", label: "Home", icon: LayoutDashboard },
   { id: "advice", path: "/advice", label: "Advice", icon: Sparkles },
   { id: "history", path: "/history", label: "History", icon: HistoryIcon },
   { id: "company", path: "/company", label: "My company", icon: Building2 },
+  { id: "review", path: "/review", label: "Compare policies", icon: FlaskConical },
+  { id: "dataset", path: "/dataset", label: "Dataset (EDGAR)", icon: Database },
+  { id: "run", path: "/run", label: "Run", icon: Play },
   { id: "settings", path: "/settings", label: "Settings", icon: SettingsIcon }
 ];
+
+// Review-demo surfaces: reachable without a company, since they run the
+// research configuration and never touch founder data.
+const REVIEW_PAGES = ["review", "dataset", "run"];
 
 const TITLES = {
   home: "Home", advice: "Advice", history: "History", company: "My company",
   settings: "Settings", update: "Update numbers", onboarding: "Set up your company",
-  analyzing: "Analysis", welcome: "Welcome"
+  analyzing: "Analysis", welcome: "Welcome",
+  review: "Compare policies", dataset: "Dataset (EDGAR)", run: "Run"
 };
 
 function useHashRoute() {
@@ -67,14 +79,16 @@ function Shell() {
   const { page, params } = parseRoute(route);
   const hasCompany = !!state.company;
 
-  // Route guards: no company → welcome/onboarding only.
+  // Route guards: no company → welcome/onboarding (plus the review surfaces,
+  // which don't need founder data).
   useEffect(() => {
-    if (!hasCompany && !["welcome", "onboarding"].includes(page)) navigate("/");
+    if (!hasCompany && !["welcome", "onboarding", ...REVIEW_PAGES].includes(page)) navigate("/");
     if (hasCompany && page === "welcome") navigate("/home");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCompany, page]);
 
-  const bare = ["welcome", "onboarding", "analyzing"].includes(page) || !hasCompany;
+  const bare = ["welcome", "onboarding", "analyzing"].includes(page)
+    || (!hasCompany && !REVIEW_PAGES.includes(page));
   const month = latestMonth(state);
 
   const pages = {
@@ -86,7 +100,10 @@ function Shell() {
     history: <History navigate={navigate} />,
     company: <CompanyView navigate={navigate} />,
     update: <UpdateRitual navigate={navigate} />,
-    settings: <Settings navigate={navigate} />
+    settings: <Settings navigate={navigate} />,
+    review: <Review />,
+    dataset: <Dataset />,
+    run: <Run />
   };
   const content = pages[page] || pages.home;
 
@@ -137,7 +154,7 @@ function Shell() {
           </div>
           <div className="topbar-actions">
             {state.demo && <DemoBadge />}
-            {!state.demo && page !== "update" && (
+            {!state.demo && page !== "update" && !REVIEW_PAGES.includes(page) && (
               <button className="secondary-button small" type="button" onClick={() => navigate("/update")}>
                 <PencilLine size={14} /> Update numbers
               </button>

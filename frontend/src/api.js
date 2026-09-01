@@ -88,6 +88,45 @@ export async function advise(company, month) {
   });
 }
 
+// ---- review demo (compare + dataset tab) ----
+
+// EDGAR growth band + dataset-card numbers. Server-computed from
+// validation/results/ and data/edgar_ratios.csv — nothing hand-typed here.
+export async function reviewMeta() {
+  return request("/review/meta", {}, 15_000);
+}
+
+// One policy x one seed x 120 months, deterministic RNG. The oracle_v3 arm runs
+// on the local LLM (Ollama) and can take minutes, so the timeout is generous;
+// the caller fires one request per arm and renders each as it lands.
+export async function reviewCompare(policy, seed) {
+  return request("/review/compare", {
+    method: "POST",
+    body: JSON.stringify({ policy, seed })
+  }, 1_800_000);
+}
+
+// Raw EDGAR panel rows for the Dataset tab (server-side filter/sort/pagination).
+export async function reviewPanel({ ticker = null, offset = 0, limit = 25, order = "asc" }) {
+  const params = new URLSearchParams({ offset, limit, order });
+  if (ticker) params.set("ticker", ticker);
+  return request(`/review/panel?${params}`, {}, 15_000);
+}
+
+// The 39 C1-mapped company states for the Run tab dropdown.
+export async function reviewBacktestCompanies() {
+  return request("/review/backtest/companies", {}, 15_000);
+}
+
+// One policy from one company's C1-mapped state. oracle_v3 goes through the
+// local LLM, so the timeout is generous; rule arms return in well under a second.
+export async function reviewBacktestRun(ticker, policy, seed, horizon) {
+  return request("/review/backtest/run", {
+    method: "POST",
+    body: JSON.stringify({ ticker, policy, seed, horizon })
+  }, 1_800_000);
+}
+
 // Twelve-month projection under three policies (D5). Pure simulation — no LLM
 // call — so it returns in well under a second and gets a short timeout rather
 // than the 120s the analysis needs. The board's plan is taken from an analysis

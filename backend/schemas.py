@@ -79,6 +79,30 @@ class AdviseRequest(BaseModel):
     history: list[FounderHistoryEntry] = Field(default_factory=list)
 
 
+class CompareRequest(BaseModel):
+    """One arm of the review-demo policy comparison (backend/review_service.py).
+
+    The client sends one request per policy so a fast arm (boardroom) can render
+    while a slow one (oracle_v3 on the local LLM) is still running.
+    """
+
+    policy: str = "boardroom"
+    seed: int = Field(default=0, ge=0)
+
+
+class BacktestRunRequest(BaseModel):
+    """One arm of the real-company Run tab (backend/review_service.py).
+
+    The client sends one request per policy — three fast rule arms first, then
+    oracle_v3 (local LLM) with a progress indicator.
+    """
+
+    ticker: str
+    policy: str = "boardroom"
+    seed: int = Field(default=0, ge=0)
+    horizon: int = Field(default=12, ge=1, le=120)
+
+
 class WhatIfRequest(BaseModel):
     """Roll the founder's state forward under competing policies (D5).
 

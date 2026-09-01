@@ -69,19 +69,32 @@ function lifespan(median, alive) {
 }
 
 // One panel: three median lines, each inside its own IQR band, on shared axes.
-function FanChart({ title, series, alive, format, shockMonth }) {
+// Exported for the review compare screen, which reuses it with its own policy
+// keys/colours plus three optional research overlays (all inert by default):
+//   band         horizontal reference band {p10,p25,median,p75,p90,tooltip}
+//                (the EDGAR QoQ-growth band), grey with a dashed median
+//   shockMarkers [{month, type}] labelled vertical lines at scheduled shocks
+//   refLines     [{from, to, value, color}] horizontal segments (pre-shock
+//                Rule-of-40 levels, so the recovery gap is visible)
+export function FanChart({
+  title, series, alive, format, shockMonth,
+  policies = POLICY_ORDER, styles = POLICY_STYLE,
+  band = null, shockMarkers = null, refLines = null, xStartLabel = "now"
+}) {
   const w = 320, h = 130, padX = 6, padTop = 8, padBottom = 18;
 
-  const all = POLICY_ORDER.flatMap((p) => {
+  const all = policies.flatMap((p) => {
     const s = series[p];
     if (!s) return [];
     return [...s.p25, ...s.p75, ...s.median].filter((v) => v != null);
   });
   if (!all.length) return null;
+  if (band) all.push(band.p10, band.p90);
+  (refLines || []).forEach((r) => all.push(r.value));
 
   const min = Math.min(...all), max = Math.max(...all);
   const span = max - min || 1;
-  const months = series[POLICY_ORDER.find((p) => series[p])].median.length;
+  const months = series[policies.find((p) => series[p])].median.length;
 
   const x = (i) => padX + (i / Math.max(months - 1, 1)) * (w - padX * 2);
   const y = (v) => h - padBottom - ((v - min) / span) * (h - padTop - padBottom);
@@ -117,28 +130,67 @@ function FanChart({ title, series, alive, format, shockMonth }) {
         {zeroY !== null && (
           <line x1={padX} x2={w - padX} y1={zeroY} y2={zeroY} className="wi-zero" />
         )}
+        {band && (
+          <g>
+            <rect
+              x={padX} width={w - padX * 2}
+              y={y(band.p90)} height={Math.max(y(band.p10) - y(band.p90), 0)}
+              className="wi-edgar-band"
+            >
+              <title>{band.tooltip}</title>
+            </rect>
+            <line
+              x1={padX} x2={w - padX} y1={y(band.median)} y2={y(band.median)}
+              className="wi-edgar-median"
+            >
+              <title>{band.tooltip}</title>
+            </line>
+          </g>
+        )}
         {shockMonth != null && shockMonth < months && (
           <line
             x1={x(shockMonth)} x2={x(shockMonth)} y1={padTop} y2={h - padBottom}
             className="wi-shock-line"
           />
         )}
-        {POLICY_ORDER.map((p) => {
+        {(shockMarkers || []).filter((s) => s.month < months).map((s, i) => (
+          <g key={`s-${s.month}`}>
+            <line
+              x1={x(s.month)} x2={x(s.month)} y1={padTop} y2={h - padBottom}
+              className="wi-shock-line"
+            />
+            <text
+              x={x(s.month) + 2} y={padTop + 6 + (i % 2) * 8}
+              className="wi-shock-label"
+            >
+              {s.type}
+            </text>
+          </g>
+        ))}
+        {(refLines || []).map((r, i) => (
+          <line
+            key={`r-${i}`}
+            x1={x(Math.max(r.from, 0))} x2={x(Math.min(r.to, months - 1))}
+            y1={y(r.value)} y2={y(r.value)}
+            stroke={r.color} strokeWidth="1" strokeDasharray="2 3" opacity="0.85"
+          />
+        ))}
+        {policies.map((p) => {
           const s = series[p];
           if (!s) return null;
           const { last } = lifespan(s.median, alive[p]);
           if (last < 0) return null;
           return (
             <polygon key={`b-${p}`} points={bandPoints(s.p25, s.p75, last)}
-                     fill={POLICY_STYLE[p].band} stroke="none" />
+                     fill={styles[p].band} stroke="none" />
           );
         })}
-        {POLICY_ORDER.map((p) => {
+        {policies.map((p) => {
           const s = series[p];
           if (!s) return null;
           const { last, full } = lifespan(s.median, alive[p]);
           if (last < 0) return null;
-          const stroke = POLICY_STYLE[p].color;
+          const stroke = styles[p].color;
           return (
             <g key={`l-${p}`}>
               <polyline points={pointsBetween(s.median, 0, full)}
@@ -163,17 +215,17 @@ function FanChart({ title, series, alive, format, shockMonth }) {
             </g>
           );
         })}
-        <text x={padX} y={h - 5} className="wi-axis">now</text>
+        <text x={padX} y={h - 5} className="wi-axis">{xStartLabel}</text>
         <text x={w - padX} y={h - 5} className="wi-axis" textAnchor="end">
           {months} mo
         </text>
       </svg>
       <span className="wi-chart-end">
-        {POLICY_ORDER.filter((p) => series[p]).map((p) => {
+        {policies.filter((p) => series[p]).map((p) => {
           const s = series[p];
           const { last } = lifespan(s.median, alive[p]);
           return (
-            <em key={p} style={{ color: POLICY_STYLE[p].color }}>
+            <em key={p} style={{ color: styles[p].color }}>
               {last >= 0 && s.median[last] != null ? format(s.median[last]) : "—"}
             </em>
           );

@@ -10,8 +10,26 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.database import connect, initialize_database, parse_json_fields, row_to_dict, utc_now
-from backend.schemas import AdviseRequest, ScenarioCreate, SimulationCreate, WhatIfRequest
+from backend.schemas import (
+    AdviseRequest,
+    BacktestRunRequest,
+    CompareRequest,
+    ScenarioCreate,
+    SimulationCreate,
+    WhatIfRequest,
+)
 from backend.advise_service import run_analysis, store_analysis
+from backend.review_service import (
+    BACKTEST_POLICIES,
+    COMPARE_POLICIES,
+    backtest_companies,
+    dataset_meta,
+    edgar_growth_band,
+    figure_path,
+    panel_rows,
+    run_backtest_policy,
+    run_compare_policy,
+)
 from backend.sim_profile import get_oracle_mode, get_profile
 from backend.whatif_service import run_whatif
 from backend.simulation_service import (
@@ -126,6 +144,87 @@ def whatif(payload: WhatIfRequest) -> dict:
     except Exception as exc:
         raise HTTPException(
             status_code=503, detail=f"Projection engine unavailable: {exc}"
+        ) from exc
+
+
+@app.get("/api/review/meta")
+def review_meta() -> dict:
+    """EDGAR growth band + dataset-card numbers for the review demo.
+
+    Everything numeric is read from validation/results/environment_stats.csv or
+    computed from data/edgar_ratios.csv at request time (review ground rule:
+    nothing hand-typed).
+    """
+    return {
+        "edgar_growth": edgar_growth_band(),
+        "dataset": dataset_meta(),
+        "compare_policies": COMPARE_POLICIES,
+    }
+
+
+@app.get("/api/review/figures/{key}")
+def review_figure(key: str):
+    """The two dataset-card figures, served from validation/figures/review/."""
+    path = figure_path(key)
+    if path is None:
+        raise HTTPException(status_code=404, detail="Unknown review figure")
+    return FileResponse(path)
+
+
+@app.post("/api/review/compare")
+def review_compare(payload: CompareRequest) -> dict:
+    """One policy x one seed x 120 months under deterministic_rng.
+
+    Synchronous on purpose: the client fires one request per arm, renders the
+    fast arm as it lands, and keeps a progress indicator up for the LLM arm.
+    Runs are serialized inside review_service (shared global RNG), so the
+    boardroom request submitted first also finishes first.
+    """
+    if payload.policy not in COMPARE_POLICIES:
+        raise HTTPException(status_code=422, detail="Unsupported compare policy")
+    try:
+        return run_compare_policy(payload.policy, payload.seed)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503, detail=f"Simulation failed: {exc}"
+        ) from exc
+
+
+@app.get("/api/review/panel")
+def review_panel(
+    ticker: str | None = Query(default=None),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=25, ge=1, le=200),
+    order: str = Query(default="asc", pattern="^(asc|desc)$"),
+) -> dict:
+    """Raw EDGAR panel rows for the Dataset tab — as-ingested dollars, paginated."""
+    return panel_rows(ticker, offset, limit, descending=(order == "desc"))
+
+
+@app.get("/api/review/backtest/companies")
+def review_backtest_companies() -> dict:
+    """The 39 C1-mapped company states for the Run tab dropdown."""
+    return backtest_companies()
+
+
+@app.post("/api/review/backtest/run")
+def review_backtest_run(payload: BacktestRunRequest) -> dict:
+    """One policy from one company's C1-mapped state, deterministic RNG.
+
+    Synchronous; the client fires the three rule arms first, then oracle_v3.
+    Runs are serialized inside review_service (shared global RNG).
+    """
+    if payload.policy not in BACKTEST_POLICIES:
+        raise HTTPException(status_code=422, detail="Unsupported backtest policy")
+    try:
+        return run_backtest_policy(
+            payload.ticker, payload.policy, payload.seed, payload.horizon
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503, detail=f"Simulation failed: {exc}"
         ) from exc
 
 

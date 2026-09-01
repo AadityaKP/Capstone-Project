@@ -18,12 +18,40 @@ from agents.proposal_agents import CFOProposalAgent, CMOProposalAgent, CPOPropos
 from oracle.action_modifier import NoOpActionModifier
 from oracle.oracle import Oracle
 
+from agents.baseline_agents import CFOAgent, CMOAgent, CPOAgent
+
 class BaselineJointAgent:
     """
     Acts as a container for the C-Suite agents, merging their decisions.
+
+    `scale` multiplies the agents' absolute dollar tiers (spec G11) — the same
+    correction the C1 backtest applied (scale = mrr / 50k) so the rule agents
+    are not strawmen at real-company scale. The default 1.0 reproduces the
+    original merge_actions behaviour exactly.
+    """
+    def __init__(self, scale: float = 1.0):
+        self.agents = [CFOAgent(scale=scale), CMOAgent(scale=scale), CPOAgent(scale=scale)]
+
+    def get_action(self, state):
+        action = {}
+        for agent in self.agents:
+            action.update(agent.act(state))
+        return action
+
+class NoopBundleAgent:
+    """
+    The no-action baseline: zero spend, zero hires, price held. The same bundle
+    the A2 policy-baselines arm used (validation/analysis/policy_baselines.py),
+    registered here so callers get it through run_simulation instead of a
+    separate episode loop.
     """
     def get_action(self, state):
-        return merge_actions(state)
+        return {
+            "marketing": {"spend": 0.0, "channel": "ppc"},
+            "hiring": {"hires": 0, "cost_per_employee": 10000.0},
+            "product": {"r_and_d_spend": 0.0},
+            "pricing": {"price_change_pct": 0.0}
+        }
 
 class RandomBundleAgent:
     """
@@ -60,11 +88,15 @@ class BoardroomAgent:
         action_modifier_instance=None,
         agents=None,
         proposal_generator=None,
+        agent_scale=1.0,
     ):
+        # agent_scale mirrors the C1 backtest's boardroom construction: proposal
+        # agents and Boardroom.scale_absolutes both take mrr/50k so dollar tiers
+        # track the company's size. 1.0 leaves every existing run unchanged.
         proposal_agents = agents or [
-            CFOProposalAgent(),
-            CMOProposalAgent(),
-            CPOProposalAgent(),
+            CFOProposalAgent(scale=agent_scale),
+            CMOProposalAgent(scale=agent_scale),
+            CPOProposalAgent(scale=agent_scale),
         ]
         self.boardroom = Boardroom(proposal_agents,
             use_oracle=(oracle_mode != "none"),
@@ -75,6 +107,7 @@ class BoardroomAgent:
             enable_action_modifier=enable_action_modifier,
             enable_memory_retrieval=enable_memory_retrieval,
             proposal_generator=proposal_generator,
+            scale_absolutes=agent_scale,
         )
 
     def start_episode(self, episode_seed):
@@ -214,15 +247,22 @@ def _collect_retrieval_rows(
     return rows
 
 
-def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides: dict | None = None):
+def _build_agent_for_policy(
+    policy: str,
+    oracle_frequency: int,
+    oracle_overrides: dict | None = None,
+    agent_scale: float = 1.0,
+):
     oracle_overrides = dict(oracle_overrides or {})
 
+    if policy == "noop":
+        return NoopBundleAgent()
     if policy == "heuristic":
-        return BaselineJointAgent()
+        return BaselineJointAgent(scale=agent_scale)
     if policy == "random":
         return RandomBundleAgent()
     if policy == "boardroom":
-        return BoardroomAgent(oracle_mode="none")
+        return BoardroomAgent(oracle_mode="none", agent_scale=agent_scale)
     if policy == "boardroom_oracle":
         return BoardroomAgent(oracle_mode="oracle_v1", oracle_frequency=oracle_frequency, **oracle_overrides)
     if policy == "oracle_v1_no_modifier":
@@ -234,7 +274,12 @@ def _build_agent_for_policy(policy: str, oracle_frequency: int, oracle_overrides
             **oracle_overrides,
         )
     if policy in {"oracle_v1", "oracle_v2", "oracle_v3"}:
-        return BoardroomAgent(oracle_mode=policy, oracle_frequency=oracle_frequency, **oracle_overrides)
+        return BoardroomAgent(
+            oracle_mode=policy,
+            oracle_frequency=oracle_frequency,
+            agent_scale=agent_scale,
+            **oracle_overrides,
+        )
     if policy == "oracle_v3_no_memory":
         return BoardroomAgent(
             oracle_mode="oracle_v3",
@@ -319,11 +364,14 @@ def run_simulation(
     return_monthly_trace: bool = False,
     return_retrieval_trace: bool = False,
     environment_config: dict | None = None,
+    agent_scale: float = 1.0,
 ):
     print(f"Running {num_episodes} episodes with Policy: {policy} (Seeds {seed_start}-{seed_start+num_episodes-1})...")
-    
+
     env = StartupEnv(initial_config=environment_config)
-    agent = _build_agent_for_policy(policy, oracle_frequency, oracle_overrides=oracle_overrides)
+    agent = _build_agent_for_policy(
+        policy, oracle_frequency, oracle_overrides=oracle_overrides, agent_scale=agent_scale
+    )
     
     results = []
     action_trace = []
