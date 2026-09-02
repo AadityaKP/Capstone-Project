@@ -224,3 +224,18 @@ export function causalEvidenceCopy(graph) {
   }
   return lines;
 }
+
+// ---- review-demo policy display names ----
+// Plain-English names for the research policies on the review surfaces. The
+// internal ids stay in the API and in every result file; the id travels in a
+// tooltip so the validation report remains cross-referenceable. "No action" is
+// a simulated counterfactual (zero discretionary spend) - it is NOT the
+// company's actual history, which reflects real spending and is never plotted.
+export const POLICY_DISPLAY = {
+  noop: "No action",
+  heuristic: "Simple rules",
+  boardroom: "Advisory board",
+  oracle_v3: "Oracle-guided board",
+  random: "Random actions"
+};
+export const policyLabel = (id) => POLICY_DISPLAY[id] || id;

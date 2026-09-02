@@ -16,6 +16,7 @@ import { AlertTriangle, Building2, Loader2, Play } from "lucide-react";
 import { reviewBacktestCompanies, reviewBacktestRun } from "../api.js";
 import { FanChart } from "../whatif.jsx";
 import { money } from "../derive.js";
+import { policyLabel } from "../copy.js";
 
 // One fixed colour per policy, everywhere on this screen.
 const POLICY_STYLE = {
@@ -82,7 +83,7 @@ function CompanyBlock({ company, arms }) {
         <p key={p} className="rv-progress">
           <Loader2 size={14} className="wi-spin" />
           <span>
-            <strong style={{ color: POLICY_STYLE[p].color }}>{p}</strong>
+            <strong style={{ color: POLICY_STYLE[p].color }} title={p}>{policyLabel(p)}</strong>
             {p === "oracle_v3"
               ? " is running on the local LLM (Ollama, llama3.1:8b)…"
               : " is running…"}
@@ -91,7 +92,7 @@ function CompanyBlock({ company, arms }) {
       ))}
       {ALL_POLICIES.filter((p) => arms?.[p]?.error).map((p) => (
         <p key={p} className="wi-error">
-          <AlertTriangle size={15} /> {p}: {arms[p].error}
+          <AlertTriangle size={15} /> {policyLabel(p)}: {arms[p].error}
         </p>
       ))}
 
@@ -126,7 +127,7 @@ function CompanyBlock({ company, arms }) {
                   const s = arms[p].data.summary;
                   return (
                     <tr key={p}>
-                      <td><i style={{ background: POLICY_STYLE[p].color }} /> {p}</td>
+                      <td title={p}><i style={{ background: POLICY_STYLE[p].color }} /> {policyLabel(p)}</td>
                       <td>{money(s.final_mrr)}</td>
                       <td className={s.survived ? "wi-alive" : "wi-dead"}>
                         {s.survived ? "yes" : `no — month ${s.months_survived}`}
@@ -209,8 +210,11 @@ export default function Run() {
           mapped exactly as the C1 backtest mapped it (price, churn and CAC are labelled
           assumptions), with <code>deterministic_rng</code> on and no scheduled shocks —
           so at equal seed all four policies face that company's identical world.
-          Five companies from the 39-company panel; simulated counterfactuals, actual
-          trajectories deliberately not shown.
+          All four lines are <strong>simulated policies</strong> applied from the
+          company's real starting state; none is the company's actual history. In
+          particular, "No action" is a counterfactual — the real companies did spend
+          (their actual figures are in the Dataset tab) — and their actual trajectories
+          are deliberately not plotted here. Five companies from the 39-company panel.
         </p>
 
         {metaError && <p className="wi-error"><AlertTriangle size={15} /> {metaError}</p>}
@@ -241,8 +245,8 @@ export default function Run() {
 
         <div className="wi-legend">
           {ALL_POLICIES.map((p) => (
-            <span key={p}>
-              <i style={{ background: POLICY_STYLE[p].color }} /> {p}
+            <span key={p} title={`internal: ${p}`}>
+              <i style={{ background: POLICY_STYLE[p].color }} /> {policyLabel(p)}
             </span>
           ))}
         </div>

@@ -225,13 +225,17 @@ def _shock_recoveries(shocks: list[dict], r40_by_month: dict[int, float]) -> lis
 
 _panel_cache: pd.DataFrame | None = None
 
-# Column order fixed by the review brief: ticker, fiscal quarter, revenue, S&M,
-# R&D, G&A, cost of revenue, cash (+STI), operating cash flow. Raw as-ingested
-# dollars from data/edgar_facts.csv; cash (+STI) is the panel's own
-# cash_and_investments column from data/edgar_ratios.csv. No derived columns.
+# One column per input the Run tab's simulation actually consumes, in mapping
+# order: revenue -> starting MRR (/3), cost of revenue -> gross margin (with
+# revenue), G&A -> monthly burn (/3), cash (+STI) -> starting cash. Raw
+# as-ingested dollars from data/edgar_facts.csv; cash (+STI) is the panel's own
+# cash_and_investments column from data/edgar_ratios.csv. S&M, R&D and
+# operating cash flow were dropped from this view on review feedback: they feed
+# other validation tests (E4) and the excluded hold arm, not this simulation —
+# the Run tab's policies choose their own spending.
 PANEL_COLUMNS = [
-    "ticker", "fiscal_period", "revenue", "sm_expense", "rnd_expense",
-    "ga_expense", "cost_of_revenue", "cash_and_investments", "operating_cash_flow",
+    "ticker", "fiscal_period", "revenue", "cost_of_revenue",
+    "ga_expense", "cash_and_investments",
 ]
 
 
@@ -242,8 +246,7 @@ def _panel_table() -> pd.DataFrame:
             EDGAR_FACTS_CSV, usecols=["ticker", "fiscal_period", "concept", "value"]
         )
         wide = (facts[facts.concept.isin([
-                    "revenue", "sm_expense", "rnd_expense", "ga_expense",
-                    "cost_of_revenue", "operating_cash_flow"])]
+                    "revenue", "ga_expense", "cost_of_revenue"])]
                 .pivot_table(index=["ticker", "fiscal_period"], columns="concept",
                              values="value", aggfunc="first")
                 .reset_index())

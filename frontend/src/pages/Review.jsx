@@ -18,6 +18,7 @@ import { AlertTriangle, FlaskConical, Loader2, Play } from "lucide-react";
 import { reviewMeta, reviewCompare } from "../api.js";
 import { FanChart } from "../whatif.jsx";
 import { money } from "../derive.js";
+import { policyLabel } from "../copy.js";
 
 const ARM_KEYS = ["a", "b"];
 const ARM_STYLE = {
@@ -186,7 +187,7 @@ export default function Review() {
                 onChange={(e) => setPicks({ ...picks, [k]: e.target.value })}
                 disabled={anyLoading}
               >
-                {policies.map((p) => <option key={p} value={p}>{p}</option>)}
+                {policies.map((p) => <option key={p} value={p}>{policyLabel(p)}</option>)}
               </select>
             </label>
           ))}
@@ -211,7 +212,9 @@ export default function Review() {
           <p key={k} className="rv-progress">
             <Loader2 size={14} className="wi-spin" />
             <span>
-              <strong style={{ color: ARM_STYLE[k].color }}>{arms[k].policy}</strong>
+              <strong style={{ color: ARM_STYLE[k].color }} title={arms[k].policy}>
+                {policyLabel(arms[k].policy)}
+              </strong>
               {" "}is running{arms[k].policy === "oracle_v3"
                 ? " on the local LLM (Ollama, llama3.1:8b) — a 120-month episode takes minutes; the other arm renders as soon as it finishes."
                 : "…"}
@@ -220,7 +223,7 @@ export default function Review() {
         ))}
         {ARM_KEYS.filter((k) => arms[k]?.error).map((k) => (
           <p key={k} className="wi-error">
-            <AlertTriangle size={15} /> {arms[k].policy}: {arms[k].error}
+            <AlertTriangle size={15} /> {policyLabel(arms[k].policy)}: {arms[k].error}
           </p>
         ))}
 
@@ -228,8 +231,8 @@ export default function Review() {
           <>
             <div className="wi-legend">
               {loaded.map((k) => (
-                <span key={k}>
-                  <i style={{ background: ARM_STYLE[k].color }} /> {arms[k].policy} (seed {arms[k].data.seed})
+                <span key={k} title={`internal: ${arms[k].policy}`}>
+                  <i style={{ background: ARM_STYLE[k].color }} /> {policyLabel(arms[k].policy)} (seed {arms[k].data.seed})
                 </span>
               ))}
               {edgarLegend && (
@@ -288,7 +291,7 @@ export default function Review() {
                     );
                     return (
                       <tr key={k}>
-                        <td><i style={{ background: ARM_STYLE[k].color }} /> {arms[k].policy}</td>
+                        <td title={arms[k].policy}><i style={{ background: ARM_STYLE[k].color }} /> {policyLabel(arms[k].policy)}</td>
                         <td>{money(s.final_mrr)}</td>
                         <td className={s.survived ? "wi-alive" : "wi-dead"}>
                           {s.survived ? "yes" : `no — month ${s.months_survived}`}

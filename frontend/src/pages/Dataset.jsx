@@ -11,16 +11,15 @@ import { reviewMeta, reviewPanel } from "../api.js";
 
 const PAGE_SIZE = 25;
 
+// Headers name the simulation input each column becomes, so the table reads
+// one-to-one against the Run tab's starting state.
 const COLUMN_LABELS = {
-  ticker: "Ticker",
+  ticker: "Company",
   fiscal_period: "Quarter",
-  revenue: "Revenue",
-  sm_expense: "S&M",
-  rnd_expense: "R&D",
-  ga_expense: "G&A",
-  cost_of_revenue: "Cost of revenue",
-  cash_and_investments: "Cash (+STI)",
-  operating_cash_flow: "Operating CF"
+  revenue: "Revenue → starting MRR (÷3)",
+  cost_of_revenue: "Cost of revenue → gross margin",
+  ga_expense: "G&A → monthly burn (÷3)",
+  cash_and_investments: "Cash (+STI) → starting cash"
 };
 
 function cell(column, value) {
@@ -34,7 +33,7 @@ export default function Dataset() {
   const [page, setPage] = useState(null);
   const [error, setError] = useState(null);
   const [ticker, setTicker] = useState("");
-  const [order, setOrder] = useState("asc");
+  const [order, setOrder] = useState("desc"); // newest quarters first by default
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
@@ -94,8 +93,8 @@ export default function Dataset() {
               value={order}
               onChange={(e) => { setOrder(e.target.value); setOffset(0); }}
             >
-              <option value="asc">Oldest first</option>
               <option value="desc">Newest first</option>
+              <option value="asc">Oldest first</option>
             </select>
           </label>
           <div className="rv-pager">
@@ -133,6 +132,16 @@ export default function Dataset() {
             </tbody>
           </table>
         </div>
+
+        <p className="wi-meta">
+          Mapping into the simulator's starting state (a company's earliest complete
+          quarter): MRR = quarterly revenue ÷ 3 · gross margin = (revenue − cost of
+          revenue) ÷ revenue · monthly burn = G&A ÷ 3 · starting cash = cash +
+          short-term investments. Price, churn and CAC are assumed — they don't exist
+          in EDGAR. The panel also carries S&M, R&D and operating cash flow (the
+          companies' real spending); those aren't shown here because the Run tab's
+          policies choose their own spending instead of replaying the company's.
+        </p>
       </article>
     </section>
   );
