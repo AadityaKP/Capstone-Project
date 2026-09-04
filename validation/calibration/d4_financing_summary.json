@@ -1,0 +1,21 @@
+{
+  "n_company_quarters": 1292,
+  "n_burning_quarters": 350,
+  "n_raises": 113,
+  "raise_freq_per_burning_quarter": 0.32285714285714284,
+  "median_raise_multiple_of_monthly_burn": 24.31760878405856,
+  "p25_raise_multiple": 8.619286561445124,
+  "p75_raise_multiple": 88.75227915749765,
+  "median_runway_at_raise_months": 48.41127760252366,
+  "rescue_regime_R_months": 18.0,
+  "n_rescue_raises": 31,
+  "median_rescue_raise_multiple_of_monthly_burn": 24.373229939312207,
+  "conditional_p_raise_per_quarter_below_R": 0.5961538461538461,
+  "conditional_p_raise_per_month_below_R": 0.26083967054135093,
+  "F2_params": {
+    "financing_runway_threshold_months": 18.0,
+    "financing_raise_multiple": 24.4,
+    "financing_monthly_prob": 0.261
+  },
+  "note": "R = 18mo, the break in P(raise|burning) by runway bin (>=0.5 below, 0.26 above); K = median raise multiple among rescue raises (runway < R); p = per-month raise prob conditional on burning and runway < R. Unconditional medians also recorded."
+}
