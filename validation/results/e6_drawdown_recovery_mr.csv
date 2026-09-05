@@ -1,0 +1,3 @@
+panel,units,unit_quarters,episodes,episodes_per_100q,median_depth,recovery_rate,median_recovery_quarters
+sim_boardroom_mean_revert,20,800,4,0.5,0.16332267039118503,0.0,
+sim_oracle_v3_mean_revert,20,800,3,0.375,0.171593441346583,0.0,

@@ -26,4 +26,5 @@ within-unit growth volatility,E5,boardroom_v2,39,20,within-unit growth std sim 0
 "growth-sign agreement, round 2",R2-SIGN,hold,19,19,100%,PASS,v2,v1,v2,opportunistic,off
 "corridor artifact, round 2",R2-CORR,boardroom+hold,19,19,"boardroom std ratio 1.09 (PASSES >=1/3) but hold Spearman 0.18 (p=0.45) fails >0.3: at q0+8 every company real-spends in the fitted curve's saturation region, hold growth nearly constant",FAIL,v2,v1,v2,opportunistic,off
 "financing realism, round 2",R2-FIN-a,hold,19,19,100% of EVAL2 companies survive >50% of seeds under hold with the opportunistic hazard,PASS,v2,v1,v2,opportunistic,off
-"financing ablation, round 2",R2-FIN-b,hold,19,19,no EVAL2 company has zero surviving seeds with financing off at q0+8 - ablation premise empty,N/A,v2,v1,v2,opportunistic,off
+"financing ablation, round 2",R2-FIN-b,hold,19,19,no EVAL2 company has zero surviving seeds with financing off at q0+8 - ablation premise empty,,v2,v1,v2,opportunistic,off
+drawdown depth under recoverable shocks (stretch),E6-mr,boardroom+oracle_v3,40,7,"median drawdown depth 16-17% (vs 61-63% recorded sim, 11% EDGAR); episodes rare (0.4-0.5/100q vs EDGAR 3.0); recovery rate unestimable from 3-4 censored episodes",REPORTED,v1,v1,v1,off,fixed

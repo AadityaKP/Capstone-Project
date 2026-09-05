@@ -137,6 +137,21 @@ MRR advantage 6 months later. Figure
 (retrieved memories, brief, pre/post-modifier actions) from the
 fidelity-checked replay in `validation/round2/case_study.md`.
 
+## 8b. Stretch (S11): recoverable shocks
+
+`shock_recovery="mean_revert"` gives hard-shock price/churn damage a 3-month
+half-life (~87.5% recovered after 9 months, matching EDGAR's median
+3-quarter drawdown recovery). Default byte-identical (tested + gate exact).
+A3 rerun (boardroom + oracle_v3, 20 seeds, legacy physics otherwise): the
+oracle advantage **does not flip — it strengthens** (20/20 seeds, mean
+paired diff +$2.23M, p=1.9e-06, median final MRR $5.45M vs $2.82M; both arms
+100% survival). E6 recomputed on these episodes
+(`e6_drawdown_recovery_mr.csv`): median drawdown depth falls from the
+recorded ~61–63% to **16–17%** (EDGAR 11%) — the depth half of the E6
+structural mismatch is repaired — while drawdowns become rare (0.4–0.5 per
+100 quarters vs EDGAR's 3.0; the sim lacks ordinary demand-side dips) and
+the recovery-rate cell is unestimable from 3–4 censored episodes.
+
 ## 9. Reproduction
 
 ```

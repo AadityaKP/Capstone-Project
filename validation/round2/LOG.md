@@ -75,3 +75,15 @@ Branch `round2` from `physics-v2`. Pre-registration committed before any code:
 - **S10** (2026-09-05): full test suite + regression gate on `round2`;
   fast-forward merge round2 → physics-v2 → main (main was a strict ancestor,
   0 behind); tag `thesis-v2-final`; post-merge gate re-run on main.
+- **S8 completion + S11 stretch** (2026-09-05, resumed session): case-study
+  replay done — no_memory arm byte-identical (rel diff 0.0), memory arm
+  0.14% drift over 120 months (fresh Chroma collection tie-breaks,
+  disclosed); the month-60 decision reproduces the recorded divergence
+  exactly and case_study.md now quotes the three retrieved GROWTH memories,
+  both briefs, and the pre/post-modifier actions. S11:
+  shock_recovery="mean_revert" (3-month half-life on hard-shock price/churn
+  damage; default byte-identical, 3 tests, gate exact). A3-mr: oracle
+  advantage does NOT flip — strengthens to 20/20 seeds, +$2.23M mean
+  (p=1.9e-06). E6-mr: median drawdown depth 61–63% → 16–17% (EDGAR 11%);
+  episodes rare (0.4–0.5/100q); recovery cell unestimable (3–4 censored).
+  Scorecard rows appended; merged to physics-v2 and main.
