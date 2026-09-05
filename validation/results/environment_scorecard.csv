@@ -1,19 +1,24 @@
-dimension,test,policy_arm,edgar_n,sim_n,result,verdict
-QoQ revenue growth distribution,E1,boardroom,1293,2920,"sim median 0.051 vs EDGAR IQR [0.027,0.091], p10-p90 [0.001,0.136]; IQR overlap=True",PASS
-growth persistence (lag-1 autocorr),E2,boardroom,39,75,median autocorr sim 0.923 vs EDGAR 0.458,PARTIAL
-growth deceleration with scale,E3,boardroom,39,75,median within-unit Spearman sim -0.530 vs EDGAR -0.637,PASS
-discretionary spend / revenue,E4,boardroom,1288,2995,"sim median discretionary spend 8.5% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL
-within-unit growth volatility,E5,boardroom,39,75,within-unit growth std sim 0.128 vs EDGAR 0.046 (x2.8),PARTIAL
-QoQ revenue growth distribution,E1,oracle_v1,1293,2924,"sim median 0.053 vs EDGAR IQR [0.027,0.091], p10-p90 [0.001,0.136]; IQR overlap=True",PASS
-growth persistence (lag-1 autocorr),E2,oracle_v1,39,75,median autocorr sim 0.923 vs EDGAR 0.458,PARTIAL
-growth deceleration with scale,E3,oracle_v1,39,75,median within-unit Spearman sim -0.468 vs EDGAR -0.637,PASS
-discretionary spend / revenue,E4,oracle_v1,1288,2999,"sim median discretionary spend 8.0% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL
-within-unit growth volatility,E5,oracle_v1,39,75,within-unit growth std sim 0.150 vs EDGAR 0.046 (x3.2),PARTIAL
-QoQ revenue growth distribution,E1,oracle_v3,1293,2925,"sim median 0.054 vs EDGAR IQR [0.027,0.091], p10-p90 [0.001,0.136]; IQR overlap=True",PASS
-growth persistence (lag-1 autocorr),E2,oracle_v3,39,75,median autocorr sim 0.920 vs EDGAR 0.458,PARTIAL
-growth deceleration with scale,E3,oracle_v3,39,75,median within-unit Spearman sim -0.466 vs EDGAR -0.637,PASS
-discretionary spend / revenue,E4,oracle_v3,1288,3000,"sim median discretionary spend 8.0% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL
-within-unit growth volatility,E5,oracle_v3,39,75,within-unit growth std sim 0.150 vs EDGAR 0.046 (x3.2),PARTIAL
-range validity: default churn vs ChartMogul band,E7a,config,0,0,calibration/bands.json arpa_bands present; ChartMogul $25-100 monthly logo churn median 3.40% (provenance doc); sim default churn 1/3/5% (mean 3%),PASS
-range validity: gross margin,E7b,research profile,1222,0,"research profile books revenue at 100% margin; EDGAR GM median 73.5% [p10 56.1%, p90 82.2%]. Outside the empirical range by design (recorded-run compatibility); founder profile applies calibrated margin",FAIL
-revenue drawdown/recovery (exploratory),E6,boardroom (oracle_v3 similar),40,47,"EDGAR: 3.0 eps/100q, median depth 11%, 85% recover in median 3q. Sim: 1.6 eps/100q, median depth 61%, recovery to prior peak 0%. Sim drawdowns are catastrophic and permanent vs shallow and quickly recovered in real SaaS; note the thesis 'recovery' metric is Rule-of-40-based, not revenue-peak-based",EXPLORATORY
+dimension,test,policy_arm,edgar_n,sim_n,result,verdict,physics_version
+QoQ revenue growth distribution,E1,boardroom,1293,2920,"sim median 0.051 vs EDGAR IQR [0.027,0.091], p10-p90 [0.001,0.136]; IQR overlap=True",PASS,v1
+growth persistence (lag-1 autocorr),E2,boardroom,39,75,median autocorr sim 0.923 vs EDGAR 0.458,PARTIAL,v1
+growth deceleration with scale,E3,boardroom,39,75,median within-unit Spearman sim -0.530 vs EDGAR -0.637,PASS,v1
+discretionary spend / revenue,E4,boardroom,1288,2995,"sim median discretionary spend 8.5% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL,v1
+within-unit growth volatility,E5,boardroom,39,75,within-unit growth std sim 0.128 vs EDGAR 0.046 (x2.8),PARTIAL,v1
+QoQ revenue growth distribution,E1,oracle_v1,1293,2924,"sim median 0.053 vs EDGAR IQR [0.027,0.091], p10-p90 [0.001,0.136]; IQR overlap=True",PASS,v1
+growth persistence (lag-1 autocorr),E2,oracle_v1,39,75,median autocorr sim 0.923 vs EDGAR 0.458,PARTIAL,v1
+growth deceleration with scale,E3,oracle_v1,39,75,median within-unit Spearman sim -0.468 vs EDGAR -0.637,PASS,v1
+discretionary spend / revenue,E4,oracle_v1,1288,2999,"sim median discretionary spend 8.0% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL,v1
+within-unit growth volatility,E5,oracle_v1,39,75,within-unit growth std sim 0.150 vs EDGAR 0.046 (x3.2),PARTIAL,v1
+QoQ revenue growth distribution,E1,oracle_v3,1293,2925,"sim median 0.054 vs EDGAR IQR [0.027,0.091], p10-p90 [0.001,0.136]; IQR overlap=True",PASS,v1
+growth persistence (lag-1 autocorr),E2,oracle_v3,39,75,median autocorr sim 0.920 vs EDGAR 0.458,PARTIAL,v1
+growth deceleration with scale,E3,oracle_v3,39,75,median within-unit Spearman sim -0.466 vs EDGAR -0.637,PASS,v1
+discretionary spend / revenue,E4,oracle_v3,1288,3000,"sim median discretionary spend 8.0% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL,v1
+within-unit growth volatility,E5,oracle_v3,39,75,within-unit growth std sim 0.150 vs EDGAR 0.046 (x3.2),PARTIAL,v1
+range validity: default churn vs ChartMogul band,E7a,config,0,0,calibration/bands.json arpa_bands present; ChartMogul $25-100 monthly logo churn median 3.40% (provenance doc); sim default churn 1/3/5% (mean 3%),PASS,v1
+range validity: gross margin,E7b,research profile,1222,0,"research profile books revenue at 100% margin; EDGAR GM median 73.5% [p10 56.1%, p90 82.2%]. Outside the empirical range by design (recorded-run compatibility); founder profile applies calibrated margin",FAIL,v1
+revenue drawdown/recovery (exploratory),E6,boardroom (oracle_v3 similar),40,47,"EDGAR: 3.0 eps/100q, median depth 11%, 85% recover in median 3q. Sim: 1.6 eps/100q, median depth 61%, recovery to prior peak 0%. Sim drawdowns are catastrophic and permanent vs shallow and quickly recovered in real SaaS; note the thesis 'recovery' metric is Rule-of-40-based, not revenue-peak-based",EXPLORATORY,v1
+QoQ revenue growth distribution,E1,boardroom_v2,1293,780,"sim median 0.093 vs EDGAR IQR [0.027,0.091]; KS=0.273, W1=0.0310",PARTIAL,v2
+growth persistence (lag-1 autocorr),E2,boardroom_v2,39,20,median autocorr sim 0.934 vs EDGAR 0.458,PARTIAL,v2
+growth deceleration with scale,E3,boardroom_v2,39,20,median within-unit Spearman sim -0.649 vs EDGAR -0.637,PASS,v2
+discretionary spend / revenue,E4,boardroom_v2,1288,800,"sim median discretionary spend 67.6% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",PASS,v2
+within-unit growth volatility,E5,boardroom_v2,39,20,within-unit growth std sim 0.069 vs EDGAR 0.046 (x1.5),PASS,v2

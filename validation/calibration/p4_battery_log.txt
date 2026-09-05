@@ -1,0 +1,6 @@
+﻿test verdict                                                                                   result
+  E1 PARTIAL                         sim median 0.093 vs EDGAR IQR [0.027,0.091]; KS=0.273, W1=0.0310
+  E2 PARTIAL                                                 median autocorr sim 0.934 vs EDGAR 0.458
+  E3    PASS                                   median within-unit Spearman sim -0.649 vs EDGAR -0.637
+  E4    PASS sim median discretionary spend 67.6% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)
+  E5    PASS                                   within-unit growth std sim 0.069 vs EDGAR 0.046 (x1.5)
