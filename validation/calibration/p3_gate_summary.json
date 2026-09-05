@@ -1,0 +1,65 @@
+{
+  "exact_match_gate": "PASS",
+  "v2_boardroom_beats_noop_median": true,
+  "v2_boardroom_gt_noop_seeds": "10/10",
+  "e4_spend_ratio_legacy": 0.08529858035994678,
+  "e4_spend_ratio_v2": 0.7228105886170881,
+  "edgar_band": [
+    0.369,
+    0.937
+  ],
+  "summary": {
+    "legacy": {
+      "boardroom": {
+        "survival": 0.9,
+        "median_final_mrr": 318962.3927872535,
+        "median_spend_ratio": 0.08529858035994678,
+        "median_qoq_growth": 0.019965013465634507
+      },
+      "heuristic": {
+        "survival": 0.9,
+        "median_final_mrr": 144271.6172871788,
+        "median_spend_ratio": 0.06254863668386279,
+        "median_qoq_growth": -0.005615289763233278
+      },
+      "noop": {
+        "survival": 1.0,
+        "median_final_mrr": 1326.8729577619656,
+        "median_spend_ratio": 0.0,
+        "median_qoq_growth": -0.050950207507654666
+      },
+      "random": {
+        "survival": 0.0,
+        "median_final_mrr": 304722.5243675943,
+        "median_spend_ratio": 0.06761900200654522,
+        "median_qoq_growth": 0.06949825756281147
+      }
+    },
+    "v2": {
+      "boardroom": {
+        "survival": 1.0,
+        "median_final_mrr": 639525.0163166325,
+        "median_spend_ratio": 0.7228105886170881,
+        "median_qoq_growth": 0.06845952426877988
+      },
+      "heuristic": {
+        "survival": 1.0,
+        "median_final_mrr": 528516.0737750684,
+        "median_spend_ratio": 0.34,
+        "median_qoq_growth": 0.06653451788194631
+      },
+      "noop": {
+        "survival": 1.0,
+        "median_final_mrr": 3265.0562983734126,
+        "median_spend_ratio": 0.0,
+        "median_qoq_growth": -0.044777205315690405
+      },
+      "random": {
+        "survival": 0.0,
+        "median_final_mrr": 71336.1487236057,
+        "median_spend_ratio": 0.26259381493031586,
+        "median_qoq_growth": 0.03743183609230849
+      }
+    }
+  }
+}

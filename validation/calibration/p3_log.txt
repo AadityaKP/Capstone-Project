@@ -1,0 +1,32 @@
+﻿Starting simulation runner...
+legacy: done
+v2: done
+legacy exact-match final_mrr: OK
+legacy exact-match final_cash: OK
+legacy exact-match steps: OK
+legacy exact-match survived: OK
+legacy exact-match total_reward: OK
+legacy E1 per-episode median growth match: OK (recorded overall 0.0401, fresh 0.0200)
+{
+  "exact_match_gate": "PASS",
+  "v2_boardroom_beats_noop_median": true,
+  "v2_boardroom_gt_noop_seeds": "10/10",
+  "e4_spend_ratio_legacy": 0.08529858035994678,
+  "e4_spend_ratio_v2": 0.7228105886170881,
+  "edgar_band": [
+    0.369,
+    0.937
+  ]
+}
+
+legacy:
+  noop       surv=100% medMRR=$1,327 spend%=0.0% g=-5.1%
+  random     surv=0% medMRR=$304,723 spend%=6.8% g=6.9%
+  heuristic  surv=90% medMRR=$144,272 spend%=6.3% g=-0.6%
+  boardroom  surv=90% medMRR=$318,962 spend%=8.5% g=2.0%
+
+v2:
+  noop       surv=100% medMRR=$3,265 spend%=0.0% g=-4.5%
+  random     surv=0% medMRR=$71,336 spend%=26.3% g=3.7%
+  heuristic  surv=100% medMRR=$528,516 spend%=34.0% g=6.7%
+  boardroom  surv=100% medMRR=$639,525 spend%=72.3% g=6.8%
