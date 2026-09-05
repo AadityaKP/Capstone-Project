@@ -140,6 +140,17 @@ class StartupEnv(gym.Env):
         # no reason they could see. Product surfaces turn them off; research runs
         # leave this True and are unaffected.
         self.scheduled_shocks = bool(self.initial_config.get("scheduled_shocks", True))
+        # Round 2 (plan S7): shock_schedule="random" draws the 3 hard-shock
+        # months per episode uniformly from [12,108] with minimum spacing 12,
+        # from the episode world RNG at reset - so equal seeds give equal
+        # schedules across arms and non-drawing policies still share the
+        # world. The shock-type cycle is unchanged. Default "fixed"
+        # reproduces the recorded {24, 48, 72} timetable byte-identically
+        # (no extra draws are consumed under "fixed").
+        self.shock_schedule = self.initial_config.get("shock_schedule", "fixed")
+        if self.shock_schedule not in {"fixed", "random"}:
+            raise ValueError(f"unknown shock_schedule: {self.shock_schedule!r}")
+        self.shock_months: list[int] = [24, 48, 72]
         # Seed-matched cross-policy comparison. Off by default because it changes
         # trajectories and would invalidate everything already in results/.
         #
@@ -212,6 +223,15 @@ class StartupEnv(gym.Env):
         self._rng = random.Random(seed) if self.deterministic_rng else None
         self.episode_seed = seed
         self.financing_events = []
+        if self.shock_schedule == "random" and self.scheduled_shocks:
+            stream = self._rng if self._rng is not None else random
+            while True:
+                months = sorted(stream.randint(12, 108) for _ in range(3))
+                if months[1] - months[0] >= 12 and months[2] - months[1] >= 12:
+                    break
+            self.shock_months = months
+        else:
+            self.shock_months = [24, 48, 72]
         
         self.state = EnvState(
             mrr=float(self.initial_config.get("initial_mrr", 50_000)),
@@ -270,7 +290,7 @@ class StartupEnv(gym.Env):
             self.state, rng=self._rng,
             scale_neutral=self.competitive_entry_scale_neutral)
 
-        if self.scheduled_shocks and self.state.months_elapsed in {24, 48, 72}:
+        if self.scheduled_shocks and self.state.months_elapsed in set(self.shock_months):
             shock_cycle = ["competitor_surge", "rate_hike", "recession"]
             shock_type = shock_cycle[(self.episode_seed or 0) % len(shock_cycle)]
             shock_label = business_logic.inject_hard_shock(self.state, shock_type)
