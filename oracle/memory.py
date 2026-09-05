@@ -5,7 +5,9 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 from env.schemas import EnvState
-from oracle.context import get_churn_tier, get_innovation_tier, get_mrr_tier
+from oracle.context import (get_churn_tier, get_innovation_tier, get_mrr_rel_tier,
+                            get_mrr_tier)
+from oracle.levels import DEFAULT_CHURN_BAND_MEDIAN, compute_level_assessment
 from oracle.schemas import (
     ExpectedOutcome,
     PendingMemoryEntry,
@@ -80,6 +82,62 @@ def format_memory_document(
     )
 
 
+def format_memory_document_normalized(
+    snapshot: StateSnapshot,
+    trend_context: TrendContext,
+    realized_outcome: ExpectedOutcome,
+) -> str:
+    """memory_query="normalized" (round 2): no absolute dollar figure anywhere.
+
+    At real scale, absolute MRR dominates embedding similarity with numbers
+    that never recur; the scale-free form keys retrieval to phase, churn
+    ratio, innovation, trends and runway band instead (BRIEF_V2_SPEC.md
+    change 3).
+    """
+    rel = snapshot.mrr_rel_start if snapshot.mrr_rel_start is not None else 1.0
+    phase_tier = get_mrr_rel_tier(rel)
+    churn_tier = get_churn_tier(snapshot.avg_churn)
+    innov_tier = get_innovation_tier(snapshot.innovation)
+    churn_ratio = snapshot.avg_churn / DEFAULT_CHURN_BAND_MEDIAN
+    mom = f"{snapshot.mrr_mom_pct:+.1f}%" if snapshot.mrr_mom_pct is not None else "n/a"
+    runway = snapshot.runway_band or "UNKNOWN"
+
+    return (
+        f"Phase: {phase_tier} | Churn: {churn_tier} | Innovation: {innov_tier}\n"
+        f"Episode month {snapshot.source_month}: MRR at {rel:.1f}x episode start, "
+        f"MoM {mom}, avg churn {snapshot.avg_churn:.3f} "
+        f"({churn_ratio:.2f}x benchmark), innovation {snapshot.innovation:.3f}, "
+        f"runway band {runway}. "
+        f"Trends were MRR {trend_context.mrr_trend.value}, "
+        f"innovation {trend_context.innovation_trend.value}, "
+        f"churn {trend_context.churn_trend.value}. "
+        f"After 6 months the realized outcome was {realized_outcome.value}."
+    )
+
+
+def build_memory_query_normalized(state: EnvState, trend_context: TrendContext,
+                                  episode_start_mrr: float | None) -> str:
+    levels = compute_level_assessment(state)
+    rel = state.mrr / max(episode_start_mrr or state.mrr, 1.0)
+    phase_tier = get_mrr_rel_tier(rel)
+    churn_tier = get_churn_tier(levels["avg_churn"])
+    innov_tier = get_innovation_tier(state.innovation_factor)
+    mom = (f"{trend_context.mrr_delta_pct:+.1f}%"
+           if trend_context.mrr_delta_pct is not None else "n/a")
+
+    return (
+        f"Phase: {phase_tier} | Churn: {churn_tier} | Innovation: {innov_tier} "
+        f"MRR at {rel:.1f}x episode start; MoM {mom}; "
+        f"avg churn {levels['avg_churn']:.3f} "
+        f"({levels['churn_ratio']:.2f}x benchmark); "
+        f"innovation {state.innovation_factor:.3f}; "
+        f"runway band {levels['runway_band']}; "
+        f"MRR trend {trend_context.mrr_trend.value}; "
+        f"innovation trend {trend_context.innovation_trend.value}; "
+        f"churn trend {trend_context.churn_trend.value}"
+    )
+
+
 def build_memory_query(state: EnvState, trend_context: TrendContext) -> str:
     avg_churn = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
     mrr_tier = get_mrr_tier(state.mrr)
@@ -102,10 +160,15 @@ class OracleMemoryStore:
         run_id: str,
         chroma_path: Optional[str] = None,
         collection: Any = None,
+        normalized: bool = False,
     ):
         self.run_id = run_id
         self.collection = collection
         self.enabled = collection is not None
+        # memory_query="normalized" (round 2): scale-free documents/queries in
+        # a SEPARATE collection ("_norm" suffix) so existing collections are
+        # untouched. Default False keeps recorded behaviour byte-identical.
+        self.normalized = normalized
 
         if self.collection is not None:
             return
@@ -127,7 +190,9 @@ class OracleMemoryStore:
                 path=chroma_path,
                 settings=chromadb.Settings(anonymized_telemetry=False),
             )
-            self.collection = client.get_or_create_collection(name=MEMORY_COLLECTION_NAME)
+            name = (MEMORY_COLLECTION_NAME + "_norm" if self.normalized
+                    else MEMORY_COLLECTION_NAME)
+            self.collection = client.get_or_create_collection(name=name)
             self.enabled = True
         except Exception as exc:
             print(f"[OracleMemoryStore] Chroma disabled: {exc}")
@@ -155,7 +220,9 @@ class OracleMemoryStore:
         if pending_entry.snapshot.episode_seed is not None:
             metadata["episode_seed"] = pending_entry.snapshot.episode_seed
 
-        document = format_memory_document(
+        formatter = (format_memory_document_normalized if self.normalized
+                     else format_memory_document)
+        document = formatter(
             pending_entry.snapshot,
             pending_entry.trend_context,
             realized_outcome,
@@ -178,11 +245,16 @@ class OracleMemoryStore:
         episode_global_start: int,
         mrr_trend: TrendDirection = TrendDirection.FLAT,
         limit: int = MEMORY_PROMPT_LIMIT,
+        episode_start_mrr: Optional[float] = None,
     ) -> List[RetrievedMemoryCandidate]:
         if not self.enabled or self.collection is None:
             return []
 
-        query_text = build_memory_query(state, trend_context)
+        if self.normalized:
+            query_text = build_memory_query_normalized(
+                state, trend_context, episode_start_mrr)
+        else:
+            query_text = build_memory_query(state, trend_context)
         try:
             query_result = self.collection.query(
                 query_texts=[query_text],

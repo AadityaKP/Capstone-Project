@@ -41,6 +41,8 @@ class Boardroom:
         scale_absolutes: float = 1.0,
         hiring_runway_guard_months: float | None = None,
         corridor: str = "legacy",
+        modifier_bound: str = "none",
+        runway_estimator: str = "legacy",
     ):
         # Spec G11. The absolute spend floors below are calibrated for a ~$50k
         # MRR company; applied unscaled to a $12k-MRR founder they demand more
@@ -58,6 +60,22 @@ class Boardroom:
         if corridor not in {"legacy", "scale_aware"}:
             raise ValueError(f"unknown corridor: {corridor!r}")
         self.corridor = corridor
+        # Round-2 brief v2 flags (BRIEF_V2_SPEC.md changes 4 and 5).
+        # modifier_bound="tier": the ActionModifier can move a proposal within
+        # the corridor but cannot lift it past the corridor's own top tier
+        # (marketing 40% MRR, R&D 30% MRR). Only meaningful with the
+        # scale-aware corridor; under legacy it is a no-op by construction.
+        # runway_estimator="burn": _estimate_runway_months via
+        # business_logic.monthly_burn - on this branch the legacy estimator
+        # ALREADY uses monthly_burn (the spec was drafted against an older
+        # snapshot), so the flag exists for the pre-registered record and is a
+        # verified no-op (tests/test_brief_v2.py asserts equivalence).
+        if modifier_bound not in {"none", "tier"}:
+            raise ValueError(f"unknown modifier_bound: {modifier_bound!r}")
+        if runway_estimator not in {"legacy", "burn"}:
+            raise ValueError(f"unknown runway_estimator: {runway_estimator!r}")
+        self.modifier_bound = modifier_bound
+        self.runway_estimator = runway_estimator
         # CFOAgent refuses to hire under 24 months of runway, but that guard
         # lives in the proposal and an LLM proposal generator can simply not
         # apply it. Set this (product surfaces do) to re-assert the rule on the
@@ -247,6 +265,15 @@ class Boardroom:
         modifier_applied = self.use_oracle and self.enable_action_modifier and self.last_brief is not None
         if modifier_applied:
             raw_action = self.action_modifier.modify(raw_action, self.last_brief)
+            if self.modifier_bound == "tier" and self.corridor == "scale_aware":
+                mkt_cap = max(pre_modifier_action["marketing"].get("spend", 0.0),
+                              0.40 * state.mrr)
+                rd_cap = max(pre_modifier_action["product"].get("r_and_d_spend", 0.0),
+                             0.30 * state.mrr)
+                raw_action["marketing"]["spend"] = min(
+                    raw_action["marketing"].get("spend", 0.0), mkt_cap)
+                raw_action["product"]["r_and_d_spend"] = min(
+                    raw_action["product"].get("r_and_d_spend", 0.0), rd_cap)
         post_modifier_action = deepcopy(raw_action)
 
         # Apply structural sanity checks
@@ -336,6 +363,8 @@ class Boardroom:
             "post_modifier_action": post_modifier_action,
             "final_action": final_action_snapshot,
             "action_modifier_applied": modifier_applied,
+            "brief_floor_applied": (list(getattr(self.oracle, "last_floor_applied", []))
+                                    if self.use_oracle else []),
             "marketing_spend_change_pct": self._pct_change(
                 pre_modifier_action.get("marketing", {}).get("spend", 0.0),
                 post_modifier_action.get("marketing", {}).get("spend", 0.0),

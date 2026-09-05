@@ -105,6 +105,11 @@ class StateSnapshot(BaseModel):
     mrr: float = 0.0
     avg_churn: float = 0.0
     innovation: float = 1.0
+    # brief v2 / memory_query="normalized" (round 2): scale-free fields so a
+    # memory document never needs the absolute MRR. None under legacy flags.
+    mrr_rel_start: Optional[float] = None
+    mrr_mom_pct: Optional[float] = None
+    runway_band: Optional[str] = None
 
 
 class TrendContext(BaseModel):

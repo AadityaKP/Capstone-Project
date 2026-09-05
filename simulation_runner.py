@@ -89,14 +89,19 @@ class BoardroomAgent:
         agents=None,
         proposal_generator=None,
         agent_scale=1.0,
+        corridor="legacy",
+        modifier_bound="none",
+        runway_estimator="legacy",
     ):
         # agent_scale mirrors the C1 backtest's boardroom construction: proposal
         # agents and Boardroom.scale_absolutes both take mrr/50k so dollar tiers
         # track the company's size. 1.0 leaves every existing run unchanged.
+        # corridor / modifier_bound / runway_estimator are the round-1/round-2
+        # flags, defaulting to legacy so every recorded run is untouched.
         proposal_agents = agents or [
-            CFOProposalAgent(scale=agent_scale),
-            CMOProposalAgent(scale=agent_scale),
-            CPOProposalAgent(scale=agent_scale),
+            CFOProposalAgent(scale=agent_scale, corridor=corridor),
+            CMOProposalAgent(scale=agent_scale, corridor=corridor),
+            CPOProposalAgent(scale=agent_scale, corridor=corridor),
         ]
         self.boardroom = Boardroom(proposal_agents,
             use_oracle=(oracle_mode != "none"),
@@ -108,6 +113,9 @@ class BoardroomAgent:
             enable_memory_retrieval=enable_memory_retrieval,
             proposal_generator=proposal_generator,
             scale_absolutes=agent_scale,
+            corridor=corridor,
+            modifier_bound=modifier_bound,
+            runway_estimator=runway_estimator,
         )
 
     def start_episode(self, episode_seed):
@@ -262,7 +270,10 @@ def _build_agent_for_policy(
     if policy == "random":
         return RandomBundleAgent()
     if policy == "boardroom":
-        return BoardroomAgent(oracle_mode="none", agent_scale=agent_scale)
+        # oracle_overrides pass through so robustness runs can set the corridor
+        # flags; empty by default, leaving recorded behaviour untouched.
+        return BoardroomAgent(oracle_mode="none", agent_scale=agent_scale,
+                              **oracle_overrides)
     if policy == "boardroom_oracle":
         return BoardroomAgent(oracle_mode="oracle_v1", oracle_frequency=oracle_frequency, **oracle_overrides)
     if policy == "oracle_v1_no_modifier":

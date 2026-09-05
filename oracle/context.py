@@ -12,8 +12,21 @@ def snapshot_state(
     state: EnvState,
     global_month: int,
     episode_seed: int | None = None,
+    episode_start_mrr: float | None = None,
+    prev_mrr: float | None = None,
 ) -> StateSnapshot:
+    """`episode_start_mrr`/`prev_mrr` are only passed under
+    memory_query="normalized" (round 2); legacy callers are unchanged."""
     avg_churn = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
+    mrr_rel_start = None
+    mrr_mom_pct = None
+    runway_band = None
+    if episode_start_mrr is not None:
+        from oracle.levels import compute_level_assessment
+        mrr_rel_start = state.mrr / max(episode_start_mrr, 1.0)
+        if prev_mrr is not None:
+            mrr_mom_pct = (state.mrr - prev_mrr) / max(abs(prev_mrr), 1.0) * 100.0
+        runway_band = compute_level_assessment(state)["runway_band"]
     return StateSnapshot(
         global_month=global_month,
         source_month=state.months_elapsed,
@@ -21,6 +34,9 @@ def snapshot_state(
         mrr=state.mrr,
         avg_churn=avg_churn,
         innovation=state.innovation_factor,
+        mrr_rel_start=mrr_rel_start,
+        mrr_mom_pct=mrr_mom_pct,
+        runway_band=runway_band,
     )
 
 
@@ -105,6 +121,21 @@ def get_mrr_tier(mrr: float) -> str:
     if mrr < 2_000_000:
         return "GROWTH"
     return "SCALE"
+
+
+def get_mrr_rel_tier(mrr_rel_start: float) -> str:
+    """Scale-free phase tier for memory_query="normalized" (round 2): tiers of
+    MRR relative to the episode start instead of absolute dollars, which
+    saturate at real scale (D1 audit)."""
+    if mrr_rel_start < 0.8:
+        return "PHASE_CONTRACTED"
+    if mrr_rel_start < 1.2:
+        return "PHASE_FLAT"
+    if mrr_rel_start < 2.0:
+        return "PHASE_GROWN"
+    if mrr_rel_start < 4.0:
+        return "PHASE_SCALED"
+    return "PHASE_HYPER"
 
 
 def get_churn_tier(avg_churn: float) -> str:

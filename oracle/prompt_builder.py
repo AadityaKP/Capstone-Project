@@ -1,6 +1,14 @@
 from env import business_logic
 from env.schemas import EnvState
+from oracle.levels import compute_level_assessment, level_block
 from oracle.schemas import GraphContext, RetrievedMemoryCandidate, TrendContext
+
+
+def _level_sections(state: EnvState, churn_benchmark_pct: float | None) -> list[str]:
+    # churn_benchmark_pct arrives as a percentage (e.g. 2.7) when a product
+    # surface set it; the level block works in fractions.
+    band_median = None if churn_benchmark_pct is None else churn_benchmark_pct / 100.0
+    return level_block(compute_level_assessment(state, band_median))
 
 
 def _runway_clause(state: EnvState) -> str:
@@ -33,6 +41,7 @@ def build_prompt(
     graph_context: GraphContext | None = None,
     include_burn_context: bool = False,
     churn_benchmark_pct: float | None = None,
+    brief_version: str = "v1",
 ) -> str:
     avg_churn = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3.0
     previous_mrr = (
@@ -108,6 +117,15 @@ def build_prompt(
         f"- Confidence: {state.consumer_confidence:.1f}",
         f"- Competitors: {state.competitors}",
         f"- Interest Rate: {state.interest_rate:.1f}%",
+        # brief v2 (round 2, BRIEF_V2_SPEC.md change 1): a deterministic level
+        # block so the model has something to judge levels AGAINST - A4 showed
+        # raw levels alone are ignored in favour of trends and the shock line.
+        # Off by default ("v1"): research prompts stay byte-identical.
+        *(
+            ["", *_level_sections(state, churn_benchmark_pct)]
+            if brief_version == "v2"
+            else []
+        ),
         "",
         "--- MARKET CONDITIONS ---",
         f"Competitors in market: {state.competitors}",
@@ -223,6 +241,12 @@ def build_prompt(
         sections.append(
             "Use the CAUSAL GRAPH CONTEXT to inform your risk_level assessment - "
             "historical recovery data is empirically derived, not estimated."
+        )
+
+    if brief_version == "v2":
+        sections.append(
+            "risk_level must be at least as severe as the Runway band and the "
+            "LTV:CAC band. macro_condition must agree with the computed Macro regime."
         )
 
     sections.extend(

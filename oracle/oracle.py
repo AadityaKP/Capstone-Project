@@ -47,11 +47,25 @@ class Oracle:
         enable_memory_retrieval: bool = True,
         include_burn_context: bool = False,
         churn_benchmark_pct: float | None = None,
+        brief_version: str = "v1",
+        brief_guardrails: bool = False,
+        memory_query: str = "absolute",
     ):
         self.mode = mode
         self.run_id = run_id or str(uuid.uuid4())
         self.llm = llm or LLMClient()
         self.enable_memory_retrieval = enable_memory_retrieval
+        # Round-2 brief v2 flags (BRIEF_V2_SPEC.md). Defaults reproduce the
+        # recorded behaviour byte-identically.
+        if brief_version not in {"v1", "v2"}:
+            raise ValueError(f"unknown brief_version: {brief_version!r}")
+        if memory_query not in {"absolute", "normalized"}:
+            raise ValueError(f"unknown memory_query: {memory_query!r}")
+        self.brief_version = brief_version
+        self.brief_guardrails = bool(brief_guardrails)
+        self.memory_query = memory_query
+        self.episode_start_mrr: float | None = None
+        self.last_floor_applied: list[str] = []
         # Product surfaces set this so the brief can reason about runway; the
         # research prompt stays unchanged by default (see prompt_builder).
         self.include_burn_context = include_burn_context
@@ -72,7 +86,10 @@ class Oracle:
             and self.mode in {"oracle_v3", "oracle_v4", "oracle_v4_causal"}
             and self.enable_memory_retrieval
         ):
-            self.memory_store = OracleMemoryStore(run_id=self.run_id)
+            self.memory_store = OracleMemoryStore(
+                run_id=self.run_id,
+                normalized=(self.memory_query == "normalized"),
+            )
 
         self.graph_store = graph_store
         if self.graph_store is None and self.mode == "oracle_v4_causal":
@@ -91,16 +108,29 @@ class Oracle:
         self.latest_snapshot = None
         self.latest_trend_context = TrendContext()
         self.episode_global_start = self.global_month
+        self.episode_start_mrr = None
+        self.last_floor_applied = []
 
     def observe_state(self, state: EnvState, episode_seed: int | None = None) -> None:
         if episode_seed is not None:
             self.current_episode_seed = episode_seed
 
-        snapshot = snapshot_state(
-            state,
-            global_month=self.global_month,
-            episode_seed=self.current_episode_seed,
-        )
+        if self.episode_start_mrr is None:
+            self.episode_start_mrr = state.mrr
+        if self.memory_query == "normalized":
+            snapshot = snapshot_state(
+                state,
+                global_month=self.global_month,
+                episode_seed=self.current_episode_seed,
+                episode_start_mrr=self.episode_start_mrr,
+                prev_mrr=(self.state_history[-1].mrr if self.state_history else None),
+            )
+        else:
+            snapshot = snapshot_state(
+                state,
+                global_month=self.global_month,
+                episode_seed=self.current_episode_seed,
+            )
         self.state_history.append(snapshot)
         self.latest_snapshot = snapshot
         self.latest_trend_context = compute_trend_context(list(self.state_history))
@@ -157,6 +187,7 @@ class Oracle:
                 current_global_month=current_global_month,
                 episode_global_start=self.episode_global_start,
                 mrr_trend=trend_context.mrr_trend,
+                episode_start_mrr=self.episode_start_mrr,
             )
 
         graph_context = GraphContext()
@@ -259,6 +290,7 @@ class Oracle:
             graph_context=graph_context,
             include_burn_context=self.include_burn_context,
             churn_benchmark_pct=self.churn_benchmark_pct,
+            brief_version=self.brief_version,
         )
 
         if hasattr(self.llm, "complete"):
@@ -274,7 +306,20 @@ class Oracle:
         if not raw_output:
             print("[WARNING] LLMClient returned empty output. Using fallback.")
 
-        return parse_llm_response(str(raw_output))
+        brief = parse_llm_response(str(raw_output))
+
+        # brief v2b guardrails (round 2): deterministic severity floors after
+        # parsing; the LLM may be more severe, never less. Overrides are
+        # recorded for the decision trace.
+        self.last_floor_applied = []
+        if self.brief_guardrails:
+            from oracle.levels import apply_brief_floors, compute_level_assessment
+            band_median = (None if self.churn_benchmark_pct is None
+                           else self.churn_benchmark_pct / 100.0)
+            levels = compute_level_assessment(state, band_median)
+            brief, self.last_floor_applied = apply_brief_floors(brief, levels)
+
+        return brief
 
     def build_cache_key(
         self,

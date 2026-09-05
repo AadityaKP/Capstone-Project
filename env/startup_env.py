@@ -79,6 +79,34 @@ class StartupEnv(gym.Env):
             "financing_raise_multiple", business_logic.FINANCING_RAISE_MULTIPLE))
         self.financing_monthly_prob = float(self.initial_config.get(
             "financing_monthly_prob", business_logic.FINANCING_MONTHLY_PROB))
+        # Round 2 (PROTOCOL_round2.md): financing_model="opportunistic" replaces
+        # the rescue trigger with a runway-binned hazard, active from month 1,
+        # parameters measured on CAL companies only and supplied via
+        # financing_hazard = {"bins": [0,12,24,48], "h": [...], "K": [...]}
+        # (validation/calibration/financing_hazard_r2.json). Same single
+        # unconditional draw per step as the rescue model, so matched seeds
+        # stay matched across arms AND across the two models. Default "rescue"
+        # reproduces round-1 behaviour byte-identically.
+        self.financing_model = self.initial_config.get("financing_model", "rescue")
+        if self.financing_model not in {"rescue", "opportunistic"}:
+            raise ValueError(f"unknown financing_model: {self.financing_model!r}")
+        hazard = self.initial_config.get("financing_hazard")
+        if self.financing_model == "opportunistic":
+            if not hazard:
+                raise ValueError(
+                    "financing_model='opportunistic' requires financing_hazard "
+                    "(bins/h/K from financing_hazard_r2.json)")
+            self.financing_hazard = {
+                "bins": [float(b) for b in hazard["bins"]],
+                "h": [float(x) for x in hazard["h"]],
+                "K": [float(x) for x in hazard["K"]],
+            }
+            if not (len(self.financing_hazard["bins"])
+                    == len(self.financing_hazard["h"])
+                    == len(self.financing_hazard["K"])):
+                raise ValueError("financing_hazard bins/h/K must align")
+        else:
+            self.financing_hazard = None
         self.financing_events: list[dict] = []
         # Re-estimate CAC only in a month that actually acquired a customer.
         # Defaults to scale_aware_marketing because that curve is what closes
@@ -344,9 +372,23 @@ class StartupEnv(gym.Env):
                 - self.state.mrr * margin
             if net_burn > 0:
                 runway = self.state.cash / net_burn
-                if (runway < self.financing_runway_threshold_months
-                        and roll < self.financing_monthly_prob):
-                    financing_raise = self.financing_raise_multiple * net_burn
+                if self.financing_model == "opportunistic":
+                    # runway-binned hazard (round 2): raises happen at every
+                    # runway level, as the panel shows; h/K per bin.
+                    bins = self.financing_hazard["bins"]
+                    idx = 0
+                    for i, lo in enumerate(bins):
+                        if runway >= lo:
+                            idx = i
+                    h = self.financing_hazard["h"][idx]
+                    k = self.financing_hazard["K"][idx]
+                    if roll < h:
+                        financing_raise = k * net_burn
+                else:
+                    if (runway < self.financing_runway_threshold_months
+                            and roll < self.financing_monthly_prob):
+                        financing_raise = self.financing_raise_multiple * net_burn
+                if financing_raise > 0:
                     self.state.cash += financing_raise
                     self.financing_events.append({
                         "month": self.state.months_elapsed,
