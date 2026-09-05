@@ -163,13 +163,26 @@ HOLDOUT backtest (`real_company_backtest_v2.csv`, 4 arms × 30 seeds × 12mo ×
 ## 6. Oracle at real scale (first-ever numbers; exploratory)
 
 oracle_v3 (llama3.1:8b via Ollama, temp 0), 8 HOLDOUT companies spanning the
-revenue range × 10 matched seeds, v2 flags, research-default prompt, memory
-accruing across seeds within a company (mirrors the recorded research
-design). Results: `validation/results/oracle_v3_real_scale_v2.csv`; summary
-appended below when the run completes. Caveats: oracle memory tiers saturate
-at real scale (§3); the brief channel is level-blind (A4) — briefs at these
-states read LOW risk / ACCELERATING and the ActionModifier scales marketing
-up, so the oracle arm spends more than the corridor-bounded boardroom.
+revenue range (APPF BAND KLTR NET PCTY QLYS RNG WK) × 10 matched seeds, v2
+flags, research-default prompt, memory accruing across seeds within a company
+(mirrors the recorded research design). 80/80 episodes completed, 559 LLM
+calls. Results: `oracle_v3_real_scale_v2.csv` + `_summary.csv` (paired
+against a matched-seed no-oracle boardroom rerun; identical worlds at equal
+seed under deterministic_rng, verified reproducible to 4 decimals).
+
+- **In-model ordering preserved at real scale:** oracle − boardroom paired 4q
+  growth diff median **+11.0pp**, positive in **84%** of 80 pairs, Wilcoxon
+  p = 2.1e-08; 7/8 companies (BAND the exception, −1pp). Both arms 100%
+  survival. Consistent with the research-scale A3 finding.
+- **But the oracle is further from reality:** median |growth − actual| across
+  the 8 companies is **37.7pp for the oracle vs 17.1pp for the boardroom**
+  (hold: 8.1pp on full HOLDOUT). Mechanism: at these states the level-blind
+  brief channel (A4) reads LOW risk / ACCELERATING, the ActionModifier scales
+  marketing ×~1.5 past the corridor tiers, and the fitted physics still
+  rewards marginal spend — so "oracle value" at real scale is the model
+  rewarding aggression, not retrodictive skill. The claim "oracle > boardroom"
+  remains strictly simulator-internal; oracle memory tiers also saturate at
+  real scale (§3).
 
 ## 7. Runtime
 
