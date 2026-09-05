@@ -17,7 +17,20 @@ the memory arm's MRR is 10.4% higher.
 (paired MRR / cash / Rule-of-40, months 48-72, decision month marked).
 
 ## Decision-level evidence (from the fidelity-checked replay)
-_(pending: run case_study_replay.py to fill quotes)_
+
+### oracle_v3 at month 60 (replay fidelity: rel diff 1.43e-03)
+
+- Brief: risk=LOW, growth=ACCELERATING, innovation=LOW, expected=GROWTH, confidence=0.85 (source: llm)
+- Marketing: 20,000 -> 32,760; R&D: 20,999 -> 17,860
+- Retrieved (weight 0.884): “Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY Episode month 33: MRR 1,089,802, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.”
+- Retrieved (weight 0.881): “Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY Episode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.”
+- Retrieved (weight 0.880): “Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY Episode month 48: MRR 1,558,560, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.”
+
+### oracle_v3_no_memory at month 60 (replay fidelity: rel diff 0.00e+00)
+
+- Brief: risk=MEDIUM, growth=ACCELERATING, innovation=MEDIUM, expected=GROWTH, confidence=0.85 (source: llm)
+- Marketing: 20,000 -> 22,100; R&D: 20,999 -> 23,099
+
 
 **Caveat.** One episode, selected for a positive outcome by a stated rule;
 this illustrates the mechanism (retrieval -> brief -> ActionModifier ->

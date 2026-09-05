@@ -1,0 +1,3744 @@
+{
+  "oracle_v3": {
+    "fidelity_rel_diff": 0.0014316110738567215,
+    "recorded_final_mrr": 1502509.8270680632,
+    "replay_final_mrr": 1504660.8367750724,
+    "months": [
+      {
+        "month": 54,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Continued MRR growth",
+            "Healthy innovation trend"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth momentum"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 29: MRR 902,964, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 29,
+              "stored_global_month": 635,
+              "episode_seed": 5,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH"
+            },
+            "distance": 0.19560396671295166,
+            "similarity_score": 0.8363973588589527,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8863973588589528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 920,276, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 30,
+              "stored_global_month": 636,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.20129859447479248,
+            "similarity_score": 0.8324325064553995,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8824325064553995
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 27: MRR 890,148, avg churn 0.056, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "stored_global_month": 1593,
+              "episode_seed": 13,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "source_month": 27
+            },
+            "distance": 0.20370244979858398,
+            "similarity_score": 0.8307700961872516,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8807700961872517
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 55,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Continued MRR growth",
+            "Healthy innovation trend"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth momentum"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 29: MRR 902,964, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 29,
+              "stored_global_month": 635,
+              "episode_seed": 5,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH"
+            },
+            "distance": 0.19560396671295166,
+            "similarity_score": 0.8363973588589527,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8863973588589528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 920,276, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 30,
+              "stored_global_month": 636,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.20129859447479248,
+            "similarity_score": 0.8324325064553995,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8824325064553995
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 27: MRR 890,148, avg churn 0.056, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "stored_global_month": 1593,
+              "episode_seed": 13,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "source_month": 27
+            },
+            "distance": 0.20370244979858398,
+            "similarity_score": 0.8307700961872516,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8807700961872517
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 56,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Continued MRR growth",
+            "Healthy innovation trend"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth momentum"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 29: MRR 902,964, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 29,
+              "stored_global_month": 635,
+              "episode_seed": 5,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH"
+            },
+            "distance": 0.19560396671295166,
+            "similarity_score": 0.8363973588589527,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8863973588589528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 920,276, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 30,
+              "stored_global_month": 636,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.20129859447479248,
+            "similarity_score": 0.8324325064553995,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8824325064553995
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 27: MRR 890,148, avg churn 0.056, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "stored_global_month": 1593,
+              "episode_seed": 13,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "source_month": 27
+            },
+            "distance": 0.20370244979858398,
+            "similarity_score": 0.8307700961872516,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8807700961872517
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 2000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 3276.0000000000005,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 21489.565139672057,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 57,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Continued MRR growth",
+            "Healthy innovation trend"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth momentum"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 29: MRR 902,964, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 29,
+              "stored_global_month": 635,
+              "episode_seed": 5,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH"
+            },
+            "distance": 0.19560396671295166,
+            "similarity_score": 0.8363973588589527,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8863973588589528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 920,276, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 30,
+              "stored_global_month": 636,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.20129859447479248,
+            "similarity_score": 0.8324325064553995,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8824325064553995
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 27: MRR 890,148, avg churn 0.056, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "stored_global_month": 1593,
+              "episode_seed": 13,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "source_month": 27
+            },
+            "distance": 0.20370244979858398,
+            "similarity_score": 0.8307700961872516,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8807700961872517
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 16380.000000000002,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 21864.021081156145,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 58,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Continued MRR growth",
+            "Healthy innovation trend"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth momentum"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 29: MRR 902,964, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 29,
+              "stored_global_month": 635,
+              "episode_seed": 5,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH"
+            },
+            "distance": 0.19560396671295166,
+            "similarity_score": 0.8363973588589527,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8863973588589528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 920,276, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 30,
+              "stored_global_month": 636,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.20129859447479248,
+            "similarity_score": 0.8324325064553995,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8824325064553995
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 27: MRR 890,148, avg churn 0.056, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "stored_global_month": 1593,
+              "episode_seed": 13,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "source_month": 27
+            },
+            "distance": 0.20370244979858398,
+            "similarity_score": 0.8307700961872516,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8807700961872517
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 59,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Continued MRR growth",
+            "Healthy innovation trend"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth momentum"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 29: MRR 902,964, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 29,
+              "stored_global_month": 635,
+              "episode_seed": 5,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH"
+            },
+            "distance": 0.19560396671295166,
+            "similarity_score": 0.8363973588589527,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8863973588589528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 920,276, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 30,
+              "stored_global_month": 636,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.20129859447479248,
+            "similarity_score": 0.8324325064553995,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8824325064553995
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 27: MRR 890,148, avg churn 0.056, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "stored_global_month": 1593,
+              "episode_seed": 13,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "source_month": 27
+            },
+            "distance": 0.20370244979858398,
+            "similarity_score": 0.8307700961872516,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8807700961872517
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 2000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 3276.0000000000005,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 22668.422373297406,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 60,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing market demand",
+            "Increasing MRR"
+          ],
+          "recommended_focus": [
+            "Invest in churn reduction strategies",
+            "Explore new market segments"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "llm",
+        "refresh_reason": "cadence",
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 33: MRR 1,089,802, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "source_month": 33,
+              "episode_seed": 14,
+              "stored_global_month": 1719,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.19833087921142578,
+            "similarity_score": 0.8344940594855241,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8844940594855242
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.2031877189874649,
+            "similarity_score": 0.8311255045401758,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8811255045401758
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 48: MRR 1,558,560, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 1494,
+              "source_month": 48,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12
+            },
+            "distance": 0.20414914190769196,
+            "similarity_score": 0.8304619130614789,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8804619130614789
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20999.039999999997
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 17859.68352
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 61,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing market demand",
+            "Increasing MRR"
+          ],
+          "recommended_focus": [
+            "Invest in churn reduction strategies",
+            "Explore new market segments"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 33: MRR 1,089,802, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "source_month": 33,
+              "episode_seed": 14,
+              "stored_global_month": 1719,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.19833087921142578,
+            "similarity_score": 0.8344940594855241,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8844940594855242
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.2031877189874649,
+            "similarity_score": 0.8311255045401758,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8811255045401758
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 48: MRR 1,558,560, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 1494,
+              "source_month": 48,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12
+            },
+            "distance": 0.20414914190769196,
+            "similarity_score": 0.8304619130614789,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8804619130614789
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 21838.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 16380.000000000002,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 18573.940223999998
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 23381.472206835937,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 62,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing market demand",
+            "Increasing MRR"
+          ],
+          "recommended_focus": [
+            "Invest in churn reduction strategies",
+            "Explore new market segments"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 33: MRR 1,089,802, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "source_month": 33,
+              "episode_seed": 14,
+              "stored_global_month": 1719,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.19833087921142578,
+            "similarity_score": 0.8344940594855241,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8844940594855242
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.2031877189874649,
+            "similarity_score": 0.8311255045401758,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8811255045401758
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 48: MRR 1,558,560, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 1494,
+              "source_month": 48,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12
+            },
+            "distance": 0.20414914190769196,
+            "similarity_score": 0.8304619130614789,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8804619130614789
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 22338.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 18999.190223999998
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 63,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing market demand",
+            "Increasing MRR"
+          ],
+          "recommended_focus": [
+            "Invest in churn reduction strategies",
+            "Explore new market segments"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 33: MRR 1,089,802, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "source_month": 33,
+              "episode_seed": 14,
+              "stored_global_month": 1719,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.19833087921142578,
+            "similarity_score": 0.8344940594855241,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8844940594855242
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.2031877189874649,
+            "similarity_score": 0.8311255045401758,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8811255045401758
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 48: MRR 1,558,560, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 1494,
+              "source_month": 48,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12
+            },
+            "distance": 0.20414914190769196,
+            "similarity_score": 0.8304619130614789,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8804619130614789
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 22838.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 16380.000000000002,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 19424.440223999998
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 23654.553101302085,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 64,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing market demand",
+            "Increasing MRR"
+          ],
+          "recommended_focus": [
+            "Invest in churn reduction strategies",
+            "Explore new market segments"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 33: MRR 1,089,802, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "source_month": 33,
+              "episode_seed": 14,
+              "stored_global_month": 1719,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.19833087921142578,
+            "similarity_score": 0.8344940594855241,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8844940594855242
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.2031877189874649,
+            "similarity_score": 0.8311255045401758,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8811255045401758
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 48: MRR 1,558,560, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 1494,
+              "source_month": 48,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12
+            },
+            "distance": 0.20414914190769196,
+            "similarity_score": 0.8304619130614789,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8804619130614789
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 23338.848
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 19849.690224
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 65,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing market demand",
+            "Increasing MRR"
+          ],
+          "recommended_focus": [
+            "Invest in churn reduction strategies",
+            "Explore new market segments"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 33: MRR 1,089,802, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "realized_outcome": "GROWTH",
+              "source_month": 33,
+              "episode_seed": 14,
+              "stored_global_month": 1719,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.19833087921142578,
+            "similarity_score": 0.8344940594855241,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8844940594855242
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.2031877189874649,
+            "similarity_score": 0.8311255045401758,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8811255045401758
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 48: MRR 1,558,560, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn FLAT. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 1494,
+              "source_month": 48,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12
+            },
+            "distance": 0.20414914190769196,
+            "similarity_score": 0.8304619130614789,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8804619130614789
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 23838.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 16380.000000000002,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20274.940223999998
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 24747.427068757486,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20274.940223999998
+          }
+        }
+      },
+      {
+        "month": 66,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Depression months"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Healthy innovation"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "llm",
+        "refresh_reason": "event",
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 701,785, avg churn 0.065, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 6,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "stored_global_month": 752
+            },
+            "distance": 0.13833105564117432,
+            "similarity_score": 0.8784790637524528,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9284790637524528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "realized_outcome": "GROWTH",
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.1394471824169159,
+            "similarity_score": 0.8776185640117778,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9276185640117779
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 830,815, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 632,
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.14161734282970428,
+            "similarity_score": 0.8759502527539743,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9259502527539744
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 25346.617599999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 16380.000000000002,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 21557.298268799997
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 25623.33114472088,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 21557.298268799997
+          }
+        }
+      },
+      {
+        "month": 67,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Depression months"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Healthy innovation"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 701,785, avg churn 0.065, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 6,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "stored_global_month": 752
+            },
+            "distance": 0.13833105564117432,
+            "similarity_score": 0.8784790637524528,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9284790637524528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "realized_outcome": "GROWTH",
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.1394471824169159,
+            "similarity_score": 0.8776185640117778,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9276185640117779
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 830,815, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 632,
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.14161734282970428,
+            "similarity_score": 0.8759502527539743,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9259502527539744
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 2000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 27698.748670176145
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 3276.0000000000005,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 23557.785743984812
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 26144.538498538728,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 23557.785743984812
+          }
+        }
+      },
+      {
+        "month": 68,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Depression months"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Healthy innovation"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 701,785, avg churn 0.065, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 6,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "stored_global_month": 752
+            },
+            "distance": 0.13833105564117432,
+            "similarity_score": 0.8784790637524528,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9284790637524528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "realized_outcome": "GROWTH",
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.1394471824169159,
+            "similarity_score": 0.8776185640117778,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9276185640117779
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 830,815, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 632,
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.14161734282970428,
+            "similarity_score": 0.8759502527539743,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9259502527539744
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 28855.762216064064
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 16380.000000000002,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 24541.82576476249
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 26870.458024870237,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 24541.82576476249
+          }
+        }
+      },
+      {
+        "month": 69,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Depression months"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Healthy innovation"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 701,785, avg churn 0.065, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 6,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "stored_global_month": 752
+            },
+            "distance": 0.13833105564117432,
+            "similarity_score": 0.8784790637524528,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9284790637524528
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 30: MRR 752,192, avg churn 0.074, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 756,
+              "realized_outcome": "GROWTH",
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "episode_seed": 6,
+              "source_month": 30
+            },
+            "distance": 0.1394471824169159,
+            "similarity_score": 0.8776185640117778,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9276185640117779
+          },
+          {
+            "document": "Phase: GROWTH | Churn: HIGH | Innovation: HEALTHY\nEpisode month 26: MRR 830,815, avg churn 0.054, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "stored_global_month": 632,
+              "episode_seed": 5,
+              "realized_outcome": "GROWTH",
+              "source_month": 26,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.14161734282970428,
+            "similarity_score": 0.8759502527539743,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9259502527539744
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 2000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 29973.337640585378
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 3276.0000000000005,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 25492.323663317864
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 27498.89285607691,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 26577.792135284595
+          }
+        }
+      },
+      {
+        "month": 70,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Decreasing innovation trend"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "Potential for growth in a growing market"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to drive growth"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "llm",
+        "refresh_reason": "cadence",
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 49: MRR 1,587,752, avg churn 0.101, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 12,
+              "source_month": 49,
+              "stored_global_month": 1495,
+              "realized_outcome": "GROWTH",
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.13041952252388,
+            "similarity_score": 0.8846273264701823,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9346273264701823
+          },
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 50: MRR 1,602,570, avg churn 0.101, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 50,
+              "stored_global_month": 1496,
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.1400529444217682,
+            "similarity_score": 0.8771522453347088,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9271522453347089
+          },
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 55: MRR 1,091,372, avg churn 0.136, innovation 0.830. Trends were MRR FLAT, innovation DECREASING, churn INCREASING. After 6 months the realized outcome was STAGNATION.",
+            "metadata": {
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "stored_global_month": 781,
+              "episode_seed": 6,
+              "realized_outcome": "STAGNATION",
+              "source_month": 55
+            },
+            "distance": 0.13426868617534637,
+            "similarity_score": 0.8816253258052212,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8816253258052212
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 31052.587827165942
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 11050.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 34157.84660988254
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 28371.78634944618,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 34157.84660988254
+          }
+        }
+      },
+      {
+        "month": 71,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Decreasing innovation trend"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "Potential for growth in a growing market"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to drive growth"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 49: MRR 1,587,752, avg churn 0.101, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 12,
+              "source_month": 49,
+              "stored_global_month": 1495,
+              "realized_outcome": "GROWTH",
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.13041952252388,
+            "similarity_score": 0.8846273264701823,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9346273264701823
+          },
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 50: MRR 1,602,570, avg churn 0.101, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 50,
+              "stored_global_month": 1496,
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.1400529444217682,
+            "similarity_score": 0.8771522453347088,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9271522453347089
+          },
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 55: MRR 1,091,372, avg churn 0.136, innovation 0.830. Trends were MRR FLAT, innovation DECREASING, churn INCREASING. After 6 months the realized outcome was STAGNATION.",
+            "metadata": {
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "stored_global_month": 781,
+              "episode_seed": 6,
+              "realized_outcome": "STAGNATION",
+              "source_month": 55
+            },
+            "distance": 0.13426868617534637,
+            "similarity_score": 0.8816253258052212,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8816253258052212
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 32090.112596429903
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 11050.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 35299.123856072896
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 28329.043361630116,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 35299.123856072896
+          }
+        }
+      },
+      {
+        "month": 72,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "Decreasing innovation trend"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "Potential for growth in a growing market"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to drive growth"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 49: MRR 1,587,752, avg churn 0.101, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "episode_seed": 12,
+              "source_month": 49,
+              "stored_global_month": 1495,
+              "realized_outcome": "GROWTH",
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.13041952252388,
+            "similarity_score": 0.8846273264701823,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9346273264701823
+          },
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 50: MRR 1,602,570, avg churn 0.101, innovation 1.000. Trends were MRR INCREASING, innovation FLAT, churn INCREASING. After 6 months the realized outcome was GROWTH.",
+            "metadata": {
+              "source_month": 50,
+              "stored_global_month": 1496,
+              "realized_outcome": "GROWTH",
+              "episode_seed": 12,
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b"
+            },
+            "distance": 0.1400529444217682,
+            "similarity_score": 0.8771522453347088,
+            "recency_factor": 1.0,
+            "memory_weight": 0.9271522453347089
+          },
+          {
+            "document": "Phase: GROWTH | Churn: CRITICAL | Innovation: HEALTHY\nEpisode month 55: MRR 1,091,372, avg churn 0.136, innovation 0.830. Trends were MRR FLAT, innovation DECREASING, churn INCREASING. After 6 months the realized outcome was STAGNATION.",
+            "metadata": {
+              "run_id": "0755ff97-9656-4ab2-8b76-113c7e33d94b",
+              "stored_global_month": 781,
+              "episode_seed": 6,
+              "realized_outcome": "STAGNATION",
+              "source_month": 55
+            },
+            "distance": 0.13426868617534637,
+            "similarity_score": 0.8816253258052212,
+            "recency_factor": 1.0,
+            "memory_weight": 0.8816253258052212
+          }
+        ],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 33093.11581050813
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 11050.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 36402.427391558944
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 28302.8614280472,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 36402.427391558944
+          }
+        }
+      }
+    ]
+  },
+  "oracle_v3_no_memory": {
+    "fidelity_rel_diff": 0.0,
+    "recorded_final_mrr": 1274765.407987768,
+    "replay_final_mrr": 1274765.407987768,
+    "months": [
+      {
+        "month": 54,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High LTV"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.8,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 55,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High LTV"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.8,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 56,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High LTV"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.8,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 2000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 3276.0000000000005,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 20429.055696804087,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 57,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High LTV"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.8,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 16380.000000000002,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 20786.804029358686,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 58,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High LTV"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.8,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 32760.000000000004,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 59,
+        "brief": {
+          "risk_level": "LOW",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "LOW",
+          "innovation_urgency": "LOW",
+          "macro_condition": "EXPANSION",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High LTV"
+          ],
+          "recommended_focus": [
+            "Monitor and address increasing churn rate",
+            "Invest in innovation to maintain growth"
+          ],
+          "confidence": 0.8,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 2000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20299.2
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 3276.0000000000005,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 17264.4696
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 21561.248778709763,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 20000.0
+          }
+        }
+      },
+      {
+        "month": 60,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Increasing innovation trend",
+            "Potential for expansion into new markets"
+          ],
+          "recommended_focus": [
+            "Invest in customer retention strategies",
+            "Improve sales efficiency to reduce CAC",
+            "Explore new revenue streams"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "llm",
+        "refresh_reason": "cadence",
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 20999.039999999997
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 22100.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 23098.944
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 22100.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 23098.944
+          }
+        }
+      },
+      {
+        "month": 61,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Increasing innovation trend",
+            "Potential for expansion into new markets"
+          ],
+          "recommended_focus": [
+            "Invest in customer retention strategies",
+            "Improve sales efficiency to reduce CAC",
+            "Explore new revenue streams"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 21838.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 22100.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 24022.7328
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 22259.58308734452,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 24022.7328
+          }
+        }
+      },
+      {
+        "month": 62,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Increasing innovation trend",
+            "Potential for expansion into new markets"
+          ],
+          "recommended_focus": [
+            "Invest in customer retention strategies",
+            "Improve sales efficiency to reduce CAC",
+            "Explore new revenue streams"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 22338.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 22100.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 24572.7328
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 22470.53730790563,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 24572.7328
+          }
+        }
+      },
+      {
+        "month": 63,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Increasing innovation trend",
+            "Potential for expansion into new markets"
+          ],
+          "recommended_focus": [
+            "Invest in customer retention strategies",
+            "Improve sales efficiency to reduce CAC",
+            "Explore new revenue streams"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 22838.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 11050.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 25122.7328
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 22592.42845532639,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 25122.7328
+          }
+        }
+      },
+      {
+        "month": 64,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Increasing innovation trend",
+            "Potential for expansion into new markets"
+          ],
+          "recommended_focus": [
+            "Invest in customer retention strategies",
+            "Improve sales efficiency to reduce CAC",
+            "Explore new revenue streams"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 20000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 23338.848
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 22100.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 25672.732800000005
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 23572.516490725695,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 25672.732800000005
+          }
+        }
+      },
+      {
+        "month": 65,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "ACCELERATING",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "GROWTH",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Dependence on a few large customers"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "Increasing innovation trend",
+            "Potential for expansion into new markets"
+          ],
+          "recommended_focus": [
+            "Invest in customer retention strategies",
+            "Improve sales efficiency to reduce CAC",
+            "Explore new revenue streams"
+          ],
+          "confidence": 0.85,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 23838.847999999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 11050.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 26222.7328
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 23733.72189116599,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 26222.7328
+          }
+        }
+      },
+      {
+        "month": 66,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "STABLE",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "STAGNATION",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Low innovation trend"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "High cash reserves"
+          ],
+          "recommended_focus": [
+            "Improve customer retention",
+            "Optimize pricing strategy",
+            "Invest in innovation"
+          ],
+          "confidence": 0.7,
+          "parse_ok": true
+        },
+        "brief_source": "llm",
+        "refresh_reason": "event",
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 25346.617599999998
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 8500.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 27881.27936
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 23788.853750339644,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 27881.27936
+          }
+        }
+      },
+      {
+        "month": 67,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "STABLE",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "STAGNATION",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Low innovation trend"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "High cash reserves"
+          ],
+          "recommended_focus": [
+            "Improve customer retention",
+            "Optimize pricing strategy",
+            "Invest in innovation"
+          ],
+          "confidence": 0.7,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 2000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 27697.314628831067
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 1700.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 30467.046091714175
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 23691.417976980767,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 30467.046091714175
+          }
+        }
+      },
+      {
+        "month": 68,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "STABLE",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "STAGNATION",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Low innovation trend"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "High cash reserves"
+          ],
+          "recommended_focus": [
+            "Improve customer retention",
+            "Optimize pricing strategy",
+            "Invest in innovation"
+          ],
+          "confidence": 0.7,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 28851.48236414113
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 8500.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 31736.630600555247
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 24392.22909835931,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 31736.630600555247
+          }
+        }
+      },
+      {
+        "month": 69,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "STABLE",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "STAGNATION",
+          "key_risks": [
+            "Increasing churn rate",
+            "High CAC compared to LTV",
+            "Low innovation trend"
+          ],
+          "key_opportunities": [
+            "Growing MRR",
+            "High cash reserves"
+          ],
+          "recommended_focus": [
+            "Improve customer retention",
+            "Optimize pricing strategy",
+            "Invest in innovation"
+          ],
+          "confidence": 0.7,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 29964.950882666224
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 8500.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 32961.44597093285
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 25006.27430366162,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 0,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.05
+          },
+          "product": {
+            "r_and_d_spend": 32961.44597093285
+          }
+        }
+      },
+      {
+        "month": 70,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "STABLE",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "STAGNATION",
+          "key_risks": [
+            "Increasing churn rate",
+            "Decreasing innovation trend",
+            "High unemployment rate",
+            "Low consumer confidence"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High cash reserves"
+          ],
+          "recommended_focus": [
+            "Innovation and R&D",
+            "Customer retention and churn reduction",
+            "Diversification and risk management"
+          ],
+          "confidence": 0.7,
+          "parse_ok": true
+        },
+        "brief_source": "llm",
+        "refresh_reason": "cadence",
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 31039.826782126915
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 8500.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 34143.80946033961
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 25842.289251218983,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 34143.80946033961
+          }
+        }
+      },
+      {
+        "month": 71,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "STABLE",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "STAGNATION",
+          "key_risks": [
+            "Increasing churn rate",
+            "Decreasing innovation trend",
+            "High unemployment rate",
+            "Low consumer confidence"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High cash reserves"
+          ],
+          "recommended_focus": [
+            "Innovation and R&D",
+            "Customer retention and churn reduction",
+            "Diversification and risk management"
+          ],
+          "confidence": 0.7,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 32078.15609452008
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 8500.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 35285.97170397209
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 25812.28221973881,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 35285.97170397209
+          }
+        }
+      },
+      {
+        "month": 72,
+        "brief": {
+          "risk_level": "MEDIUM",
+          "growth_outlook": "STABLE",
+          "efficiency_pressure": "MEDIUM",
+          "innovation_urgency": "MEDIUM",
+          "macro_condition": "NEUTRAL",
+          "expected_outcome": "STAGNATION",
+          "key_risks": [
+            "Increasing churn rate",
+            "Decreasing innovation trend",
+            "High unemployment rate",
+            "Low consumer confidence"
+          ],
+          "key_opportunities": [
+            "Increasing MRR",
+            "High cash reserves"
+          ],
+          "recommended_focus": [
+            "Innovation and R&D",
+            "Customer retention and churn reduction",
+            "Diversification and risk management"
+          ],
+          "confidence": 0.7,
+          "parse_ok": true
+        },
+        "brief_source": "reuse",
+        "refresh_reason": null,
+        "retrieved_memories": [],
+        "pre_modifier_action": {
+          "marketing": {
+            "spend": 10000.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 33081.918344624086
+          }
+        },
+        "post_modifier_action": {
+          "marketing": {
+            "spend": 8500.0,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 36390.1101790865
+          }
+        },
+        "final_action": {
+          "marketing": {
+            "spend": 25798.815940809312,
+            "channel": "ppc"
+          },
+          "hiring": {
+            "hires": 1,
+            "cost_per_employee": 10000.0
+          },
+          "pricing": {
+            "price_change_pct": 0.0
+          },
+          "product": {
+            "r_and_d_spend": 36390.1101790865
+          }
+        }
+      }
+    ]
+  }
+}
