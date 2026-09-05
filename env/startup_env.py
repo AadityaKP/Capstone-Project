@@ -151,6 +151,17 @@ class StartupEnv(gym.Env):
         if self.shock_schedule not in {"fixed", "random"}:
             raise ValueError(f"unknown shock_schedule: {self.shock_schedule!r}")
         self.shock_months: list[int] = [24, 48, 72]
+        # Round 2 stretch (plan S11, decision D6): shock_recovery="mean_revert"
+        # gives the price/churn damage of a HARD shock a 3-month half-life
+        # (~87.5% recovered after 9 months, matching EDGAR's median 3-quarter
+        # revenue-drawdown recovery in E6). Only the recorded shock DELTA is
+        # given back - deviations are tracked per shock and decayed, so other
+        # dynamics that move price/churn are untouched. Default "none" changes
+        # nothing (no draws consumed either way) and stays byte-identical.
+        self.shock_recovery = self.initial_config.get("shock_recovery", "none")
+        if self.shock_recovery not in {"none", "mean_revert"}:
+            raise ValueError(f"unknown shock_recovery: {self.shock_recovery!r}")
+        self._shock_deviations: dict[str, float] = {}
         # Seed-matched cross-policy comparison. Off by default because it changes
         # trajectories and would invalidate everything already in results/.
         #
@@ -223,6 +234,7 @@ class StartupEnv(gym.Env):
         self._rng = random.Random(seed) if self.deterministic_rng else None
         self.episode_seed = seed
         self.financing_events = []
+        self._shock_deviations = {}
         if self.shock_schedule == "random" and self.scheduled_shocks:
             stream = self._rng if self._rng is not None else random
             while True:
@@ -293,7 +305,29 @@ class StartupEnv(gym.Env):
         if self.scheduled_shocks and self.state.months_elapsed in set(self.shock_months):
             shock_cycle = ["competitor_surge", "rate_hike", "recession"]
             shock_type = shock_cycle[(self.episode_seed or 0) % len(shock_cycle)]
+            pre_shock = {v: getattr(self.state, v) for v in
+                         ("price", "churn_enterprise", "churn_smb", "churn_b2c")}
             shock_label = business_logic.inject_hard_shock(self.state, shock_type)
+            if self.shock_recovery == "mean_revert":
+                for var, before in pre_shock.items():
+                    delta = getattr(self.state, var) - before
+                    if delta != 0.0:
+                        self._shock_deviations[var] = \
+                            self._shock_deviations.get(var, 0.0) + delta
+
+        if self.shock_recovery == "mean_revert" and self._shock_deviations:
+            # give back (1 - 0.5^(1/3)) of the remaining hard-shock damage to
+            # price/churn each month: half-life 3 months
+            retain = 0.5 ** (1.0 / 3.0)
+            for var in list(self._shock_deviations):
+                remaining = self._shock_deviations[var]
+                give_back = remaining * (1.0 - retain)
+                setattr(self.state, var, getattr(self.state, var) - give_back)
+                remaining *= retain
+                if abs(remaining) < 1e-12:
+                    del self._shock_deviations[var]
+                else:
+                    self._shock_deviations[var] = remaining
 
         business_logic.apply_recession_cascade(
             self.state, rng=self._rng, always_draw=self.deterministic_rng
