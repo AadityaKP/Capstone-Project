@@ -161,8 +161,9 @@ def physics_patches(churn_override: float | None = None,
             business_logic.compute_churn_rate = churn_patched
         if zero_acquisition:
             def new_mrr_patched(state, action, scale_aware=False, rng=None,
-                                _orig=orig_new_mrr):
-                _orig(state, action, scale_aware=scale_aware, rng=rng)
+                                saturation_rate=None, _orig=orig_new_mrr):
+                _orig(state, action, scale_aware=scale_aware, rng=rng,
+                      saturation_rate=saturation_rate)
                 return 0.0
             business_logic.compute_new_mrr = new_mrr_patched
         if zero_expansion:
@@ -187,6 +188,7 @@ def rollout(row, state: EnvState, arm: str, seed: int, scale: float,
             extra_env_config: dict | None = None,
             boardroom_kwargs: dict | None = None,
             board=None,
+            corridor: str = "legacy",
             collect_trace: bool = False):
     """One 12-month episode. Returns dict with growth (None if died) and trace.
 
@@ -198,17 +200,19 @@ def rollout(row, state: EnvState, arm: str, seed: int, scale: float,
     env.reset(seed=seed)
     env.state = state.model_copy(deep=True)
     if arm == "boardroom" and board is None:
-        kwargs = dict(use_oracle=False, scale_absolutes=scale)
+        kwargs = dict(use_oracle=False, scale_absolutes=scale, corridor=corridor)
         if boardroom_kwargs:
             kwargs.update(boardroom_kwargs)
         board = Boardroom(
-            [CFOProposalAgent(scale=scale), CMOProposalAgent(scale=scale),
-             CPOProposalAgent(scale=scale)], **kwargs)
+            [CFOProposalAgent(scale=scale, corridor=corridor),
+             CMOProposalAgent(scale=scale, corridor=corridor),
+             CPOProposalAgent(scale=scale, corridor=corridor)], **kwargs)
         board.start_episode(seed)
     heuristic_agents = None
     if arm == "heuristic":
-        heuristic_agents = (CFOAgent(scale=scale), CMOAgent(scale=scale),
-                            CPOAgent(scale=scale))
+        heuristic_agents = (CFOAgent(scale=scale, corridor=corridor),
+                            CMOAgent(scale=scale, corridor=corridor),
+                            CPOAgent(scale=scale, corridor=corridor))
 
     mrr_path, trace = [], []
     for month in range(HORIZON):
@@ -243,22 +247,29 @@ def rollout(row, state: EnvState, arm: str, seed: int, scale: float,
 def run_company_arm(row, arm: str, seeds, price: float = PRIMARY_PRICE,
                     extra_env_config: dict | None = None,
                     boardroom_kwargs: dict | None = None,
+                    corridor: str = "legacy",
                     patches: dict | None = None) -> dict:
     """Run one arm over seeds for one company. Returns growths + death count."""
     state = build_state(row, price)
     scale = state.mrr / 50_000.0
     growths, deaths = [], 0
+    n_raises, months_survived = 0, []
     with physics_patches(**(patches or {})):
         for seed in seeds:
             out = rollout(row, state, arm, seed, scale,
                           extra_env_config=extra_env_config,
-                          boardroom_kwargs=boardroom_kwargs)
+                          boardroom_kwargs=boardroom_kwargs,
+                          corridor=corridor, collect_trace=True)
+            months_survived.append(out["months_survived"])
+            n_raises += sum(1 for t in out["trace"] if t["financing_raise"] > 0)
             if out["died"]:
                 deaths += 1
             else:
                 growths.append(out["growth"])
     return dict(ticker=row.ticker, arm=arm, price=price,
                 growths=growths, deaths=deaths, n_seeds=len(list(seeds)),
+                n_financing_raises=n_raises,
+                median_months_survived=float(np.median(months_survived)),
                 median_growth=float(np.median(growths)) if growths else np.nan)
 
 

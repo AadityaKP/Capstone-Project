@@ -12,6 +12,18 @@ from oracle.oracle import Oracle
 from oracle.schemas import OracleEpisodeStats, OracleRefreshSnapshot
 from oracle.weight_adapter import WeightAdapter
 
+# physics_v2 (F3) corridor anchors: spend floors/caps as fractions of the
+# company's CURRENT MRR, anchored to the repo's screened EDGAR panel
+# (data/edgar_ratios.csv, 39 SaaS companies, 1,288 complete quarters -
+# quarterly S&M% and R&D% of revenue; monthly MRR fractions are the same
+# ratios). SaaS Capital's bands.json p50 (R&D 24% of ARR) cross-checks the
+# panel p50 (24.0%) exactly. Recomputable via:
+#   python -c "import pandas as pd, numpy as np; d=pd.read_csv('data/edgar_ratios.csv');
+#              print(np.nanpercentile(d.sm_pct_revenue,[10,90]), np.nanpercentile(d.rnd_pct_revenue,[10,90]))"
+EDGAR_SM_PCT_P90 = 0.641   # S&M spend cap anchor
+EDGAR_RND_PCT_P10 = 0.131  # R&D floor anchor
+EDGAR_RND_PCT_P90 = 0.365  # R&D cap anchor (v4 causal cap)
+
 
 class Boardroom:
     def __init__(
@@ -28,12 +40,24 @@ class Boardroom:
         proposal_generator=None,
         scale_absolutes: float = 1.0,
         hiring_runway_guard_months: float | None = None,
+        corridor: str = "legacy",
     ):
         # Spec G11. The absolute spend floors below are calibrated for a ~$50k
         # MRR company; applied unscaled to a $12k-MRR founder they demand more
         # than the company earns. Product surfaces pass mrr/50k here; research
         # runs leave it at 1.0, which reproduces the original constants exactly.
         self.scale_absolutes = max(0.01, float(scale_absolutes))
+        # physics_v2 (F3). corridor="scale_aware" replaces every absolute
+        # dollar floor/cap with a fraction of the company's CURRENT MRR or
+        # cash, anchored to the EDGAR percentiles above. scale_absolutes
+        # multiplied dollar constants by INITIAL mrr/50k, which froze every
+        # company's spend at the same ratios of its starting size - the "+43.7%
+        # for everyone" corridor artifact the C1 decomposition exposed
+        # (report section 5). "legacy" (default) keeps the original constants
+        # and every recorded run byte-identical.
+        if corridor not in {"legacy", "scale_aware"}:
+            raise ValueError(f"unknown corridor: {corridor!r}")
+        self.corridor = corridor
         # CFOAgent refuses to hire under 24 months of runway, but that guard
         # lives in the proposal and an LLM proposal generator can simply not
         # apply it. Set this (product surfaces do) to re-assert the rule on the
@@ -486,7 +510,14 @@ class Boardroom:
     # -----------------------------
     def _evaluate_proposal(self, proposal: Proposal, state: EnvState) -> ScoreVector:
         # Efficiency
-        burn = max(1.0, float(state.headcount * 10000))
+        if self.corridor == "scale_aware":
+            # headcount x $10k is another burn re-implementation; with a real
+            # monthly_burn on the state it misstates runway by orders of
+            # magnitude at EDGAR scale, so the scale-aware corridor scores
+            # efficiency against the engine's own burn figure.
+            burn = max(1.0, business_logic.monthly_burn(state))
+        else:
+            burn = max(1.0, float(state.headcount * 10000))
         efficiency = min(1.0, max(0.0, state.cash / (burn * 12)))
         
         # Growth
@@ -717,7 +748,14 @@ class Boardroom:
     # Safeguards & Conflicts
     # -----------------------------
     def _apply_sanity_bounds(self, action: dict, state: EnvState) -> dict:
-        max_mkt = max(state.cash * 0.3, 20000 * self.scale_absolutes)
+        if self.corridor == "scale_aware":
+            # Cap at the EDGAR p90 S&M intensity (or 30% of cash if larger,
+            # keeping the legacy cash-cap meaning). The 10-hire cap below is
+            # count-scaled, not dollar-scaled, and hiring has no revenue
+            # channel in this engine (A1) - it stays.
+            max_mkt = max(state.cash * 0.3, state.mrr * EDGAR_SM_PCT_P90)
+        else:
+            max_mkt = max(state.cash * 0.3, 20000 * self.scale_absolutes)
         action["marketing"]["spend"] = min(action["marketing"].get("spend", 0), max_mkt)
         action["hiring"]["hires"] = min(action["hiring"].get("hires", 0), 10)
         if (
@@ -734,27 +772,41 @@ class Boardroom:
             return action
         action.setdefault("product", {})
         rd_spend = max(0.0, float(action["product"].get("r_and_d_spend", 0.0)))
-        rd_cap = max(float(state.cash) * 0.25, 30_000.0 * self.scale_absolutes)
+        if self.corridor == "scale_aware":
+            rd_cap = max(float(state.cash) * 0.25, state.mrr * EDGAR_RND_PCT_P90)
+        else:
+            rd_cap = max(float(state.cash) * 0.25, 30_000.0 * self.scale_absolutes)
         action["product"]["r_and_d_spend"] = min(rd_spend, rd_cap)
         return action
 
     def _apply_dynamic_minimums(self, action: dict, state: EnvState, innov_score: float) -> dict:
         innovation_deficit = max(0.0, 1.0 - state.innovation_factor)
-        
+
         # Dynamic R&D floor: strictly tied to % of MRR + deficit scaling
         # E.g. up to 10% of MRR floor when innovation deficit is huge
         rd_floor_mrr = state.mrr * (innovation_deficit * 0.10)
-        rd_floor_abs = (20000 + (innovation_deficit * 50000)) * self.scale_absolutes
+        if self.corridor == "scale_aware":
+            # Floor at the EDGAR p10 R&D intensity: floors exist to catch
+            # degenerate zero-spend, not to set strategy - under the legacy
+            # constants the absolute floor (40% of the calibration company's
+            # MRR at zero deficit) overrode every proposal, which is what made
+            # boardroom spend company-independent at real scale.
+            rd_floor_abs = state.mrr * EDGAR_RND_PCT_P10
+        else:
+            rd_floor_abs = (20000 + (innovation_deficit * 50000)) * self.scale_absolutes
         rd_floor = max(rd_floor_mrr, rd_floor_abs)
-        
+
         # Ensure we always hit the floor minimum
         if action["product"].get("r_and_d_spend", 0) < rd_floor:
             action["product"]["r_and_d_spend"] = rd_floor
-            
-        mkt_floor = max(5000.0 * self.scale_absolutes, state.mrr * 0.02)
+
+        if self.corridor == "scale_aware":
+            mkt_floor = state.mrr * 0.02
+        else:
+            mkt_floor = max(5000.0 * self.scale_absolutes, state.mrr * 0.02)
         if action["marketing"].get("spend", 0) < mkt_floor:
             action["marketing"]["spend"] = mkt_floor
-            
+
         return action
 
     def _resolve_conflicts(

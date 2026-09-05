@@ -33,6 +33,53 @@ class StartupEnv(gym.Env):
         self.scale_aware_marketing = bool(
             self.initial_config.get("scale_aware_marketing", False)
         )
+        # physics_v2 (F1). marketing_curve selects between three regimes:
+        #   "legacy"      absolute-dollar Hill constants (the original engine)
+        #   "scale_aware" customer/CAC-anchored curve, ASSUMED rate 0.20 - what
+        #                 every recorded scale-aware run (incl. the v1 backtest)
+        #                 used
+        #   "v2"          same curve with the CAL-fitted saturation rate
+        #                 (business_logic.SATURATION_ACQUISITION_RATE_V2)
+        # None (default) preserves the old two-flag behaviour exactly, so every
+        # recorded config keeps reproducing byte-identically.
+        marketing_curve = self.initial_config.get("marketing_curve")
+        if marketing_curve is not None:
+            if marketing_curve not in {"legacy", "scale_aware", "v2"}:
+                raise ValueError(f"unknown marketing_curve: {marketing_curve!r}")
+            self.scale_aware_marketing = marketing_curve != "legacy"
+        self.marketing_curve = marketing_curve
+        # Explicit override wins; otherwise "v2" uses the fitted constant and
+        # the other regimes use the module default (0.20) via None.
+        rate = self.initial_config.get("saturation_acquisition_rate")
+        if rate is None and marketing_curve == "v2":
+            rate = business_logic.SATURATION_ACQUISITION_RATE_V2
+            if rate is None:
+                raise ValueError(
+                    "marketing_curve='v2' requires the fitted "
+                    "SATURATION_ACQUISITION_RATE_V2 (run the F1 fit) or an "
+                    "explicit saturation_acquisition_rate override")
+        self.saturation_acquisition_rate = None if rate is None else float(rate)
+        # physics_v2 (D1). competitive_entry="scale_neutral" removes the $50k
+        # market-attractiveness anchor from the random entry shock (see
+        # business_logic.competitive_entry_shock). None/"legacy" reproduces
+        # recorded runs byte-identically.
+        competitive_entry = self.initial_config.get("competitive_entry")
+        if competitive_entry not in {None, "legacy", "scale_neutral"}:
+            raise ValueError(f"unknown competitive_entry: {competitive_entry!r}")
+        self.competitive_entry_scale_neutral = competitive_entry == "scale_neutral"
+        # physics_v2 (F2). Environment financing rule, parameters measured from
+        # the EDGAR panel (see business_logic.FINANCING_* provenance). Off by
+        # default: enabling it adds exactly one RNG draw per step, which would
+        # change every recorded trajectory. Research-scale runs leave it off.
+        self.financing_enabled = bool(self.initial_config.get("financing_enabled", False))
+        self.financing_runway_threshold_months = float(self.initial_config.get(
+            "financing_runway_threshold_months",
+            business_logic.FINANCING_RUNWAY_THRESHOLD_MONTHS))
+        self.financing_raise_multiple = float(self.initial_config.get(
+            "financing_raise_multiple", business_logic.FINANCING_RAISE_MULTIPLE))
+        self.financing_monthly_prob = float(self.initial_config.get(
+            "financing_monthly_prob", business_logic.FINANCING_MONTHLY_PROB))
+        self.financing_events: list[dict] = []
         # Re-estimate CAC only in a month that actually acquired a customer.
         # Defaults to scale_aware_marketing because that curve is what closes
         # the loop: marketing_curve_params places gamma from state.cac, so a
@@ -136,6 +183,7 @@ class StartupEnv(gym.Env):
         # reproducible too, they just must not share a stream with the physics.
         self._rng = random.Random(seed) if self.deterministic_rng else None
         self.episode_seed = seed
+        self.financing_events = []
         
         self.state = EnvState(
             mrr=float(self.initial_config.get("initial_mrr", 50_000)),
@@ -190,7 +238,9 @@ class StartupEnv(gym.Env):
 
         business_logic.interest_rate_shock(self.state, rng=self._rng)
         business_logic.consumer_confidence_shock(self.state, rng=self._rng)
-        business_logic.competitive_entry_shock(self.state, rng=self._rng)
+        business_logic.competitive_entry_shock(
+            self.state, rng=self._rng,
+            scale_neutral=self.competitive_entry_scale_neutral)
 
         if self.scheduled_shocks and self.state.months_elapsed in {24, 48, 72}:
             shock_cycle = ["competitor_surge", "rate_hike", "recession"]
@@ -209,6 +259,7 @@ class StartupEnv(gym.Env):
             action.marketing,
             scale_aware=self.scale_aware_marketing,
             rng=self._rng,
+            saturation_rate=self.saturation_acquisition_rate,
         )
 
         expansion = business_logic.compute_expansion_mrr(
@@ -277,6 +328,33 @@ class StartupEnv(gym.Env):
         rule40 = business_logic.compute_rule_of_40(prev_mrr, self.state.mrr, rule40_burn)
         reward = business_logic.compute_reward(self.state, rule40)
 
+        # physics_v2 (F2): environment financing rule, parameters measured from
+        # the panel (business_logic.FINANCING_* provenance). The draw happens
+        # UNCONDITIONALLY whenever the flag is on, so per-step draw count stays
+        # fixed and matched-seed arms keep sharing a world (same reasoning as
+        # apply_recession_cascade's always_draw). Runway is measured against
+        # this month's realized net burn - the in-sim analogue of |OCF|/3 that
+        # D4 measured. A month that drove cash negative is still eligible:
+        # rescue rounds close while cash crosses zero, which is exactly what
+        # the six all-seed bankruptcy companies did in reality.
+        financing_raise = 0.0
+        if self.financing_enabled:
+            roll = (self._rng if self._rng is not None else random).random()
+            net_burn = (salary_burn + total_spend + one_time_hiring_cost) \
+                - self.state.mrr * margin
+            if net_burn > 0:
+                runway = self.state.cash / net_burn
+                if (runway < self.financing_runway_threshold_months
+                        and roll < self.financing_monthly_prob):
+                    financing_raise = self.financing_raise_multiple * net_burn
+                    self.state.cash += financing_raise
+                    self.financing_events.append({
+                        "month": self.state.months_elapsed,
+                        "amount": financing_raise,
+                        "net_burn": net_burn,
+                        "runway_before": runway,
+                    })
+
         self.state.months_elapsed += 1
 
         terminated = self.state.cash <= 0
@@ -286,6 +364,7 @@ class StartupEnv(gym.Env):
             "rule_of_40": rule40,
             "state": self.state.model_dump(),
             "shock_label": shock_label,
+            "financing_raise": financing_raise,
         }
 
     def _get_obs(self) -> np.ndarray:

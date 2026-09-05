@@ -54,10 +54,28 @@ def consumer_confidence_shock(state: EnvState, prob: float = 0.1, rng=None) -> N
         state.consumer_confidence -= 20
         state.unemployment += 1.0
 
-def competitive_entry_shock(state: EnvState, prob: float = 0.1, rng=None) -> None:
-    market_attractiveness = (state.mrr - 50_000) / 50_000
-    dynamic_prob = 1 / (1 + math.exp(-market_attractiveness))
-    actual_prob = prob * (2 * dynamic_prob)
+def competitive_entry_shock(state: EnvState, prob: float = 0.1, rng=None,
+                            scale_neutral: bool = False) -> None:
+    """Random competitor entry (one draw per step either way).
+
+    physics_v2 (D1 finding): the market-attractiveness anchor is a bare $50k
+    constant, so its sigmoid saturates to exactly 1.0 for any EDGAR-scale
+    company and pins entry probability at the 0.2/month ceiling - double the
+    calibration-point rate - compounding ~-22%/yr expected price erosion and a
+    one-way competitor ratchet for every real company regardless of anything
+    about it. No observable fixes what "market attractiveness" means at $100M
+    MRR, so `scale_neutral=True` (config `competitive_entry="scale_neutral"`)
+    removes the dollar anchor by pinning the whole term to its calibration
+    point (sigmoid=0.5, i.e. actual_prob = prob), the same
+    preserve-the-calibration-point conversion the F3 corridor uses. Default
+    False keeps every recorded run byte-identical.
+    """
+    if scale_neutral:
+        actual_prob = prob
+    else:
+        market_attractiveness = (state.mrr - 50_000) / 50_000
+        dynamic_prob = 1 / (1 + math.exp(-market_attractiveness))
+        actual_prob = prob * (2 * dynamic_prob)
 
     if _stream(rng).random() < actual_prob:
         state.competitors += 1
@@ -168,8 +186,24 @@ def hill_response(spend: float, alpha: float, beta: float, gamma: float) -> floa
 # must be reported as such wherever the calibration provenance is surfaced.
 SATURATION_ACQUISITION_RATE = 0.20
 
+# physics_v2: the same parameter, FITTED instead of assumed. The C1 backtest
+# falsified 0.20 as several times too high at real spend intensities
+# (report/validation_report.md section 5); the v2 value minimizes the median
+# |4-quarter growth error| when replaying the 20 CAL companies' real S&M spend
+# (hold arm, 10 seeds) - fit curve, bootstrap CI and split provenance in
+# validation/calibration/marketing_fit.md. HOLDOUT companies were not touched
+# by the fit. Selected via marketing_curve="v2"; the default above is what
+# every recorded scale-aware run used and stays untouched.
+#
+# Fit (2026-09-05, CAL n=20, hold arm, 10 seeds, financing on,
+# competitive_entry scale_neutral): 0.0727, 95% bootstrap CI over companies
+# [0.0475, 0.1113]; CAL median |4q growth error| 12.9pp at the fit vs
+# 49.7pp at the nearest grid point to the old assumed 0.20.
+SATURATION_ACQUISITION_RATE_V2 = 0.0727
 
-def marketing_curve_params(state: EnvState, channel: str, rng=None) -> tuple[float, float, float]:
+
+def marketing_curve_params(state: EnvState, channel: str, rng=None,
+                           saturation_rate: float | None = None) -> tuple[float, float, float]:
     """Hill parameters expressed in customers, not bare dollars.
 
     The original constants were dimensionally wrong: gamma is a spend level, but
@@ -187,9 +221,15 @@ def marketing_curve_params(state: EnvState, channel: str, rng=None) -> tuple[flo
     gamma is now "what it costs to acquire half the customers you could plausibly
     win this month", which is a quantity with units that make sense. alpha (curve
     shape) is unchanged - it is a shape parameter, not a scale one.
+
+    `saturation_rate` overrides the assumed module constant; marketing_curve="v2"
+    passes the CAL-fitted value through here. Because gamma = (customers x rate/2)
+    x CAC, the half-saturation point is a fraction of current MRR (via CAC and
+    price), and the rate is the one global multiplier - the F1 parameterization.
     """
+    rate = SATURATION_ACQUISITION_RATE if saturation_rate is None else float(saturation_rate)
     current_customers = state.mrr / max(1.0, state.price)
-    acquirable = max(1.0, current_customers * SATURATION_ACQUISITION_RATE)
+    acquirable = max(1.0, current_customers * rate)
     cac = max(1.0, state.cac)
 
     beta = acquirable * max(1.0, state.price)
@@ -208,10 +248,11 @@ def marketing_curve_params(state: EnvState, channel: str, rng=None) -> tuple[flo
 
 
 def compute_new_mrr(state: EnvState, action: MarketingAction, scale_aware: bool = False,
-                    rng=None) -> float:
+                    rng=None, saturation_rate: float | None = None) -> float:
     draw = _stream(rng)
     if scale_aware:
-        alpha, beta, gamma = marketing_curve_params(state, action.channel, rng=rng)
+        alpha, beta, gamma = marketing_curve_params(
+            state, action.channel, rng=rng, saturation_rate=saturation_rate)
     elif action.channel == "ppc":
         alpha = draw.uniform(0.5, 1.0)
         gamma = draw.uniform(15_000, 50_000)
@@ -234,6 +275,25 @@ def compute_new_mrr(state: EnvState, action: MarketingAction, scale_aware: bool 
         response *= 0.8
 
     return response
+
+# physics_v2 financing rule (F2). The v1 engine had no financing mechanism at
+# all, so six high-burn EDGAR companies went bankrupt in-sim on every seed
+# under their own real spend where the real companies raised capital. These
+# parameters are MEASURED from the panel, not invented - see
+# validation/calibration/d4_financing_evidence.py and d4_financing_summary.json:
+#   R: below 18 months of runway, the probability a burning company raises in a
+#      quarter jumps to >= 0.5 (0.86 under 6mo) vs 0.26 above - the empirical
+#      break in the conditional table.
+#   K: median raise among rescue-regime raises (runway < R) = 24.4x monthly
+#      net burn.
+#   p: per-month raise probability conditional on burning with runway < R
+#      (0.596/quarter -> 0.261/month).
+# The rule is an ENVIRONMENT mechanism, not an agent action: agents cannot see
+# or request it, mirroring how the backtest treats financing as exogenous.
+FINANCING_RUNWAY_THRESHOLD_MONTHS = 18.0
+FINANCING_RAISE_MULTIPLE = 24.4
+FINANCING_MONTHLY_PROB = 0.261
+
 
 def compute_churn_rate(state: EnvState) -> float:
     base = (state.churn_enterprise + state.churn_smb + state.churn_b2c) / 3

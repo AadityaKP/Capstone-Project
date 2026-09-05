@@ -47,7 +47,8 @@ def variant_patches(hill_pinned: bool, macro_frozen: bool):
                    business_logic.competitive_entry_shock)
     try:
         if hill_pinned:
-            def pinned(state, action, scale_aware=False, rng=None):
+            def pinned(state, action, scale_aware=False, rng=None,
+                       saturation_rate=None):
                 draw = business_logic._stream(rng)
                 # consume exactly the legacy branch's three draws
                 draw.uniform(0.5, 1.0); draw.uniform(15_000, 50_000)
@@ -69,7 +70,7 @@ def variant_patches(hill_pinned: bool, macro_frozen: bool):
                 return response
             business_logic.compute_new_mrr = pinned
         if macro_frozen:
-            def frozen(state, prob=0.1, rng=None):
+            def frozen(state, prob=0.1, rng=None, **kwargs):
                 business_logic._stream(rng).random()  # consume, no effect
             business_logic.interest_rate_shock = frozen
             business_logic.consumer_confidence_shock = frozen
