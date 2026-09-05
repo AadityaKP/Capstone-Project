@@ -42,3 +42,18 @@ Branch `round2` from `physics-v2`. Pre-registration committed before any code:
   WORSE for boardroom than noop/heuristic under v2 physics (heavy spend hurts
   the margin term) — robustness caveat for the paper. A3 v2phys queued on
   Ollama after B1.
+- **S3/S5 harvest** (2026-09-05): **A3 v2phys robustness gate FAIL.**
+  oracle_v3 > boardroom in only 8/20 seeds under v2 physics (mean paired diff
+  −$110k, median −$3.4k, Wilcoxon p=0.45; both arms 100% survival, medians
+  $650k vs $697k; 606 LLM calls). The recorded oracle advantage (20/20,
+  +$1.15M) does not survive the fitted marketing curve at research scale: the
+  ActionModifier's spend-up behaviour stops paying once acquisition
+  saturates at the fitted rate. Pre-declared consequence applies: reported
+  as-is; the paper must state the oracle-layer result is
+  **calibration-sensitive** (in-model value under legacy physics; null under
+  v2 physics). A2 half of the gate PASSes (boardroom > all baselines).
+  R2-4 EVAL2 verdicts recorded (see r2_criteria_verdicts.json): R2-C1
+  PARTIAL 14.8pp, R2-SIGN PASS 100%, R2-CORR FAIL (inverted: variance passes
+  at 1.09, hold Spearman 0.18 — saturation flattens hold at q0+8 states),
+  R2-FIN-a PASS 100%, R2-FIN-b N/A (premise empty). Random-shock ablation
+  queued.

@@ -1,0 +1,1 @@
+{"policy": "boardroom", "episodes": 20, "freq": 10, "env": {"deterministic_rng": true, "marketing_curve": "v2", "competitive_entry": "scale_neutral"}, "agent": {"corridor": "scale_aware"}, "wall_seconds": 0.7, "llm_calls_total": 0}
