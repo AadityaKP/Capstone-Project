@@ -18,3 +18,27 @@ Branch `round2` from `physics-v2`. Pre-registration committed before any code:
 ## Session log
 
 - **S1** (2026-09-05): pre-registration committed, tag `r2-preregistered`. No code.
+- **S2** (2026-09-05): brief v2 implemented behind 5 flags (defaults legacy);
+  13 unit tests; full suite 216 green; legacy regression gate exact. One code
+  fix before any LLM read (enum coercion in the guardrail floors, crashed the
+  first B1 attempt — no sweep result had been read). **B1 gate: FAIL by the
+  frozen rule.** v1 0/4 sweeps move (replicates A4); v2a 1/4 (runway now
+  ρ=0.97, was 0.00 — the level block fixes the headline defect); v2b 1/4
+  gated + the new LTV:CAC sweep ρ=0.65 via floors (floor share 13%). Churn /
+  confidence / competitors sweeps still flat: the ActionModifier consumes
+  risk/growth/efficiency/innovation only — macro_condition never reaches the
+  arithmetic — and the model holds innovation_urgency flat. Per the frozen
+  variant rule: **brief v2 = FAIL; B2/B3 not run; brief v1 stays primary;
+  A4 FAIL remains a limitation** (with the runway-responsiveness improvement
+  reported as a finding, not adopted). No prompt was modified after reading.
+- **S4** (2026-09-05): R2-1 data committed before any simulation (offset
+  q0+8, 39/39 eligible, CAC clamp [926, 4233] @ $250 with 4 clamped, CAL-only
+  hazard table, no bin inheritance). R2-2 flags + 9 tests. R2-3 gates, ZERO
+  DEV2 fix iterations: R2-VAR PASS (LTV:CAC IQR 1.07), DEV2 sanity PASS
+  (213 raises, finite), R2-REG EXACT (round-1 HOLDOUT reproduction and legacy
+  A2/E1 both byte-identical on this branch).
+- **S3** (2026-09-05): A2 v2phys done — boardroom > noop/random/heuristic on
+  final MRR (paired g 0.78–0.82, Holm p≈1.6e-14, 50 seeds); post-shock R40 is
+  WORSE for boardroom than noop/heuristic under v2 physics (heavy spend hurts
+  the margin term) — robustness caveat for the paper. A3 v2phys queued on
+  Ollama after B1.

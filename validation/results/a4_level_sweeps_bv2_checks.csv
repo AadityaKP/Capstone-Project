@@ -1,0 +1,16 @@
+sweep,expectation,gated,rho,variant,moved
+runway_down,risk rises as cash falls,True,0.0,v1,False
+churn_up,R&D multiplier rises with churn,True,0.0,v1,False
+confidence_down,marketing multiplier falls with confidence,True,0.0,v1,False
+competitors_up,risk rises with competitors,True,0.0,v1,False
+ltv_cac_down,"risk rises as LTV:CAC falls (new, reported)",False,0.0,v1,False
+runway_down,risk rises as cash falls,True,0.9710083124552245,v2a,True
+churn_up,R&D multiplier rises with churn,True,0.0,v2a,False
+confidence_down,marketing multiplier falls with confidence,True,0.0,v2a,False
+competitors_up,risk rises with competitors,True,0.0,v2a,False
+ltv_cac_down,"risk rises as LTV:CAC falls (new, reported)",False,0.0,v2a,False
+runway_down,risk rises as cash falls,True,0.9710083124552245,v2b,True
+churn_up,R&D multiplier rises with churn,True,0.0,v2b,False
+confidence_down,marketing multiplier falls with confidence,True,0.0,v2b,False
+competitors_up,risk rises with competitors,True,0.0,v2b,False
+ltv_cac_down,"risk rises as LTV:CAC falls (new, reported)",False,0.6546536707079772,v2b,True
