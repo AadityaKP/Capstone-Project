@@ -57,3 +57,21 @@ Branch `round2` from `physics-v2`. Pre-registration committed before any code:
   at 1.09, hold Spearman 0.18 — saturation flattens hold at q0+8 states),
   R2-FIN-a PASS 100%, R2-FIN-b N/A (premise empty). Random-shock ablation
   queued.
+- **S7/S6/S9 harvest** (2026-09-05): RS-1 PASS — oracle_v3 > boardroom
+  20/20 seeds under random shock timing (mean +$1.30M, p=1.9e-06): the
+  advantage does not rest on the learnable fixed timetable. RS-2 FAIL —
+  retrieval increment not detectable under random timing (mean +$11.6k,
+  CI [−$0.6k, +$25.0k], 10/20); the +$37.9k recorded increment carries a
+  fixed-timetable qualifier. Recovery rates 68/78/73%. Second LLM
+  (qwen2.5:7b-instruct): v1 2/4 sweeps move (churn 0.65, confidence 0.62) vs
+  llama 0/4 — level-blindness is substantially a model property; v2a runway
+  0.97 on both models; no combination reaches 3/4. Scorecards appended
+  (8 agent rows, 5 environment rows, full flag columns). §5d + §8/§9 claim
+  language updated. **Deferred item:** case_study_replay.py (Ollama, ~40 min)
+  to fill the decision-level quotes in case_study.md — figure and recorded
+  numbers are in; re-run later with
+  `python validation/round2/case_study_replay.py` then
+  `python validation/round2/case_study_report.py`.
+- **S10** (2026-09-05): full test suite + regression gate on `round2`;
+  fast-forward merge round2 → physics-v2 → main (main was a strict ancestor,
+  0 behind); tag `thesis-v2-final`; post-merge gate re-run on main.

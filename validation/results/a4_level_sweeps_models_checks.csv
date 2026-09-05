@@ -1,0 +1,21 @@
+sweep,expectation,gated,rho,variant,moved,model
+runway_down,risk rises as cash falls,True,0.0,v1,False,llama3.1:8b
+churn_up,R&D multiplier rises with churn,True,0.0,v1,False,llama3.1:8b
+confidence_down,marketing multiplier falls with confidence,True,0.0,v1,False,llama3.1:8b
+competitors_up,risk rises with competitors,True,0.0,v1,False,llama3.1:8b
+ltv_cac_down,"risk rises as LTV:CAC falls (new, reported)",False,0.0,v1,False,llama3.1:8b
+runway_down,risk rises as cash falls,True,0.9710083124552245,v2a,True,llama3.1:8b
+churn_up,R&D multiplier rises with churn,True,0.0,v2a,False,llama3.1:8b
+confidence_down,marketing multiplier falls with confidence,True,0.0,v2a,False,llama3.1:8b
+competitors_up,risk rises with competitors,True,0.0,v2a,False,llama3.1:8b
+ltv_cac_down,"risk rises as LTV:CAC falls (new, reported)",False,0.0,v2a,False,llama3.1:8b
+runway_down,risk rises as cash falls,True,0.0,v1,False,qwen2.5:7b-instruct
+churn_up,R&D multiplier rises with churn,True,0.6546536707079772,v1,True,qwen2.5:7b-instruct
+confidence_down,marketing multiplier falls with confidence,True,0.6210590034081188,v1,True,qwen2.5:7b-instruct
+competitors_up,risk rises with competitors,True,0.0,v1,False,qwen2.5:7b-instruct
+ltv_cac_down,"risk rises as LTV:CAC falls (new, reported)",False,0.0,v1,False,qwen2.5:7b-instruct
+runway_down,risk rises as cash falls,True,0.9710083124552245,v2a,True,qwen2.5:7b-instruct
+churn_up,R&D multiplier rises with churn,True,-0.3236694374850748,v2a,False,qwen2.5:7b-instruct
+confidence_down,marketing multiplier falls with confidence,True,0.6546536707079772,v2a,True,qwen2.5:7b-instruct
+competitors_up,risk rises with competitors,True,0.0,v2a,False,qwen2.5:7b-instruct
+ltv_cac_down,"risk rises as LTV:CAC falls (new, reported)",False,0.0,v2a,False,qwen2.5:7b-instruct

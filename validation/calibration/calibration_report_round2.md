@@ -117,8 +117,15 @@ physics; 20 matched seeds; freq 10; all arms 100% survival.
 
 ## 7. Second-LLM sensitivity (reported, no gate)
 
-_(filled on harvest by s6_second_llm.py; B1 failed, so v2a stands in as the
-level-block variant — deviation noted)_
+qwen2.5:7b-instruct, temp 0, same five sweeps, brief v1 and v2a (B1 failed,
+so v2a stands in as the level-block representative — deviation noted).
+Gated-sweep moved-counts: llama v1 **0/4**, llama v2a 1/4; **qwen v1 2/4**
+(churn ρ=0.65, confidence ρ=0.62), qwen v2a 2/4 (runway ρ=0.97, confidence
+ρ=0.65; churn flips negative). Level-blindness is therefore substantially a
+property of llama3.1:8b rather than of the prompt alone — qwen reads churn
+and confidence levels unaided — while the v2 level block reliably fixes the
+runway dimension on both models. No model/variant reaches the 3/4 bar.
+(`a4_level_sweeps_models.csv`, `_checks.csv`)
 
 ## 8. Case study (S8)
 
