@@ -87,3 +87,28 @@ Branch `round2` from `physics-v2`. Pre-registration committed before any code:
   (p=1.9e-06). E6-mr: median drawdown depth 61–63% → 16–17% (EDGAR 11%);
   episodes rare (0.4–0.5/100q); recovery cell unestimable (3–4 censored).
   Scorecard rows appended; merged to physics-v2 and main.
+- **S12 pre-registration + queue** (2026-09-06, before any addendum run):
+  PROTOCOL_addendum_A.md committed verbatim at
+  validation/calibration/PROTOCOL_addendum_A.md, tagged
+  `addendum-a-preregistered` (75e00cc), before anything ran.
+  gates_decomp.py written and committed before any result exists. New code:
+  a3_decomp.py (arms D-a/D-b/D-c/D-d/L-1 via the recorded run_simulation
+  harness — seeds 0–19, freq 10, brief v1, policy column relabelled per
+  arm), a3_rs_ext.py (RS-2x, seeds 21–40, the exact a3_random_shock.py
+  harness), `oracle_v3_no_modifier` registered in simulation_runner.py
+  (additive branch mirroring oracle_v1_no_modifier; 206 non-LLM tests +
+  4 new pass), a2_policy_baselines_v2phys_mr.py, e_battery_mr.py (writes
+  stats + candidate `_mr` rows to new files only; scorecard appends stay
+  in S13). **Config deviation, recorded before any run:** the addendum's
+  common-configuration line says `financing_enabled=True`, but the recorded
+  v2phys arms it pairs against ran with financing OFF
+  (a3_v2phys/meta_*.json); a paired design on the same seeds requires
+  matching the recorded config, so every new v2 arm runs financing off.
+  Both LLM runners pre/postflight Ollama and exit non-zero on failure (the
+  neutral-brief parser fallback would otherwise leave complete-looking
+  CSVs for a dead-LLM arm). Smoke: 1-episode scratch runs of all six arm
+  configs (incl. both qwen arms) plus gates_decomp on synthetic and empty
+  inputs — no addendum outcome read. Queue launched detached immediately
+  after this commit: D-b, D-a, D-c, D-d, L-1, RS-2x sequentially (logs
+  validation/logs/decomp_*.log); A2 v2phys+mr and the E-battery mr chain
+  in parallel. No oracle output will be read before S13.

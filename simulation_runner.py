@@ -299,6 +299,18 @@ def _build_agent_for_policy(
             oracle_instance=Oracle(mode="oracle_v3", memory_store=None, enable_memory_retrieval=False),
             **oracle_overrides,
         )
+    if policy == "oracle_v3_no_modifier":
+        # Addendum A arm D-a: the brief still feeds the weight adapter, but
+        # the ActionModifier's spend multipliers are off (mirrors
+        # oracle_v1_no_modifier with the v3 oracle).
+        return BoardroomAgent(
+            oracle_mode="oracle_v3",
+            oracle_frequency=oracle_frequency,
+            enable_action_modifier=False,
+            action_modifier_instance=NoOpActionModifier(),
+            agent_scale=agent_scale,
+            **oracle_overrides,
+        )
     if policy == "oracle_v4":
         return BoardroomAgent(
             oracle_mode="oracle_v4",
