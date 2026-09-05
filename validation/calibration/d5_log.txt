@@ -1,0 +1,13 @@
+﻿Starting simulation runner...
+baseline done
+hill_pinned done
+macro_frozen done
+both done
+
+medians (EDGAR: growth_std 0.046, lag1_autocorr 0.46):
+              growth_std  lag1_autocorr
+variant                                
+baseline           0.160          0.880
+hill_pinned        0.136          0.960
+macro_frozen       0.118          0.799
+both               0.095          0.990

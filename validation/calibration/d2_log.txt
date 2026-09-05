@@ -1,0 +1,8 @@
+﻿WEAV: err +51.8pp | acq 82.7 | churn-mult 20.3 | expansion 41.2 | implied churn 4.705%
+AMPL: err +20.3pp | acq 82.9 | churn-mult 20.3 | expansion 40.1 | implied churn 2.701%
+TWLO: err +22.5pp | acq 81.8 | churn-mult 20.2 | expansion 41.1 | implied churn 2.838%
+INTA: err +62.1pp | acq 80.6 | churn-mult 20.1 | expansion 40.9 | implied churn 20.000%
+ZM: err -9.8pp | acq 86.0 | churn-mult 21.3 | expansion 37.6 | implied churn 20.000%
+EGHT: err +93.7pp | acq 81.5 | churn-mult 20.0 | expansion 39.5 | implied churn 20.000%
+
+median contributions (pp): acquisition 82.2, churn-multiplier-stack 20.2, expansion 40.5; median baseline error 37.2
