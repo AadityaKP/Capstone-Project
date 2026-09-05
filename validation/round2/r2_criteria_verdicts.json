@@ -1,0 +1,23 @@
+{
+  "offset": "q0+8",
+  "R2_C1_median_abs_error_pp": 14.827333114283519,
+  "R2_C1_verdict": "PARTIAL",
+  "R2_C1_signed_median_pp": 8.41509627632292,
+  "R2_SIGN": 1.0,
+  "R2_SIGN_verdict": "PASS",
+  "R2_CORR_std_boardroom": 0.19534004797710489,
+  "R2_CORR_std_actual": 0.1792985518147565,
+  "R2_CORR_std_ratio": 1.0894680743373863,
+  "R2_CORR_spearman": 0.1824561403508772,
+  "R2_CORR_p": 0.4546861307191131,
+  "R2_CORR_verdict": "FAIL",
+  "R2_FIN_a_share": 1.0,
+  "R2_FIN_a_verdict": "PASS",
+  "R2_FIN_b_zero_survival_companies": [],
+  "R2_FIN_b_share": null,
+  "R2_FIN_b_verdict": "N/A (no zero-survival companies)",
+  "n_eval2_evaluable": 19,
+  "dev2_median_abs_error_pp": 15.727414133539472,
+  "price50_sensitivity_median_abs_error_pp": 13.753092854520032,
+  "boardroom_minus_hold_median_pp": 43.29310876298027
+}
