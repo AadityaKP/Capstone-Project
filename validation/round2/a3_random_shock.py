@@ -33,8 +33,27 @@ POLICIES = ["boardroom", "oracle_v3", "oracle_v3_no_memory"]
 
 
 def main() -> None:
+    # Arm-level resume: a policy arm already complete in the episodes CSV is
+    # skipped (an arm must be whole - oracle memory accrues across episodes
+    # within an arm, so partial arms are discarded and re-run). Lets the job
+    # survive an interrupted session without redoing finished arms.
     ep_rows, monthly_rows = [], []
+    done_policies: set[str] = set()
+    ep_path = RESULTS / "a3_oracle_value_rs.csv"
+    mo_path = RESULTS / "a3_rs_monthly.csv"
+    if ep_path.exists():
+        prev = pd.read_csv(ep_path)
+        done_policies = {p for p, g in prev.groupby("policy")
+                         if g.seed.nunique() >= N_EPISODES}
+        prev = prev[prev.policy.isin(done_policies)]
+        ep_rows = prev.to_dict("records")
+        if mo_path.exists():
+            prev_mo = pd.read_csv(mo_path)
+            monthly_rows = prev_mo[prev_mo.policy.isin(done_policies)].to_dict("records")
+        print(f"resuming; complete arms kept: {sorted(done_policies)}", flush=True)
     for policy in POLICIES:
+        if policy in done_policies:
+            continue
         t0 = time.time()
         agent = _build_agent_for_policy(policy, FREQ)
         for seed in range(N_EPISODES):
@@ -73,10 +92,11 @@ def main() -> None:
             print(f"{policy} seed {seed}: mrr={env.state.mrr:,.0f} "
                   f"schedule={schedule} llm={ep_rows[-1]['llm_calls']}",
                   flush=True)
-            pd.DataFrame(ep_rows).to_csv(RESULTS / "a3_oracle_value_rs.csv",
-                                         index=False)
+            pd.DataFrame(ep_rows).to_csv(ep_path, index=False)
+        # monthly rows land after each completed ARM so an interrupted session
+        # keeps whole arms only (matching the episode-CSV resume contract)
+        pd.DataFrame(monthly_rows).to_csv(mo_path, index=False)
         print(f"DONE {policy} in {time.time() - t0:.0f}s", flush=True)
-    pd.DataFrame(monthly_rows).to_csv(RESULTS / "a3_rs_monthly.csv", index=False)
 
 
 if __name__ == "__main__":

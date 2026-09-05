@@ -78,3 +78,13 @@ python validation/calibration/p4_holdout_backtest.py    # Phase 4 HOLDOUT (once)
 python validation/calibration/p4_e_battery_v2.py        # E-battery v2 rows
 python validation/calibration/p4_oracle_holdout.py      # oracle_v3 (needs Ollama)
 ```
+
+## Round 2 (branch `round2`, tag `r2-preregistered`)
+
+Pre-registered protocol + brief-v2 spec, EVAL2-once calibration round, brief
+v2 gates, v2-physics robustness rows, random-shock ablation, case study:
+read `validation/calibration/PROTOCOL_round2.md`,
+`validation/oracle/BRIEF_V2_SPEC.md`, then
+`validation/calibration/calibration_report_round2.md` (§9 lists the full
+reproduction command sequence; LLM steps need Ollama with llama3.1:8b and
+qwen2.5:7b-instruct). Session-by-session log: `validation/round2/LOG.md`.

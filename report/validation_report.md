@@ -312,6 +312,63 @@ channel reads LOW/ACCELERATING at these states and scales marketing past the
 corridor, and the physics rewards the aggression. Oracle value remains a
 strictly simulator-internal claim (`oracle_v3_real_scale_v2_summary.csv`).
 
+## 5d. Round-2 calibration, brief v2, robustness and ablations (2026-09-05, branch `round2`)
+
+Pre-registered before any code (tag `r2-preregistered`;
+`validation/calibration/PROTOCOL_round2.md`, `validation/oracle/BRIEF_V2_SPEC.md`);
+full report `validation/calibration/calibration_report_round2.md`; session log
+`validation/round2/LOG.md`. All flags default to recorded behaviour; round-1
+HOLDOUT numbers and legacy research numbers reproduce exactly on this branch.
+
+**Round-2 calibration (EVAL2 = the 19 round-1 HOLDOUT companies at q0+8,
+touched once; two changes only — company-specific CAC mapping and
+opportunistic financing from CAL-only hazard; the fitted `s` frozen).**
+R2-C1 **PARTIAL** (median |4q error| 14.8pp out-of-time, signed +8.4pp;
+DEV2 15.7pp; $50 mapping 13.8pp). R2-SIGN **PASS** (100%). R2-CORR **FAIL,
+inverted vs round 1**: boardroom growth std ratio 1.09 now passes (the CAC
+mapping produces real state variety, DEV2 LTV:CAC IQR 1.07) but hold-arm
+Spearman falls to 0.18 — at q0+8 every company's real spend sits in the
+fitted curve's saturation region, so the hold arm projects ≈43% for everyone
+while actual growth still varies. R2-FIN-a **PASS** (100% survive under
+hold); R2-FIN-b **N/A** (no zero-survival company exists at q0+8 with
+financing off — premise empty, recorded). Zero DEV2 fix iterations; one
+EVAL2 run; no round 3.
+
+**Brief v2: B1 FAIL by the frozen rule; brief v1 stays.** The deterministic
+level block fixes runway responsiveness outright (sweep ρ 0.00→0.97) and the
+v2b floors move the new LTV:CAC sweep (ρ=0.65; floor share 13%), but
+churn/confidence/competitors sweeps stay flat (1/4 < 3/4): the
+ActionModifier's arithmetic never consumes macro_condition, and
+innovation_urgency stays flat. B2/B3 were not run; the A4 level-blindness
+FAIL remains a limitation; no prompt was modified after reading results.
+
+**Robustness under v2 physics (research scale).** A2 ordering survives:
+boardroom > noop/random/heuristic on final MRR (paired g 0.78–0.82, Holm
+p≈2e-14, 50 seeds; caveat: boardroom post-shock Rule-of-40 is worse than
+noop/heuristic under v2 — heavy corridor spend hurts the margin term). The
+**oracle layer's advantage does not survive**: oracle_v3 > boardroom in only
+8/20 seeds (mean paired diff −$110k, Wilcoxon p=0.45, both arms 100%
+survival). **Every oracle-layer value claim is therefore
+calibration-sensitive** — real under the legacy physics the thesis recorded,
+null under the CAL-fitted marketing curve, where saturation removes the
+payoff of the brief-driven spend-up.
+
+**Random-shock-timing ablation (legacy physics, 20 matched seeds).**
+RS-1 **PASS**: oracle_v3 > boardroom in 20/20 seeds with per-episode random
+schedules (mean +$1.30M, p=1.9e-06) — the oracle advantage does not rest on
+the learnable fixed {24,48,72} timetable. RS-2 **FAIL**: the retrieval
+increment is not detectable under random timing (v3 − v3_no_memory mean
++$11.6k, 95% CI [−$0.6k, +$25.0k], 10/20 seeds) — the recorded +$37.9k
+(≈3%) increment carries a fixed-timetable qualifier. Post-shock R40
+recovery within 24 months: boardroom 68%, oracle 78%, no-memory 73%.
+
+**Case study** (frozen ranking rule over the recorded A3 replication;
+`validation/round2/case_study.md`, figure `f8_case_study_seed15.png`):
+seed 15, month 60 — the memory arm read LOW risk vs MEDIUM, spent 48% more
+on marketing, +10.4% MRR six months later; illustrates the
+retrieval→brief→modifier mechanism, quantified only by the paired A6
+ablation. Second-LLM A4 sensitivity: `a4_level_sweeps_models.csv`.
+
 ## 6. Leakage and implementation problems found
 
 (Full audit: `validation/system_audit.md` §5.)
@@ -366,25 +423,45 @@ strictly simulator-internal claim (`oracle_v3_real_scale_v2_summary.csv`).
 **Simulator:** "At its calibration scale, the environment reproduces the quarterly
 revenue-growth distribution (median within the EDGAR panel's IQR) and the
 growth-deceleration-with-scale regularity of 39 public SaaS companies (1,288 quarters),
-while exhibiting higher persistence and volatility than the panel and far deeper,
-non-recovering revenue drawdowns under its injected shocks; initialized from real
-company states it over-projects four-quarter growth (median error ≈ +50 pp), so it
-serves as a controlled comparative testbed rather than a forecasting model."
+while exhibiting higher persistence than the panel and far deeper,
+non-recovering revenue drawdowns under its injected shocks. Under the original
+physics it over-projected four-quarter growth from real company states by ≈+50 pp;
+after a pre-registered split-panel recalibration of its one assumed marketing
+parameter it retrodicts held-out companies to a median |error| of 8.1 pp at the
+calibration horizon (PASS) and 14.8 pp out-of-time eight quarters later
+(PARTIAL), with 100% growth-sign agreement, while cross-company dispersion
+remains under-produced (corridor criterion FAIL in both rounds, for opposite
+reasons); it serves as a controlled comparative testbed rather than a
+forecasting model."
 
-**Agents:** "Under matched random worlds, the boardroom policy improves final MRR over
-no-action, random and heuristic controls (paired Hedges g 0.60–0.82, n=50), and the
-LLM-oracle layer improves it further in 74–75 of 75 paired episodes (g ≈ 0.93,
-p < 1e-13), with the gain concentrated in post-shock periods — all effects are
-simulator-internal and are reported as model-based counterfactuals."
+**Agents:** "Under matched random worlds with the recorded (legacy) physics, the
+boardroom policy improves final MRR over no-action, random and heuristic
+controls (paired Hedges g 0.60–0.82, n=50; g 0.78–0.82 under the recalibrated
+physics), and the LLM-oracle layer improves it further in 74–75 of 75 paired
+episodes (g ≈ 0.93, p < 1e-13) — a result that survives randomized shock
+timing (20/20 seeds) but is **calibration-sensitive**: under the recalibrated
+marketing curve the oracle increment is null (8/20 seeds, p=0.45). All effects
+are simulator-internal and are reported as model-based counterfactuals."
 
 Do not claim: v4 ≠ v3; reward improvements; retrieval as the main source of value
-(it contributes ≈3% of the oracle gain); any real-world agent value; any
-real-company forecast.
+(it contributes ≈3% of the oracle gain, and is not detectable under random
+shock timing); oracle value under the recalibrated (v2) physics; any
+real-world agent value; any real-company forecast.
 
 ## 9. Before submission / limitations
 
 Must complete: state the E4 payroll-definition caveat wherever spend ratios appear;
-replace any figure sourced from the screenshot-variant summaries. Should state as limitations: single LLM (llama3.1:8b) and its level-blindness;
-no financing mechanism; assumed price/churn/CAC in the backtest mapping; benchmark
-calibration post-dates backtest initialization states; memory arms learn across
-episodes within a run. Reproduction commands: `validation/README.md`.
+replace any figure sourced from the screenshot-variant summaries. Should state as
+limitations: single primary LLM (llama3.1:8b) and its level-blindness (A4 FAIL;
+brief-v2 level block fixes the runway dimension only — B1 FAIL; second-LLM
+sensitivity in `a4_level_sweeps_models.csv`); oracle value is
+calibration-sensitive (§5d); the retrieval increment carries a fixed-timetable
+qualifier (RS-2); churn tenure-decay bias in the backtest mapping (~20pp
+mechanism, absorbed by the fit); round-1 under-financing (2/6 rescued) and the
+round-2 rescue of it evaluated only at q0+8; assumed price/churn in the
+backtest mapping (round-2 CAC is company-specific, clamped, no look-ahead);
+EVAL2 reuses the round-1 HOLDOUT companies at later quarters (same-company
+correlation disclosed); the round-1 D4 financing parameters were panel-wide
+(round-2 hazard is CAL-only); oracle memory tiers saturate at real scale;
+memory arms learn across episodes within a run. Reproduction commands:
+`validation/README.md`.

@@ -98,7 +98,22 @@ calibration-sensitive.**
 
 ## 6. Random-shock ablation (RS-1 / RS-2)
 
-_(filled on harvest by gates_rs.py — run once)_
+3 shock months per episode drawn uniformly from [12,108] (min spacing 12)
+from the episode world RNG — equal seeds share schedules across arms; legacy
+physics; 20 matched seeds; freq 10; all arms 100% survival.
+
+- **RS-1 PASS:** oracle_v3 > boardroom in **20/20 seeds** under random
+  timing (mean paired diff **+$1.30M**, median +$946k, Wilcoxon p=1.9e-06).
+  The oracle advantage does not depend on the learnable fixed {24,48,72}
+  timetable.
+- **RS-2 FAIL:** oracle_v3 − oracle_v3_no_memory mean **+$11.6k**, 95%
+  bootstrap CI **[−$590, +$25,014]** (includes 0), positive in 10/20 seeds.
+  The episodic-retrieval increment is **not detectable under random shock
+  timing** — the recorded fixed-timetable increment (+$37.9k, ≈3% of the
+  oracle gain) must be described with this qualifier.
+- Post-shock Rule-of-40 recovery within 24 months (per-episode schedules):
+  boardroom 68%, oracle_v3 78%, no-memory 73% — the recovery-rate advantage
+  persists directionally under random timing.
 
 ## 7. Second-LLM sensitivity (reported, no gate)
 
