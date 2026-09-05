@@ -1,0 +1,105 @@
+﻿AI [CAL] p=250: actual=+19.0% hold=+44.9% board=+43.8% err=+25.9% deaths_hold=0
+AI [CAL] p=50: actual=+19.0% hold=+39.8% board=+61.9% err=+20.8% deaths_hold=0
+ALRM [HOLDOUT] p=250: actual=+25.0% hold=+39.1% board=+42.9% err=+14.1% deaths_hold=0
+ALRM [HOLDOUT] p=50: actual=+25.0% hold=+34.1% board=+61.6% err=+9.0% deaths_hold=0
+AMPL [CAL] p=250: actual=+72.5% hold=+42.0% board=+44.7% err=-30.4% deaths_hold=0
+AMPL [CAL] p=50: actual=+72.5% hold=+37.0% board=+64.0% err=-35.5% deaths_hold=0
+APPF [HOLDOUT] p=250: actual=+31.7% hold=+37.6% board=+42.9% err=+5.9% deaths_hold=0
+APPF [HOLDOUT] p=50: actual=+31.7% hold=+32.6% board=+61.1% err=+0.9% deaths_hold=0
+ASAN [CAL] p=250: actual=+54.7% hold=+53.9% board=+40.8% err=-0.8% deaths_hold=22
+ASAN [CAL] p=50: actual=+54.7% hold=+48.2% board=+50.8% err=-6.5% deaths_hold=22
+BAND [HOLDOUT] p=250: actual=+7.1% hold=+33.9% board=+35.4% err=+26.9% deaths_hold=0
+BAND [HOLDOUT] p=50: actual=+7.1% hold=+28.9% board=+30.0% err=+21.8% deaths_hold=0
+BL [CAL] p=250: actual=+48.6% hold=+43.6% board=+42.9% err=-5.1% deaths_hold=2
+BL [CAL] p=50: actual=+48.6% hold=+38.5% board=+61.6% err=-10.1% deaths_hold=2
+BRZE [CAL] p=250: actual=+62.6% hold=+41.7% board=+42.9% err=-21.0% deaths_hold=0
+BRZE [CAL] p=50: actual=+62.6% hold=+36.6% board=+61.6% err=-26.0% deaths_hold=0
+CRWD [HOLDOUT] p=250: actual=+103.2% hold=+47.7% board=+43.0% err=-55.5% deaths_hold=4
+CRWD [HOLDOUT] p=50: actual=+103.2% hold=+42.6% board=+61.6% err=-60.6% deaths_hold=4
+DDOG [HOLDOUT] p=250: actual=+87.7% hold=+44.0% board=+44.2% err=-43.7% deaths_hold=0
+DDOG [HOLDOUT] p=50: actual=+87.7% hold=+38.9% board=+62.6% err=-48.8% deaths_hold=0
+DOCN [CAL] p=250: actual=+28.7% hold=+40.8% board=+42.9% err=+12.1% deaths_hold=0
+DOCN [CAL] p=50: actual=+28.7% hold=+35.8% board=+63.0% err=+7.1% deaths_hold=0
+DOMO [CAL] p=250: actual=+32.3% hold=+55.2% board=+44.1% err=+22.9% deaths_hold=9
+DOMO [CAL] p=50: actual=+32.3% hold=+49.6% board=+62.9% err=+17.3% deaths_hold=9
+EGHT [CAL] p=250: actual=-2.8% hold=+41.2% board=+43.2% err=+44.0% deaths_hold=0
+EGHT [CAL] p=50: actual=-2.8% hold=+36.1% board=+61.6% err=+38.9% deaths_hold=0
+ESTC [HOLDOUT] p=250: actual=+71.6% hold=+45.2% board=+45.0% err=-26.4% deaths_hold=22
+ESTC [HOLDOUT] p=50: actual=+71.6% hold=+39.9% board=+63.9% err=-31.7% deaths_hold=22
+FRSH [HOLDOUT] p=250: actual=+46.0% hold=+42.1% board=+43.6% err=-3.8% deaths_hold=0
+FRSH [HOLDOUT] p=50: actual=+46.0% hold=+37.1% board=+61.7% err=-8.9% deaths_hold=0
+FSLY [HOLDOUT] p=250: actual=+34.0% hold=+42.1% board=+44.3% err=+8.1% deaths_hold=0
+FSLY [HOLDOUT] p=50: actual=+34.0% hold=+37.0% board=+62.9% err=+3.0% deaths_hold=0
+GTLB [HOLDOUT] p=250: actual=+58.5% hold=+49.6% board=+44.7% err=-8.8% deaths_hold=0
+GTLB [HOLDOUT] p=50: actual=+58.5% hold=+44.4% board=+64.0% err=-14.1% deaths_hold=0
+INTA [CAL] p=250: actual=+29.2% hold=+42.2% board=+43.4% err=+13.1% deaths_hold=0
+INTA [CAL] p=50: actual=+29.2% hold=+37.2% board=+61.6% err=+8.0% deaths_hold=0
+KLTR [HOLDOUT] p=250: actual=+44.7% hold=+40.9% board=+42.9% err=-3.9% deaths_hold=0
+KLTR [HOLDOUT] p=50: actual=+44.7% hold=+35.8% board=+61.6% err=-8.9% deaths_hold=0
+KVYO [CAL] p=250: actual=+47.5% hold=+43.5% board=+44.7% err=-4.0% deaths_hold=0
+KVYO [CAL] p=50: actual=+47.5% hold=+38.4% board=+64.0% err=-9.1% deaths_hold=0
+MDB [CAL] p=250: actual=+73.0% hold=+47.9% board=+44.7% err=-25.1% deaths_hold=0
+MDB [CAL] p=50: actual=+73.0% hold=+42.7% board=+64.0% err=-30.3% deaths_hold=0
+NET [HOLDOUT] p=250: actual=+47.7% hold=+44.5% board=+43.9% err=-3.2% deaths_hold=1
+NET [HOLDOUT] p=50: actual=+47.7% hold=+39.5% board=+64.0% err=-8.2% deaths_hold=1
+OKTA [CAL] p=250: actual=+57.8% hold=+45.1% board=+44.7% err=-12.7% deaths_hold=0
+OKTA [CAL] p=50: actual=+57.8% hold=+40.0% board=+64.0% err=-17.8% deaths_hold=0
+PATH [CAL] p=250: actual=+64.6% hold=+44.0% board=+44.7% err=-20.6% deaths_hold=0
+PATH [CAL] p=50: actual=+64.6% hold=+38.9% board=+64.0% err=-25.8% deaths_hold=0
+PCTY [HOLDOUT] p=250: actual=+40.7% hold=+37.1% board=+42.9% err=-3.6% deaths_hold=0
+PCTY [HOLDOUT] p=50: actual=+40.7% hold=+32.1% board=+61.6% err=-8.6% deaths_hold=0
+PD [CAL] p=250: actual=+49.1% hold=+45.0% board=+44.7% err=-4.1% deaths_hold=0
+PD [CAL] p=50: actual=+49.1% hold=+39.9% board=+63.4% err=-9.2% deaths_hold=0
+QLYS [HOLDOUT] p=250: actual=+19.8% hold=+43.3% board=+61.4% err=+23.5% deaths_hold=0
+QLYS [HOLDOUT] p=50: actual=+19.8% hold=+38.2% board=+66.8% err=+18.4% deaths_hold=0
+RNG [HOLDOUT] p=250: actual=+34.0% hold=+40.7% board=+44.4% err=+6.7% deaths_hold=0
+RNG [HOLDOUT] p=50: actual=+34.0% hold=+35.6% board=+62.7% err=+1.7% deaths_hold=0
+RPD [HOLDOUT] p=250: actual=+44.2% hold=+46.5% board=+43.4% err=+2.3% deaths_hold=22
+RPD [HOLDOUT] p=50: actual=+44.2% hold=+41.2% board=+63.0% err=-3.0% deaths_hold=22
+S [HOLDOUT] p=250: actual=+121.3% hold=+53.2% board=+44.7% err=-68.1% deaths_hold=0
+S [HOLDOUT] p=50: actual=+121.3% hold=+47.8% board=+64.0% err=-73.5% deaths_hold=0
+SPT [CAL] p=250: actual=+30.6% hold=+43.6% board=+43.1% err=+13.0% deaths_hold=0
+SPT [CAL] p=50: actual=+30.6% hold=+38.6% board=+61.6% err=+8.0% deaths_hold=0
+TENB [CAL] p=250: actual=+46.0% hold=+45.4% board=+61.4% err=-0.7% deaths_hold=22
+TENB [CAL] p=50: actual=+46.0% hold=+40.0% board=+66.8% err=-6.0% deaths_hold=22
+TWLO [CAL] p=250: actual=+70.0% hold=+42.6% board=+44.7% err=-27.4% deaths_hold=0
+TWLO [CAL] p=50: actual=+70.0% hold=+37.5% board=+64.0% err=-32.5% deaths_hold=0
+WEAV [CAL] p=250: actual=+41.7% hold=+43.0% board=+44.7% err=+1.3% deaths_hold=0
+WEAV [CAL] p=50: actual=+41.7% hold=+37.9% board=+64.0% err=-3.8% deaths_hold=0
+WK [HOLDOUT] p=250: actual=+15.4% hold=+43.9% board=+43.4% err=+28.4% deaths_hold=0
+WK [HOLDOUT] p=50: actual=+15.4% hold=+38.7% board=+61.6% err=+23.3% deaths_hold=0
+YEXT [HOLDOUT] p=250: actual=+36.7% hold=+41.9% board=+43.9% err=+5.2% deaths_hold=0
+YEXT [HOLDOUT] p=50: actual=+36.7% hold=+36.8% board=+62.0% err=+0.1% deaths_hold=0
+ZETA [CAL] p=250: actual=+38.6% hold=+37.6% board=+42.9% err=-1.0% deaths_hold=0
+ZETA [CAL] p=50: actual=+38.6% hold=+32.6% board=+61.6% err=-6.0% deaths_hold=0
+ZM [CAL] p=250: actual=+103.1% hold=+39.9% board=+43.2% err=-63.1% deaths_hold=0
+ZM [CAL] p=50: actual=+103.1% hold=+34.9% board=+61.6% err=-68.2% deaths_hold=0
+ZS [HOLDOUT] p=250: actual=+49.1% hold=+43.5% board=+44.7% err=-5.6% deaths_hold=0
+ZS [HOLDOUT] p=50: actual=+49.1% hold=+38.4% board=+64.0% err=-10.7% deaths_hold=0
+
+{
+  "C1_v2_median_abs_error_pp": 8.067828342951861,
+  "C1_v2_verdict": "PASS",
+  "growth_sign_agreement": 1.0,
+  "growth_sign_verdict": "PASS",
+  "corridor_std_boardroom": 0.04634869008977754,
+  "corridor_std_actual": 0.29428489934125096,
+  "corridor_std_ratio": 0.15749598499116968,
+  "corridor_spearman_hold_vs_actual": 0.7263157894736841,
+  "corridor_spearman_p": 0.0004292336928359067,
+  "corridor_verdict": "FAIL",
+  "financing_survivor_fraction": 0.3333333333333333,
+  "financing_detail": {
+    "ASAN": "22/30 deaths",
+    "CRWD": "4/30 deaths",
+    "DOMO": "9/30 deaths",
+    "ESTC": "22/30 deaths",
+    "RPD": "22/30 deaths",
+    "TENB": "22/30 deaths"
+  },
+  "financing_verdict": "FAIL",
+  "n_holdout_evaluable": 19,
+  "holdout_median_error_pp_signed": -3.1678006819146676,
+  "cal_median_abs_error_pp": 13.047665353722696,
+  "price50_sensitivity_median_abs_error_pp": 9.040909895306138
+}

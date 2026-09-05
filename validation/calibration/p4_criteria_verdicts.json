@@ -1,0 +1,26 @@
+{
+  "C1_v2_median_abs_error_pp": 8.067828342951861,
+  "C1_v2_verdict": "PASS",
+  "growth_sign_agreement": 1.0,
+  "growth_sign_verdict": "PASS",
+  "corridor_std_boardroom": 0.04634869008977754,
+  "corridor_std_actual": 0.29428489934125096,
+  "corridor_std_ratio": 0.15749598499116968,
+  "corridor_spearman_hold_vs_actual": 0.7263157894736841,
+  "corridor_spearman_p": 0.0004292336928359067,
+  "corridor_verdict": "FAIL",
+  "financing_survivor_fraction": 0.3333333333333333,
+  "financing_detail": {
+    "ASAN": "22/30 deaths",
+    "CRWD": "4/30 deaths",
+    "DOMO": "9/30 deaths",
+    "ESTC": "22/30 deaths",
+    "RPD": "22/30 deaths",
+    "TENB": "22/30 deaths"
+  },
+  "financing_verdict": "FAIL",
+  "n_holdout_evaluable": 19,
+  "holdout_median_error_pp_signed": -3.1678006819146676,
+  "cal_median_abs_error_pp": 13.047665353722696,
+  "price50_sensitivity_median_abs_error_pp": 9.040909895306138
+}
