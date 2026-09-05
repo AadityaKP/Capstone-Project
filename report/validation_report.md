@@ -301,8 +301,16 @@ E5 PARTIAL→PASS, E3 PASS, E1 PASS→PARTIAL (median growth 9.3% vs IQR upper
 2× EDGAR volatility and 0.99 persistence; `d5_volatility_attribution.png`).
 The boardroom−hold increment, negative for 100% of companies in v1, is
 +5.2pp median (positive for 84% of HOLDOUT companies) — still a model-based
-counterfactual, not a claim about real companies. Oracle-at-real-scale
-numbers (first ever): `validation/results/oracle_v3_real_scale_v2.csv`.
+counterfactual, not a claim about real companies.
+
+First oracle-at-real-scale numbers (exploratory; 8 HOLDOUT companies × 10
+matched seeds, llama3.1:8b): the in-model ordering survives — oracle_v3 beats
+the matched-seed boardroom by +11.0pp median paired 4q growth (84% of pairs,
+p=2.1e-08) — but the oracle arm sits *further from actual growth* (median
+|error| 37.7pp vs boardroom 17.1pp vs hold 8.1pp): the level-blind brief
+channel reads LOW/ACCELERATING at these states and scales marketing past the
+corridor, and the physics rewards the aggression. Oracle value remains a
+strictly simulator-internal claim (`oracle_v3_real_scale_v2_summary.csv`).
 
 ## 6. Leakage and implementation problems found
 
