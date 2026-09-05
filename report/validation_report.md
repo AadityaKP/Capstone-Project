@@ -260,6 +260,50 @@ survivor-biased, mechanically coupled to growth, and unadjusted for company clus
 — so this is recorded as *absence of observational support*, not a refutation
 (`validation/results/c2_allocation_consistency.csv`).
 
+## 5c. physics_v2 recalibration (2026-09-05, branch `physics-v2`)
+
+The C1 diagnosis (§5) was acted on under a pre-frozen split-panel protocol
+(`validation/calibration/PROTOCOL.md`: 20 CAL / 19 HOLDOUT companies,
+stratified, criteria frozen before any run; HOLDOUT touched exactly once).
+Full report: `validation/calibration/calibration_report.md`. All changes sit
+behind config flags (`marketing_curve="v2"`, `financing_enabled`,
+`corridor="scale_aware"`, `competitive_entry="scale_neutral"`), default
+legacy; the recorded v1 results reproduce exactly from the same commit
+(Phase 3 gate: per-seed A2 episodes and E1 aggregation byte-identical).
+
+What changed: the one assumed free parameter of the scale-aware marketing
+curve was fitted on CAL only (0.20 → 0.0727, bootstrap CI [0.0475, 0.1113]);
+a financing rule measured from the panel (R=18mo, K=24.4× monthly burn,
+p=0.261/mo) was added as an environment mechanism; every dollar floor/cap in
+the boardroom and heuristic corridor became a fraction of current MRR
+anchored to EDGAR percentiles (legacy values preserved at the $50k
+calibration point); and a D1-audit finding — the competitive-entry shock's
+$50k attractiveness anchor saturating at real scale — was neutralized.
+
+HOLDOUT verdicts against the frozen criteria:
+
+| Criterion | Result | Verdict |
+|---|---|---|
+| C1-v2 median \|4q growth error\| (≤10pp) | **8.1pp** (v1: 49.6pp); sign agreement 100% | **PASS** |
+| Corridor artifact (boardroom growth std ≥ actual/3 AND hold-vs-actual ρ>0.3) | ρ=0.73 ✓ but std ratio 0.16 ✗ | **FAIL** |
+| Financing (≥80% of v1 all-seed bankrupts survive) | 2/6 survive | **FAIL** |
+| Regression (legacy exact) | exact | **PASS** |
+| E4-v2 (research-scale spend in EDGAR bands) | 67.6% in [37%, 93%] | **PASS** |
+
+The two failures are reported as results (one-round-trip rule; no re-tuning
+against HOLDOUT). Diagnoses: the boardroom variance compression traces to the
+backtest *mapping* (identical assumed churn/price/LTV:CAC for every company),
+not the corridor floors; the financing rule's rescue-regime parameters
+under-finance companies that in reality raised at ~48 months of runway,
+long before distress. Research-scale E-battery under v2: E4 FAIL→PASS,
+E5 PARTIAL→PASS, E3 PASS, E1 PASS→PARTIAL (median growth 9.3% vs IQR upper
+9.1%), E2 PARTIAL (structural — freezing all noise sources still leaves
+2× EDGAR volatility and 0.99 persistence; `d5_volatility_attribution.png`).
+The boardroom−hold increment, negative for 100% of companies in v1, is
++5.2pp median (positive for 84% of HOLDOUT companies) — still a model-based
+counterfactual, not a claim about real companies. Oracle-at-real-scale
+numbers (first ever): `validation/results/oracle_v3_real_scale_v2.csv`.
+
 ## 6. Leakage and implementation problems found
 
 (Full audit: `validation/system_audit.md` §5.)

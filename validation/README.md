@@ -58,3 +58,23 @@ python validation/analysis/build_review_site.py      # self-contained presentati
 
 LLM analyses used llama3.1:8b via local Ollama at temperature 0. A4/A3 outputs
 depend on that exact model; everything else is fully deterministic.
+
+## physics_v2 (branch `physics-v2`)
+
+Protocol, split, diagnostics, fit, gate and HOLDOUT verdicts:
+`validation/calibration/` (read `PROTOCOL.md`, then `calibration_report.md`).
+v2 outputs carry `_v2` suffixes or a `physics_version` column; v1 results are
+untouched and reproduce exactly (Phase 3 gate). Reproduction:
+
+```
+python validation/calibration/d2_error_attribution.py   # Phase 1 diagnostics
+python validation/calibration/d3_saturation_sweep.py
+python validation/calibration/d4_financing_evidence.py
+python validation/calibration/d5_volatility_attribution.py
+python validation/calibration/f1_marketing_fit.py       # F1 fit (CAL only)
+python -m pytest tests/test_physics_v2.py               # F4 deterministic tests
+python validation/calibration/p3_regression_gate.py     # legacy-exact + v2 gate
+python validation/calibration/p4_holdout_backtest.py    # Phase 4 HOLDOUT (once)
+python validation/calibration/p4_e_battery_v2.py        # E-battery v2 rows
+python validation/calibration/p4_oracle_holdout.py      # oracle_v3 (needs Ollama)
+```
