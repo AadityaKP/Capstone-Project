@@ -3,6 +3,9 @@
 Date: 2026-08-30 · Branch `review2-sim-frontend` · Full methodology and pre-declared
 acceptance criteria: `validation/validation_plan.md` (criteria fixed before any result
 was computed; deviations are labelled where they occur).
+Consolidated 2026-09-06 on branch `round2`: incorporates the physics_v2
+recalibration (§5c), round 2 (§5d), and the pre-registered addendum-A
+decomposition (§5d; `validation/calibration/PROTOCOL_addendum_A.md`).
 
 **Status legend.** Every number in this report is VERIFIED/EXECUTED from data on disk.
 No synthetic or placeholder values appear anywhere in this report. (The A3 live
@@ -12,29 +15,50 @@ replication, pending in an earlier draft, completed on 2026-08-30 and is incorpo
 
 ## 1. Summary verdicts
 
-**SIMULATOR: C — IMPORTANT VALIDATION GAPS.**
-At its calibration scale the environment reproduces several scale-free regularities of
-real SaaS (growth-rate distribution, growth deceleration with scale) but is too smooth
-and too volatile at once (persistence and volatility both off), its policies spend far
-less of revenue than real SaaS companies do, its shocks produce catastrophic permanent
-revenue drawdowns where real SaaS drawdowns are shallow and quickly recovered (§5b E6),
-and when initialized from real company states it over-projects growth by ~45–50
-percentage points over four quarters. It is
-usable as a *controlled research environment* for comparing policies under identical
-dynamics; it is not currently supported as a *predictive model* of real company
-trajectories.
+**SIMULATOR: B — VALIDATED COMPARATIVE TESTBED WITH NAMED STRUCTURAL GAPS.**
+Grade raised from C after round 2 because the failures that set the C are now
+either repaired or repaired-by-flag with the residuals named and measured.
+After the pre-registered split-panel recalibration the simulator retrodicts
+held-out real companies (median |4q error| 8.1 pp at the calibration horizon,
+C1-v2 PASS; 14.8 pp out-of-time at q0+8, R2-C1 PARTIAL; 100% growth-sign
+agreement — the original physics over-projected by ~45–50 pp), its policies
+spend realistically under the v2 corridor (E4 PASS, discretionary spend inside
+the EDGAR p10–p90 band, vs ≈8% of revenue under legacy), within-unit growth
+volatility matches under v2 (E5 PASS), a financing mechanism exists, and the
+catastrophic-drawdown depth is repairable by the `shock_recovery="mean_revert"`
+flag (median depth 61–63% → 16–17%, EDGAR 11%). The remaining structural gaps:
+growth persistence is too high (E2 — structural, per D5), cross-company
+dispersion is under-produced (corridor criterion FAIL in both rounds, for
+opposite reasons), and under mean-revert drawdowns become too rare
+(0.4–0.5/100 quarters vs EDGAR's 3.0 — depth is repaired at the cost of
+frequency). It is usable as a *controlled comparative testbed* for policy
+experiments under identical dynamics; it is still not supported as a
+*predictive model* of individual company trajectories.
 
 **AGENTS: B — EVIDENCE OF POLICY VALUE WITH IMPORTANT LIMITATIONS.**
-Actions causally move outcomes; the boardroom beats no-action, random and plain
-heuristic controls at matched seeds with medium-to-large paired effects; the
-oracle layer beats the boardroom in 74–75 of 75 matched seeds in the recorded thesis
-run (paired g ≈ 0.93 on final MRR) and in 20/20 seeds in a fresh replication under the
-clean RNG regime; memory-conditioned briefs are genuinely predictive (+17 pp over base
-rate), though episodic retrieval itself contributes only ≈3% of the oracle layer's
-outcome gain. The limitations are material: all demonstrated value is
-*in-simulator at research scale*; the LLM brief channel responds to trends and shock
-alerts but is blind to state levels; and the real-scale counterfactual does not support
-any claim of agent value on real company states.
+Actions causally move outcomes, and the boardroom's superiority over
+no-action, random and heuristic controls is robust to recalibration (paired
+g 0.60–0.82 legacy, 0.78–0.82 under v2 physics, 1.21–1.68 under v2 physics
+with recoverable shocks; all at matched seeds). The oracle layer beats the
+boardroom in 74–75 of 75 recorded seeds and 20/20 under clean RNG, and the
+advantage survives randomized shock timing (20/20) and recoverable shocks
+under legacy physics (20/20, +$2.23M) — but it is **calibration-sensitive**,
+and the pre-registered addendum-A decomposition locates the sensitivity: the
+brief's only causal channel into actions is the ActionModifier's spend
+multipliers (with them off, oracle_v3 is outcome-identical to the boardroom,
+0/20; tier-bounding them does not restore value, 8/20; nor do recoverable
+shocks, 7/20), and the v2-physics null is **LLM-specific** — qwen2.5:7b-instruct
+passes the same pre-registered criterion under the fitted curve (15/20; small
+mean +$28.8k, CI including 0) and replicates the legacy headline 20/20
+(+$564k, p=1.9e-06). Memory-conditioned briefs are genuinely predictive
+(+17 pp over base rate); episodic retrieval changes ~60% of monthly spend
+decisions with a small outcome increment (≈3% of the oracle gain under the
+fixed timetable), not detectable at n=20 under random shock timing but
+detectable at the pre-declared pooled n=40 (+$39.7k, CI [+$18.0k, +$65.9k]).
+The limitations are material: all demonstrated value is *in-simulator at
+research scale*; the primary LLM's brief channel is blind to state levels;
+and the real-scale counterfactual does not support any claim of agent value
+on real company states.
 
 ## 2. What was validated against what
 
@@ -116,7 +140,7 @@ marketing ×0.85, R&D ×1.10); churn deltas are ignored. This matches the record
 where risk labels shift sharply at shock months (MEDIUM share 0.44→0.90). The oracle
 layer is best described as a trend-and-shock reactor, not a state assessor.
 
-### 4.4 Does the oracle layer add value over the boardroom? (A3 — PASS, recorded; ⏳ live replication running)
+### 4.4 Does the oracle layer add value over the boardroom? (A3 — PASS, recorded and replicated)
 The recorded FULL thesis run (75 seeds × {boardroom, oracle_v1, oracle_v3}) was
 re-analyzed as a **paired** design — valid because the legacy shared-world property was
 verified empirically this session (non-drawing policies experience identical macro
@@ -351,7 +375,8 @@ noop/heuristic under v2 — heavy corridor spend hurts the margin term). The
 survival). **Every oracle-layer value claim is therefore
 calibration-sensitive** — real under the legacy physics the thesis recorded,
 null under the CAL-fitted marketing curve, where saturation removes the
-payoff of the brief-driven spend-up.
+payoff of the brief-driven spend-up (decomposed component-by-component in
+the addendum-A paragraph below).
 
 **Random-shock-timing ablation (legacy physics, 20 matched seeds).**
 RS-1 **PASS**: oracle_v3 > boardroom in 20/20 seeds with per-episode random
@@ -359,7 +384,8 @@ schedules (mean +$1.30M, p=1.9e-06) — the oracle advantage does not rest on
 the learnable fixed {24,48,72} timetable. RS-2 **FAIL**: the retrieval
 increment is not detectable under random timing (v3 − v3_no_memory mean
 +$11.6k, 95% CI [−$0.6k, +$25.0k], 10/20 seeds) — the recorded +$37.9k
-(≈3%) increment carries a fixed-timetable qualifier. Post-shock R40
+(≈3%) increment carries a fixed-timetable qualifier at n=20 (superseded by
+the pre-declared RS-2x pooled n=40 result below). Post-shock R40
 recovery within 24 months: boardroom 68%, oracle 78%, no-memory 73%.
 
 **Case study** (frozen ranking rule over the recorded A3 replication;
@@ -368,6 +394,59 @@ seed 15, month 60 — the memory arm read LOW risk vs MEDIUM, spent 48% more
 on marketing, +10.4% MRR six months later; illustrates the
 retrieval→brief→modifier mechanism, quantified only by the paired A6
 ablation. Second-LLM A4 sensitivity: `a4_level_sweeps_models.csv`.
+
+**Recoverable shocks (S11 stretch; `shock_recovery="mean_revert"`, legacy
+physics).** Hard-shock price/churn damage gets a 3-month half-life (~87.5%
+recovered after 9 months, matching EDGAR's median 3-quarter drawdown
+recovery); defaults byte-identical. The oracle advantage does not flip — it
+**strengthens** (20/20 seeds, mean paired diff +$2.23M, p=1.9e-06; both arms
+100% survival). E6 recomputed on these episodes
+(`e6_drawdown_recovery_mr.csv`): median drawdown depth falls from the
+recorded ~61–63% to **16–17%** (EDGAR 11%) — the depth half of the E6
+structural mismatch is repaired — while drawdowns become rare (0.4–0.5 per
+100 quarters vs EDGAR's 3.0; the sim lacks ordinary demand-side dips) and
+the recovery-rate cell is unestimable from 3–4 censored episodes. E-battery
+rows under mean-revert for both physics: scorecard tests `E1-mr`–`E5-mr`
+(legacy: E1/E3 PASS, E2/E5 PARTIAL, E4 FAIL at 8.0% spend — the known
+legacy failure mode; v2: E3/E4/E5 PASS, E1/E2 PARTIAL).
+
+**Oracle-layer decomposition (addendum A, pre-registered 2026-09-05 and run
+overnight into 2026-09-06; tag
+`addendum-a-preregistered`, `validation/calibration/PROTOCOL_addendum_A.md`;
+gates `validation/round2/gates_decomp.py`, results
+`validation/results/a3_decomp_*.csv`).** Six arms, frozen criteria
+(oracle arm > paired boardroom on final MRR in ≥15/20 seeds) and frozen
+interpretation rules, committed before any run; all v2 arms match the
+recorded a3_v2phys config (financing off — deviation from the addendum's
+common-config line recorded in LOG.md before any run). Results:
+* **D-a** `oracle_v3_no_modifier` **FAIL 0/20** — with the ActionModifier
+  off, the outcome path is *identical* to the boardroom on every seed. The
+  brief-adjusted proposal weights only rescale proposal confidences; the
+  assembled action never reads them, so **the modifier's spend multipliers
+  are the brief's only causal channel into actions**.
+* **D-b** `modifier_bound="tier"` **FAIL 8/20** (mean +$20.4k, 95% CI
+  [−$53.8k, +$103.5k], p=0.78) — capping the modifier's spend-up at the
+  corridor's top tier does not restore value under the fitted curve.
+* **D-c** v2 + mean-revert (new boardroom pair) **FAIL 7/20** (mean −$284k,
+  CI [−$721k, +$23k]) — shock recoverability does not restore it either.
+* **D-d** qwen2.5:7b-instruct, v2 physics **PASS 15/20** (mean +$28.8k, CI
+  [−$41.9k, +$98.1k], p=0.12 — win-count criterion met; magnitude small).
+  Frozen rule fires: **the null under v2 physics is LLM-specific**.
+* **L-1** qwen2.5:7b-instruct, legacy physics **PASS 20/20** (mean +$564k,
+  CI [+$306k, +$875k], p=1.9e-06) — the headline oracle claim carries no
+  llama3.1:8b qualifier.
+* **RS-2x** (pre-declared extension to seeds 21–40, legacy, random
+  schedules): pooled n=40 retrieval increment (v3 − v3_no_memory) mean
+  **+$39.7k, 95% CI [+$18.0k, +$65.9k]**, positive in 23/40, p=0.0014;
+  extension cohort alone +$67.8k, CI [+$27.5k, +$115.7k]. Frozen rule
+  fires: **small but detectable at n=40** — the n=20 RS-2 null reflected
+  power, not absence.
+
+The A2 robustness panel also passes in the most realistic configuration —
+v2 physics + mean-revert, 50 seeds: boardroom > noop/random/heuristic on
+final MRR, paired g 1.21–1.68, Holm p≈1.6e-14
+(`statistical_tests_policy_baselines_v2phys_mr.csv`; run summaries in
+`policy_comparison_v2phys_mr.csv`).
 
 ## 6. Leakage and implementation problems found
 
@@ -393,39 +472,64 @@ ablation. Second-LLM A4 sensitivity: `a4_level_sweeps_models.csv`.
 2. **Do agent actions affect outcomes?** Yes — causally, with per-lever magnitudes
    quantified (A1).
 3. **Are decisions economically sensible?** Rule layer yes (10/10); LLM layer
-   partially — trend/shock-sensitive, level-blind (A4).
+   partially — trend/shock-sensitive, level-blind (A4). The level-blindness is
+   substantially a model property, not only a prompt property: qwen2.5:7b-instruct
+   reads churn and confidence levels unaided (2/4 sweeps) where llama3.1:8b
+   reads none (0/4); the brief-v2 level block fixes the runway dimension on
+   both models (`a4_level_sweeps_models.csv`).
 4. **Do agents beat simple controls?** Yes, in-sim, paired, medium-to-large effects
    (A2; A3 recorded-paired).
 5. **Does retrieval/context improve decisions?** Briefs are predictive (+17 pp,
    A6i); retrieval changes ~60% of monthly spend decisions and yields a small,
    significant outcome gain (+$37.9k, CI [+14.0k, +66.3k], 15/20 seeds) — ≈3% of the
    oracle layer's total value; the brief mechanism, not memory, carries the bulk.
+   Qualifier: under random shock timing the increment is not detectable at n=20
+   (RS-2 FAIL) but is detectable at the pre-declared pooled n=40 (RS-2x:
+   +$39.7k, CI [+$18.0k, +$65.9k], p=0.0014) — small, real, and an order of
+   magnitude below the brief channel.
 6. **Robust across seeds/states?** Yes: 74–75/75 recorded seeds, 20/20 replicated
    under clean RNG, and the boardroom ranking holds in 9/9 initial-condition cells
-   (A7) with paired g 0.64–0.84 throughout.
+   (A7) with paired g 0.64–0.84 throughout. Not under v2 physics with the primary
+   LLM: the oracle increment is null under the fitted marketing curve (8/20), and
+   the addendum-A decomposition shows the entire effect flows through the
+   ActionModifier (the no-modifier arm is outcome-identical to the boardroom,
+   0/20), with neither tier-bounding (8/20) nor shock recoverability (7/20)
+   restoring it — while qwen2.5:7b-instruct passes the same pre-registered
+   criterion (15/20), making the v2-physics null LLM-specific; the legacy
+   headline replicates on qwen 20/20.
 7. **Real-state initialization — agent beats controls?** No. Increment negative
    everywhere; see §5.
-8. **Simulated vs observed real trajectories?** Simulation over-projects growth by
-   ~45–50 pp per 4 quarters at real scale.
+8. **Simulated vs observed real trajectories?** After the pre-registered
+   recalibration, the simulator retrodicts held-out companies to a median |4q
+   error| of 8.1 pp at the calibration horizon (C1-v2 PASS) and 14.8 pp
+   out-of-time at q0+8 (R2-C1 PARTIAL), with 100% growth-sign agreement; the
+   original physics over-projected by ~45–50 pp per 4 quarters.
 9. **Which conclusions are empirical?** The EDGAR panel statistics; the claim audit;
    brief-label distributions; all paired in-sim comparisons *as statements about the
    simulator*.
 10. **Which depend on simulator-based counterfactuals?** Every "agent adds value"
     statement (A2, A3, C1 arms) — value is defined inside the model's dynamics.
 11. **What remains unvalidated?** Churn/CAC/price/product-quality realism, macro
-    block, monthly dynamics, hiring, v4 causal-graph contribution. (Moved to
-    validated since the first draft: retrieval outcome-increment — small positive;
-    robustness grid — PASS; candidate regret and drawdown/recovery — exploratory
-    results in §5b; allocation-direction consistency — null.)
+    block, monthly dynamics, hiring, v4 causal-graph contribution; drawdown
+    *frequency* under mean-revert (0.4–0.5/100q vs EDGAR 3.0) — the new
+    unvalidated shock item now that drawdown *depth* is addressed by the
+    `shock_recovery="mean_revert"` flag (61–63% → 16–17%, S11). (Moved to
+    validated since the first draft: retrieval outcome-increment — small positive,
+    detectable at pooled n=40 under random timing; robustness grid — PASS;
+    candidate regret — exploratory results in §5b; allocation-direction
+    consistency — null.)
 
 ## 8. Strongest defensible claims, and required paper language
 
 **Simulator:** "At its calibration scale, the environment reproduces the quarterly
 revenue-growth distribution (median within the EDGAR panel's IQR) and the
 growth-deceleration-with-scale regularity of 39 public SaaS companies (1,288 quarters),
-while exhibiting higher persistence than the panel and far deeper,
-non-recovering revenue drawdowns under its injected shocks. Under the original
-physics it over-projected four-quarter growth from real company states by ≈+50 pp;
+while exhibiting higher persistence than the panel and, by default, far deeper
+non-recovering revenue drawdowns under its injected shocks — a pre-registered
+mean-revert recovery flag repairs the drawdown depth (61–63% → 16–17%, EDGAR
+11%) at the cost of making drawdowns rarer than the panel's (0.4–0.5 vs 3.0
+per 100 quarters). Under the original physics it over-projected four-quarter
+growth from real company states by ≈+50 pp;
 after a pre-registered split-panel recalibration of its one assumed marketing
 parameter it retrodicts held-out companies to a median |error| of 8.1 pp at the
 calibration horizon (PASS) and 14.8 pp out-of-time eight quarters later
@@ -437,15 +541,28 @@ forecasting model."
 **Agents:** "Under matched random worlds with the recorded (legacy) physics, the
 boardroom policy improves final MRR over no-action, random and heuristic
 controls (paired Hedges g 0.60–0.82, n=50; g 0.78–0.82 under the recalibrated
-physics), and the LLM-oracle layer improves it further in 74–75 of 75 paired
+physics, 1.21–1.68 with recoverable shocks added), and the LLM-oracle layer
+improves it further in 74–75 of 75 paired
 episodes (g ≈ 0.93, p < 1e-13) — a result that survives randomized shock
-timing (20/20 seeds) but is **calibration-sensitive**: under the recalibrated
-marketing curve the oracle increment is null (8/20 seeds, p=0.45). All effects
+timing (20/20 seeds), recoverable shocks (20/20, +$2.23M), and replication on
+a second LLM (qwen2.5:7b-instruct, 20/20), but is **calibration-sensitive**:
+under the recalibrated marketing curve the oracle increment is null with
+llama3.1:8b (8/20 seeds, p=0.45). A pre-registered decomposition locates the
+sensitivity in the ActionModifier's spend multipliers — the brief's only
+causal channel into actions (without them the oracle arm is outcome-identical
+to the boardroom on all 20 seeds; capping them at the corridor's top tier
+does not restore value, 8/20; nor do recoverable shocks, 7/20) — and shows
+the recalibrated-physics null is LLM-specific: qwen2.5:7b-instruct meets the
+same pre-registered criterion under the fitted curve (15/20 seeds, mean
++$28.8k with a CI including 0). All effects
 are simulator-internal and are reported as model-based counterfactuals."
 
 Do not claim: v4 ≠ v3; reward improvements; retrieval as the main source of value
-(it contributes ≈3% of the oracle gain, and is not detectable under random
-shock timing); oracle value under the recalibrated (v2) physics; any
+(it contributes ≈3% of the oracle gain; under random shock timing it is
+detectable only at the pre-declared pooled n=40, +$39.7k, not at n=20);
+oracle value under the recalibrated (v2) physics with llama3.1:8b — and the
+qwen 15/20 win-count PASS is reported as LLM-sensitivity of the null, not as
+established v2-physics value (its CI includes 0); any
 real-world agent value; any real-company forecast.
 
 ## 9. Before submission / limitations
@@ -456,12 +573,21 @@ limitations: single primary LLM (llama3.1:8b) and its level-blindness (A4 FAIL;
 brief-v2 level block fixes the runway dimension only — B1 FAIL; second-LLM
 sensitivity in `a4_level_sweeps_models.csv`); oracle value is
 calibration-sensitive (§5d); the retrieval increment carries a fixed-timetable
-qualifier (RS-2); churn tenure-decay bias in the backtest mapping (~20pp
+qualifier (RS-2) at n=20, resolved as small-but-detectable at the
+pre-declared pooled n=40 (RS-2x); churn tenure-decay bias in the backtest
+mapping (~20pp
 mechanism, absorbed by the fit); round-1 under-financing (2/6 rescued) and the
 round-2 rescue of it evaluated only at q0+8; assumed price/churn in the
 backtest mapping (round-2 CAC is company-specific, clamped, no look-ahead);
 EVAL2 reuses the round-1 HOLDOUT companies at later quarters (same-company
 correlation disclosed); the round-1 D4 financing parameters were panel-wide
 (round-2 hazard is CAL-only); oracle memory tiers saturate at real scale;
-memory arms learn across episodes within a run. Reproduction commands:
+memory arms learn across episodes within a run. From the addendum-A
+decomposition: the D-a/D-b/D-c arms are llama-only (the modifier-channel
+decomposition was not repeated on qwen); the second-LLM evidence is a single
+7B-class model, and D-d's PASS is a win-count result whose CI includes 0;
+drawdown frequency under mean-revert (0.4–0.5/100q vs EDGAR 3.0) replaces
+drawdown depth as the open shock-realism item; E4 remains FAIL under legacy
+physics even with mean-revert (spend share ≈8.0% — the flag does not touch
+spend). Reproduction commands:
 `validation/README.md`.

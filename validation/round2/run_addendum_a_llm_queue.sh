@@ -8,7 +8,10 @@
 # Launch DETACHED into its own hidden console (survives closing the
 # launching terminal; plain `nohup ... &` dies with a conpty tab such as
 # Windows Terminal / VS Code):
-#   powershell -Command "Start-Process -WindowStyle Hidden -FilePath 'C:\Program Files\Git\bin\bash.exe' -ArgumentList '-c','cd /c/College/Capstone/CapstoneProject && bash validation/round2/run_addendum_a_llm_queue.sh > validation/logs/decomp_queue.log 2>&1'"
+#   powershell -Command "Start-Process -WindowStyle Hidden -FilePath 'C:\Program Files\Git\bin\bash.exe' -ArgumentList '-c \"cd /c/College/Capstone/CapstoneProject && bash validation/round2/run_addendum_a_llm_queue.sh > validation/logs/decomp_queue.log 2>&1\"'"
+# (single pre-quoted -ArgumentList string: PowerShell 5.1 does not quote
+# array elements containing spaces, so the '-c','...' array form silently
+# runs `bash -c cd` and exits - verified during the S12 launch)
 cd "$(dirname "$0")/../.." || exit 1
 PY=venv/Scripts/python.exe
 mkdir -p validation/logs

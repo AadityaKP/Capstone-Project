@@ -112,3 +112,89 @@ Branch `round2` from `physics-v2`. Pre-registration committed before any code:
   after this commit: D-b, D-a, D-c, D-d, L-1, RS-2x sequentially (logs
   validation/logs/decomp_*.log); A2 v2phys+mr and the E-battery mr chain
   in parallel. No oracle output will be read before S13.
+- **S13 harvest** (2026-09-06): queue ran 00:28–05:01 IST, all six jobs
+  EXIT=0, all 12 Ollama pre/postflights OK (no arm suspect), every arm
+  complete (20 seeds; D-c and RS-2x 2×20). gates_decomp.py output, run
+  once:
+
+  ```
+  D-a (does the brief add value without the spend multipliers?)
+    oracle_v3_no_modifier > boardroom on final MRR in 0/20 seeds (need >=15): FAIL
+    paired diff: mean +0, median +0, 95% CI [+0, +0], Wilcoxon p=1
+    survival: oracle_v3_no_modifier 100%, boardroom 100%
+    post-shock R40 (mean months 25-60): oracle_v3_no_modifier -69.4, boardroom -69.4, paired diff +0.0
+    recovered-shock rate: oracle_v3_no_modifier 72%, boardroom 72%
+
+  D-b (is the loss caused by spend-up past the corridor?)
+    oracle_v3_tier_bound > boardroom on final MRR in 8/20 seeds (need >=15): FAIL
+    paired diff: mean +20,424, median -3,920, 95% CI [-53,756, +103,516], Wilcoxon p=0.78
+    survival: oracle_v3_tier_bound 100%, boardroom 100%
+    post-shock R40 (mean months 25-60): oracle_v3_tier_bound -66.0, boardroom -69.4, paired diff +3.4
+    recovered-shock rate: oracle_v3_tier_bound 67%, boardroom 72%
+
+  D-c (does oracle value under fitted acquisition depend on shock recoverability?)
+    oracle_v3_mr > boardroom_mr on final MRR in 7/20 seeds (need >=15): FAIL
+    paired diff: mean -283,677, median -87,330, 95% CI [-721,274, +23,161], Wilcoxon p=0.39
+    survival: oracle_v3_mr 100%, boardroom_mr 100%
+    post-shock R40 (mean months 25-60): oracle_v3_mr -63.0, boardroom_mr -65.4, paired diff +2.4
+    recovered-shock rate: oracle_v3_mr 87%, boardroom_mr 93%
+
+  D-d (is the null LLM-specific? (qwen2.5:7b-instruct, v2 physics))
+    oracle_v3_qwen > boardroom on final MRR in 15/20 seeds (need >=15): PASS
+    paired diff: mean +28,842, median +16,544, 95% CI [-41,894, +98,050], Wilcoxon p=0.12
+    survival: oracle_v3_qwen 100%, boardroom 100%
+    post-shock R40 (mean months 25-60): oracle_v3_qwen -72.2, boardroom -69.4, paired diff -2.8
+    recovered-shock rate: oracle_v3_qwen 90%, boardroom 72%
+
+  L-1 (does the headline result depend on the LLM? (qwen, legacy))
+    oracle_v3_qwen_legacy > boardroom on final MRR in 20/20 seeds (need >=15): PASS
+    paired diff: mean +564,475, median +283,599, 95% CI [+305,909, +875,261], Wilcoxon p=1.9e-06
+    survival: oracle_v3_qwen_legacy 100%, boardroom 95%
+    post-shock R40 (mean months 25-60): oracle_v3_qwen_legacy -40.2, boardroom -47.6, paired diff +7.4
+    recovered-shock rate: oracle_v3_qwen_legacy 72%, boardroom 68%
+
+  RS-2x (retrieval increment under random shock timing)
+    recorded seeds 0-19: n=20, mean +11,563, median +5, 95% CI [-590, +25,014], positive in 10/20, Wilcoxon p=0.14
+    extension seeds 21-40: n=20, mean +67,783, median +13,101, 95% CI [+27,490, +115,680], positive in 13/20, Wilcoxon p=0.0045
+    pooled (target n=40): n=40, mean +39,673, median +2,229, 95% CI [+17,967, +65,928], positive in 23/40, Wilcoxon p=0.0014
+    verdict: small but detectable at n=40 (CI excludes 0)
+  ```
+
+  **Frozen interpretation rules applied literally**
+  (PROTOCOL_addendum_A.md):
+  * D-a FAIL and D-b FAIL → the rule "the brief mechanism's value survives
+    recalibration; the legacy-tuned ActionModifier spend multipliers are
+    the calibration-sensitive component" does NOT fire.
+  * D-c FAIL → "under fitted acquisition, oracle value depends on shock
+    recoverability" is NOT stated.
+  * D-d PASS while the recorded llama oracle_v3 FAILs (8/20) → **"the null
+    under v2 physics is LLM-specific"** — this rule fires.
+  * L-1 PASS → the headline oracle claim carries no llama3.1:8b qualifier
+    (the legacy result replicates 20/20 on qwen2.5:7b-instruct).
+  * Not all of D-a..D-d failed (D-d passed), so the "null stands
+    unchanged" rule does not fire.
+  * RS-2x pooled CI excludes 0 → **"small but detectable at n=40"**.
+
+  **Mechanistic note on D-a** (verified in boardroom/boardroom.py before
+  interpretation): the brief-adjusted weights only rescale proposal
+  confidences (`proposal_base_scores` → `p.confidence`); the assembled
+  action takes marketing from the CMO proposal, hiring/pricing from the
+  CFO proposal, and R&D from the CPO proposal regardless of those scores,
+  so with the ActionModifier off the brief has **no causal path into the
+  executed action**. D-a's exact-zero paired diff on all 20 seeds is the
+  expected consequence, and it establishes that the entire oracle_v3
+  behavioural delta flows through the ActionModifier spend multipliers.
+  Combined with D-b (tier-capping those multipliers does not restore
+  value), the decomposition statement supported by the data is: under the
+  fitted marketing curve with llama3.1:8b, the modifier channel is the
+  whole effect and neither removing nor bounding it recovers the recorded
+  legacy advantage — while the same architecture under the same physics
+  passes with qwen (D-d), making the v2-physics null LLM-specific.
+
+  Non-LLM companions: A2 v2phys+mr — boardroom > noop/random/heuristic on
+  final MRR, g 1.21–1.68, all Holm p≈1.6e-14 (PASS, same gate as recorded
+  A2 v2phys). E-battery mr: legacy+mr E1/E3 PASS, E2/E5 PARTIAL, E4 FAIL
+  (8.0% spend vs EDGAR band — same E4 failure mode as recorded legacy);
+  v2+mr E3/E4/E5 PASS, E1/E2 PARTIAL. Scorecards appended via
+  s13_scorecards.py (9 agent rows, 10 environment rows; never edited
+  existing rows).

@@ -1,0 +1,1 @@
+{"arm": "dd", "policy": "oracle_v3", "label": "oracle_v3_qwen", "episodes": 20, "freq": 10, "env": {"deterministic_rng": true, "marketing_curve": "v2", "competitive_entry": "scale_neutral"}, "agent": {"corridor": "scale_aware"}, "model": "qwen2.5:7b-instruct", "wall_seconds": 2319.9, "llm_calls_total": 601}

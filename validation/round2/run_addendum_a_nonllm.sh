@@ -5,7 +5,9 @@
 # Launch DETACHED into its own hidden console (survives closing the
 # launching terminal; plain `nohup ... &` dies with a conpty tab such as
 # Windows Terminal / VS Code):
-#   powershell -Command "Start-Process -WindowStyle Hidden -FilePath 'C:\Program Files\Git\bin\bash.exe' -ArgumentList '-c','cd /c/College/Capstone/CapstoneProject && bash validation/round2/run_addendum_a_nonllm.sh > validation/logs/nonllm_queue.log 2>&1'"
+#   powershell -Command "Start-Process -WindowStyle Hidden -FilePath 'C:\Program Files\Git\bin\bash.exe' -ArgumentList '-c \"cd /c/College/Capstone/CapstoneProject && bash validation/round2/run_addendum_a_nonllm.sh > validation/logs/nonllm_queue.log 2>&1\"'"
+# (single pre-quoted -ArgumentList string; see the note in
+# run_addendum_a_llm_queue.sh)
 cd "$(dirname "$0")/../.." || exit 1
 PY=venv/Scripts/python.exe
 mkdir -p validation/logs

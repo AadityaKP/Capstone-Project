@@ -88,3 +88,32 @@ read `validation/calibration/PROTOCOL_round2.md`,
 `validation/calibration/calibration_report_round2.md` (§9 lists the full
 reproduction command sequence; LLM steps need Ollama with llama3.1:8b and
 qwen2.5:7b-instruct). Session-by-session log: `validation/round2/LOG.md`.
+
+## Addendum A — oracle-layer decomposition (tag `addendum-a-preregistered`)
+
+Pre-registered arms, frozen criteria and interpretation rules:
+`validation/calibration/PROTOCOL_addendum_A.md` (committed before any run).
+
+```bash
+# LLM arms (Ollama; ~45-70 min each; one at a time - or use
+# validation/round2/run_addendum_a_llm_queue.sh for the full chain)
+python validation/round2/a3_decomp.py db   # D-b oracle_v3 + modifier_bound=tier, v2 physics
+python validation/round2/a3_decomp.py da   # D-a oracle_v3_no_modifier, v2 physics
+python validation/round2/a3_decomp.py dc   # D-c boardroom + oracle_v3, v2 + mean_revert
+python validation/round2/a3_decomp.py dd   # D-d oracle_v3, qwen2.5:7b-instruct, v2 physics
+python validation/round2/a3_decomp.py l1   # L-1 oracle_v3, qwen2.5:7b-instruct, legacy
+python validation/round2/a3_rs_ext.py      # RS-2x seeds 21-40, random schedules, legacy
+
+# non-LLM companions (seconds; or validation/round2/run_addendum_a_nonllm.sh)
+python validation/round2/a2_policy_baselines_v2phys_mr.py
+python validation/round2/e_battery_mr.py
+
+# gates + scorecard appends (run once, after all arms finish)
+python validation/round2/gates_decomp.py
+python validation/round2/s13_scorecards.py
+```
+
+Outputs: `validation/results/a3_decomp_*.csv`, `a3_oracle_value_rs_ext.csv`,
+`policy_comparison_v2phys_mr.csv`, `environment_stats_{legacy,v2}_mr.csv`.
+All v2 arms match the recorded a3_v2phys config (financing off; deviation
+note in `validation/round2/LOG.md` S12).

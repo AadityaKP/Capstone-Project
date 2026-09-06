@@ -28,3 +28,13 @@ within-unit growth volatility,E5,boardroom_v2,39,20,within-unit growth std sim 0
 "financing realism, round 2",R2-FIN-a,hold,19,19,100% of EVAL2 companies survive >50% of seeds under hold with the opportunistic hazard,PASS,v2,v1,v2,opportunistic,off
 "financing ablation, round 2",R2-FIN-b,hold,19,19,no EVAL2 company has zero surviving seeds with financing off at q0+8 - ablation premise empty,,v2,v1,v2,opportunistic,off
 drawdown depth under recoverable shocks (stretch),E6-mr,boardroom+oracle_v3,40,7,"median drawdown depth 16-17% (vs 61-63% recorded sim, 11% EDGAR); episodes rare (0.4-0.5/100q vs EDGAR 3.0); recovery rate unestimable from 3-4 censored episodes",REPORTED,v1,v1,v1,off,fixed
+QoQ revenue growth distribution (recoverable shocks),E1-mr,boardroom_legacy_mr,1293,780,"sim median 0.063 vs EDGAR IQR [0.027,0.091]; KS=0.148, W1=0.0287",PASS,v1,v1,v1,off,fixed
+growth persistence (lag-1 autocorr) (recoverable shocks),E2-mr,boardroom_legacy_mr,39,20,median autocorr sim 0.887 vs EDGAR 0.458,PARTIAL,v1,v1,v1,off,fixed
+growth deceleration with scale (recoverable shocks),E3-mr,boardroom_legacy_mr,39,20,median within-unit Spearman sim -0.750 vs EDGAR -0.637,PASS,v1,v1,v1,off,fixed
+discretionary spend / revenue (recoverable shocks),E4-mr,boardroom_legacy_mr,1288,800,"sim median discretionary spend 8.0% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL,v1,v1,v1,off,fixed
+within-unit growth volatility (recoverable shocks),E5-mr,boardroom_legacy_mr,39,20,within-unit growth std sim 0.112 vs EDGAR 0.046 (x2.4),PARTIAL,v1,v1,v1,off,fixed
+QoQ revenue growth distribution (recoverable shocks),E1-mr,boardroom_v2_mr,1293,780,"sim median 0.110 vs EDGAR IQR [0.027,0.091]; KS=0.521, W1=0.0535",PARTIAL,v2,v1,v1,off,fixed
+growth persistence (lag-1 autocorr) (recoverable shocks),E2-mr,boardroom_v2_mr,39,20,median autocorr sim 0.718 vs EDGAR 0.458,PARTIAL,v2,v1,v1,off,fixed
+growth deceleration with scale (recoverable shocks),E3-mr,boardroom_v2_mr,39,20,median within-unit Spearman sim -0.728 vs EDGAR -0.637,PASS,v2,v1,v1,off,fixed
+discretionary spend / revenue (recoverable shocks),E4-mr,boardroom_v2_mr,1288,800,"sim median discretionary spend 65.9% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",PASS,v2,v1,v1,off,fixed
+within-unit growth volatility (recoverable shocks),E5-mr,boardroom_v2_mr,39,20,within-unit growth std sim 0.037 vs EDGAR 0.046 (x0.8),PASS,v2,v1,v1,off,fixed

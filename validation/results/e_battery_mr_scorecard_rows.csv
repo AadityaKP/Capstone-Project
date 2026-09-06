@@ -1,0 +1,11 @@
+dimension,test,policy_arm,edgar_n,sim_n,result,verdict,physics_version,shock_recovery
+QoQ revenue growth distribution,E1_mr,boardroom_legacy_mr,1293,780,"sim median 0.063 vs EDGAR IQR [0.027,0.091]; KS=0.148, W1=0.0287",PASS,legacy,mean_revert
+growth persistence (lag-1 autocorr),E2_mr,boardroom_legacy_mr,39,20,median autocorr sim 0.887 vs EDGAR 0.458,PARTIAL,legacy,mean_revert
+growth deceleration with scale,E3_mr,boardroom_legacy_mr,39,20,median within-unit Spearman sim -0.750 vs EDGAR -0.637,PASS,legacy,mean_revert
+discretionary spend / revenue,E4_mr,boardroom_legacy_mr,1288,800,"sim median discretionary spend 8.0% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",FAIL,legacy,mean_revert
+within-unit growth volatility,E5_mr,boardroom_legacy_mr,39,20,within-unit growth std sim 0.112 vs EDGAR 0.046 (x2.4),PARTIAL,legacy,mean_revert
+QoQ revenue growth distribution,E1_mr,boardroom_v2_mr,1293,780,"sim median 0.110 vs EDGAR IQR [0.027,0.091]; KS=0.521, W1=0.0535",PARTIAL,v2,mean_revert
+growth persistence (lag-1 autocorr),E2_mr,boardroom_v2_mr,39,20,median autocorr sim 0.718 vs EDGAR 0.458,PARTIAL,v2,mean_revert
+growth deceleration with scale,E3_mr,boardroom_v2_mr,39,20,median within-unit Spearman sim -0.728 vs EDGAR -0.637,PASS,v2,mean_revert
+discretionary spend / revenue,E4_mr,boardroom_v2_mr,1288,800,"sim median discretionary spend 65.9% of revenue vs EDGAR p10-p90 [36.9%,93.4%] (S&M+R&D)",PASS,v2,mean_revert
+within-unit growth volatility,E5_mr,boardroom_v2_mr,39,20,within-unit growth std sim 0.037 vs EDGAR 0.046 (x0.8),PASS,v2,mean_revert
