@@ -4,14 +4,29 @@
     {
       "name": "founder-ui",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "cwd": "frontend",
       "port": 5173
     },
     {
       "name": "founder-api",
       "runtimeExecutable": "venv/Scripts/python.exe",
-      "runtimeArgs": ["run_app.py"],
+      "runtimeArgs": [
+        "run_app.py"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "founder-api-founder",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "$env:SIM_PROFILE='founder'; & ./venv/Scripts/python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"
+      ],
       "port": 8000
     }
   ]
