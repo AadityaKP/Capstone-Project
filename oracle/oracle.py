@@ -50,9 +50,19 @@ class Oracle:
         brief_version: str = "v1",
         brief_guardrails: bool = False,
         memory_query: str = "absolute",
+        dedupe_months: bool = False,
     ):
         self.mode = mode
+        # `run_id` is also the memory scope: retrieval filters on it, so a fresh
+        # UUID per request means an analysis can only ever read what it wrote
+        # itself. Product surfaces pass a stable per-company key instead
+        # (sim_profile.get_memory_scope); research runs keep the UUID.
         self.run_id = run_id or str(uuid.uuid4())
+        # Product-only: observing the same source month twice (a re-analysis of
+        # the same numbers) replaces the earlier observation instead of
+        # appending a duplicate. Off by default so research runs, where months
+        # only ever advance, stay byte-identical.
+        self.dedupe_months = bool(dedupe_months)
         self.llm = llm or LLMClient()
         self.enable_memory_retrieval = enable_memory_retrieval
         # Round-2 brief v2 flags (BRIEF_V2_SPEC.md). Defaults reproduce the
@@ -111,16 +121,40 @@ class Oracle:
         self.episode_start_mrr = None
         self.last_floor_applied = []
 
+    @property
+    def memory_scope(self) -> str:
+        return self.run_id
+
     def observe_state(self, state: EnvState, episode_seed: int | None = None) -> None:
         if episode_seed is not None:
             self.current_episode_seed = episode_seed
 
         if self.episode_start_mrr is None:
             self.episode_start_mrr = state.mrr
+
+        # Product path: the latest observation of a month wins. The replaced
+        # snapshot keeps its global_month so nothing downstream ages by a month
+        # that never passed.
+        replacing = (
+            self.dedupe_months
+            and self.latest_snapshot is not None
+            and self.latest_snapshot.source_month == state.months_elapsed
+        )
+        if replacing:
+            global_month = self.latest_snapshot.global_month
+            self.state_history.pop()
+            if (
+                self.pending_memories
+                and self.pending_memories[-1].snapshot.source_month == state.months_elapsed
+            ):
+                self.pending_memories.pop()
+        else:
+            global_month = self.global_month
+
         if self.memory_query == "normalized":
             snapshot = snapshot_state(
                 state,
-                global_month=self.global_month,
+                global_month=global_month,
                 episode_seed=self.current_episode_seed,
                 episode_start_mrr=self.episode_start_mrr,
                 prev_mrr=(self.state_history[-1].mrr if self.state_history else None),
@@ -128,7 +162,7 @@ class Oracle:
         else:
             snapshot = snapshot_state(
                 state,
-                global_month=self.global_month,
+                global_month=global_month,
                 episode_seed=self.current_episode_seed,
             )
         self.state_history.append(snapshot)
@@ -142,7 +176,47 @@ class Oracle:
                 trend_context=self.latest_trend_context,
             )
         )
-        self.global_month += 1
+        if not replacing:
+            self.global_month += 1
+
+    # ---- per-company persistence (docs/oefa_loop_decisions.md, decision 4) ----
+    #
+    # The Oracle is constructed fresh per request with global_month = 0, so
+    # without this the pending-memory queue dies with the request and "memories
+    # written this cycle mature next cycle" is false. The product path exports
+    # after every analysis and imports before the next one for the same company.
+
+    def export_state(self) -> dict:
+        return {
+            "global_month": int(self.global_month),
+            "episode_global_start": int(self.episode_global_start),
+            "episode_start_mrr": self.episode_start_mrr,
+            "current_episode_seed": self.current_episode_seed,
+            "state_history": [s.model_dump(mode="json") for s in self.state_history],
+            "pending_memories": [p.model_dump(mode="json") for p in self.pending_memories],
+        }
+
+    def import_state(self, payload: dict | None) -> None:
+        if not payload:
+            return
+        from oracle.schemas import StateSnapshot
+
+        self.global_month = int(payload.get("global_month", 0))
+        self.episode_global_start = int(payload.get("episode_global_start", 0))
+        self.episode_start_mrr = payload.get("episode_start_mrr")
+        self.current_episode_seed = payload.get("current_episode_seed")
+        self.state_history.clear()
+        for item in payload.get("state_history") or []:
+            self.state_history.append(StateSnapshot(**item))
+        self.pending_memories.clear()
+        for item in payload.get("pending_memories") or []:
+            self.pending_memories.append(PendingMemoryEntry(**item))
+        self.latest_snapshot = self.state_history[-1] if self.state_history else None
+        self.latest_trend_context = (
+            compute_trend_context(list(self.state_history))
+            if self.state_history
+            else TrendContext()
+        )
 
     def get_context(
         self,
@@ -232,6 +306,17 @@ class Oracle:
                 contexts[role] = context
         return contexts
 
+    @property
+    def graph_store_enabled(self) -> bool:
+        """True only when a causal write would actually land somewhere. The
+        failure mode of write_causal_outcome is silence, so product surfaces
+        report this rather than assuming the loop is closed."""
+        return bool(
+            self.graph_store is not None
+            and getattr(self.graph_store, "enabled", False)
+            and hasattr(self.graph_store, "write_action_outcome")
+        )
+
     def write_causal_outcome(
         self,
         action: dict,
@@ -240,26 +325,38 @@ class Oracle:
         stress_node: str | None = None,
         episode_id: int | None = None,
         month: int | None = None,
-    ) -> None:
-        """Persist action-to-KPI evidence when causal graph storage is active."""
+        source: str | None = None,
+        weight: float = 1.0,
+    ) -> bool:
+        """Persist action-to-KPI evidence when causal graph storage is active.
 
-        if (
-            self.graph_store is None
-            or not getattr(self.graph_store, "enabled", False)
-            or not hasattr(self.graph_store, "write_action_outcome")
-        ):
-            return
+        Returns True when the write was attempted, False when it was skipped
+        because no graph store is active - callers that promise a learning loop
+        must surface that False rather than swallow it. `source`/`weight` are
+        the evidence-provenance controls documented on
+        CausalGraphStore.write_action_outcome; None keeps the research path
+        byte-identical.
+        """
+
+        if not self.graph_store_enabled:
+            return False
+        kwargs = {
+            "action": action,
+            "kpi_delta": kpi_delta,
+            "confidence": confidence,
+            "stress_node": stress_node,
+            "episode_id": episode_id,
+            "month": month,
+        }
+        if source is not None:
+            kwargs["source"] = source
+            kwargs["weight"] = weight
         try:
-            self.graph_store.write_action_outcome(
-                action=action,
-                kpi_delta=kpi_delta,
-                confidence=confidence,
-                stress_node=stress_node,
-                episode_id=episode_id,
-                month=month,
-            )
+            self.graph_store.write_action_outcome(**kwargs)
         except Exception as exc:
             print(f"[Oracle] Causal outcome write failed: {exc}")
+            return False
+        return True
 
     def generate_brief(
         self,

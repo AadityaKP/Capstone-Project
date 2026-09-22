@@ -7,14 +7,34 @@ import { useStore } from "../store.jsx";
 import { health } from "../api.js";
 import { Banner } from "../components.jsx";
 
+// One capability line: what it is, whether it is on, and the server's own
+// reason. The reason is shown verbatim because the failure modes behind these
+// are silent inside the engine and paraphrasing them would hide the detail.
+function Capability({ on, label, reason }) {
+  return (
+    <li className={`cap-row ${on ? "on" : "off"}`}>
+      {on ? <CheckCircle2 size={15} className="ok-icon" /> : <CircleOff size={15} className="warn-icon" />}
+      <span>
+        <strong>{label}</strong>
+        <em>{reason}</em>
+      </span>
+    </li>
+  );
+}
+
 export default function Settings({ navigate }) {
   const { state, dispatch } = useStore();
   const [apiUp, setApiUp] = useState(null);
+  const [loop, setLoop] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    health().then((r) => { if (alive) setApiUp(r.ok); });
+    health().then((r) => {
+      if (!alive) return;
+      setApiUp(r.ok);
+      setLoop(r.ok ? r.data?.loop || null : null);
+    });
     return () => { alive = false; };
   }, []);
 
@@ -42,6 +62,40 @@ export default function Settings({ navigate }) {
             ? (<><CheckCircle2 size={16} className="ok-icon" /> Connected — analyses run against the engine.</>)
             : (<><CircleOff size={16} className="warn-icon" /> Not reachable. Data entry and history work; analyses need the engine service at <code>/api</code>.</>)}
         </p>
+        {/* The learning loop's three capabilities, each stated rather than
+            assumed. A plan that claims the board learns while the graph is
+            unreachable is the one thing this product must never show. */}
+        {loop && (
+          <>
+            <p className="subtle cap-intro">
+              What the board can actually do right now
+              {loop.advisor_mode && <> · advisor mode <code>{loop.advisor_mode}</code></>}
+            </p>
+            <ul className="cap-list">
+              <Capability
+                on={loop.llm_reachable}
+                label="Strategist (language model)"
+                reason={loop.llm_reachable
+                  ? "Fresh briefs and proposals each month."
+                  : "Unreachable — plans come from the board's built-in rules and say so."}
+              />
+              <Capability
+                on={loop.memory_store_enabled}
+                label="Memory, scoped to your company"
+                reason={loop.memory_store_enabled
+                  ? "Each analysis can read what earlier ones learned about this company."
+                  : "Off — nothing is remembered between analyses."}
+              />
+              <Capability
+                on={loop.graph_store_enabled}
+                label="Causal evidence graph"
+                reason={loop.graph_store_enabled
+                  ? "What happens after each plan is written back as evidence."
+                  : `Off — ${loop.graph_store_reason}. The board still advises and remembers, but what happens next is not written back as evidence.`}
+              />
+            </ul>
+          </>
+        )}
       </article>
 
       {state.demo && (

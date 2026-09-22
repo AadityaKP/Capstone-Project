@@ -130,6 +130,69 @@ def initialize_database() -> None:
                 FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
             );
 
+            -- OEFA loop (docs/oefa_loop_plan.md). One cycle = H months stepped
+            -- through Observe -> Execute -> Feedback -> Adapt on a background
+            -- thread; months land in cycle_months as they finish so the client
+            -- can render each without waiting for all of them.
+            CREATE TABLE IF NOT EXISTS cycles (
+                id TEXT PRIMARY KEY,
+                company_id TEXT NOT NULL,
+                month_index INTEGER NOT NULL,
+                horizon_months INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                error TEXT,
+                request_json TEXT NOT NULL,
+                summary_json TEXT,
+                oracle_mode TEXT,
+                use_oracle INTEGER NOT NULL DEFAULT 1,
+                seed INTEGER,
+                created_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS cycle_months (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cycle_id TEXT NOT NULL,
+                month_index INTEGER NOT NULL,
+                month_json TEXT NOT NULL,
+                latency_s REAL,
+                created_at TEXT NOT NULL,
+                UNIQUE (cycle_id, month_index),
+                FOREIGN KEY (cycle_id) REFERENCES cycles(id) ON DELETE CASCADE
+            );
+
+            -- State ownership decision (plan section 2.4, option a): cycles carry
+            -- their own actuals here; the browser stays the founder's record.
+            -- Shaped so moving months server-side later is a migration into
+            -- company_months, not a rewrite.
+            CREATE TABLE IF NOT EXISTS cycle_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cycle_id TEXT NOT NULL,
+                month_index INTEGER NOT NULL,
+                feedback_json TEXT NOT NULL,
+                result_json TEXT,
+                created_at TEXT NOT NULL,
+                UNIQUE (cycle_id, month_index),
+                FOREIGN KEY (cycle_id) REFERENCES cycles(id) ON DELETE CASCADE
+            );
+
+            -- The Oracle's per-company state (global_month, pending memories,
+            -- recent snapshots). Without it every request starts at month 0 and
+            -- the pending-memory queue dies with the request. No foreign key:
+            -- this is a cache keyed by company id, written by the analysis
+            -- services whether or not the company row exists yet.
+            CREATE TABLE IF NOT EXISTS company_oracle_state (
+                company_id TEXT PRIMARY KEY,
+                state_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_cycles_company
+                ON cycles(company_id, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_cycle_months_cycle
+                ON cycle_months(cycle_id, month_index);
             CREATE INDEX IF NOT EXISTS idx_runs_created_at
                 ON simulation_runs(created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_months_company

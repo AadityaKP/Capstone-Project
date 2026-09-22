@@ -17,6 +17,7 @@ from backend.schemas import (
     WhatIfRequest,
 )
 from backend.advise_service import run_analysis, store_analysis
+from backend.loop_status import loop_status
 from backend.sim_profile import get_oracle_mode, get_profile
 from backend.whatif_service import run_whatif
 from backend.simulation_service import (
@@ -54,12 +55,20 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health() -> dict:
+    """Service status plus whether the learning loop is actually live.
+
+    `loop` says, per capability, whether Feedback writes land (graph store),
+    whether Adapt can read the company's own past (memory scope) and whether
+    Execute can get a fresh brief (LLM). Each failure mode is silent inside the
+    engine, so this is where it is made visible (plan section 2.2).
+    """
     return {
         "status": "ok",
         "database": "sqlite",
         "simulation_engine": "ready",
         "advisor_mode": get_oracle_mode(),
         "sim_profile": get_profile(),
+        "loop": loop_status(),
     }
 
 

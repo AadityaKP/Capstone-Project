@@ -116,24 +116,50 @@ def use_causal_proposals() -> bool:
     return is_founder() and get_oracle_mode() == "oracle_v4_causal"
 
 
-def get_oracle_kwargs(churn_benchmark_pct: float | None = None) -> dict[str, Any]:
+def get_memory_scope(company_id: str | None) -> str:
+    """The Oracle run_id for a product analysis: stable per company.
+
+    OracleMemoryStore.retrieve_similar filters on run_id, so the scope is what
+    decides whether an analysis can read what a previous one wrote. A fresh
+    UUID per request (the previous behaviour) made founder memory write-only:
+    nothing any earlier analysis stored was ever reachable. One key per company
+    is what lets Adapt and the HITL close see the company's own past.
+
+    Without a company id there is nothing to scope to, and a UUID keeps the
+    old isolation rather than pooling anonymous requests together.
+    """
+    if not company_id:
+        return str(uuid.uuid4())
+    return f"company:{company_id}"
+
+
+def get_oracle_kwargs(
+    churn_benchmark_pct: float | None = None,
+    company_id: str | None = None,
+) -> dict[str, Any]:
     """Extra kwargs for Oracle(...) beyond mode.
 
     founder: the isolated chroma_db_founder store (never the research corpus),
     burn context in the prompt, and the published churn benchmark when one
     covers the company's price band.
 
-    review2: nothing - Oracle(mode="oracle_v3") builds its own
-    OracleMemoryStore against CHROMA_PATH (default ./chroma_db, the repo
-    research corpus) and the research prompt stays byte-identical.
+    review2: only the memory scope and month de-duplication. Oracle(mode=
+    "oracle_v3") still builds its own OracleMemoryStore against CHROMA_PATH
+    (default ./chroma_db) and the research prompt template stays byte-identical;
+    what changes is that a second analysis of the same company can now retrieve
+    memories the first one matured, which under a per-request UUID it never
+    could.
     """
+    scope = get_memory_scope(company_id)
     if not is_founder():
-        return {}
+        return {"run_id": scope, "dedupe_months": True}
     from oracle.memory import OracleMemoryStore
 
     return {
+        "run_id": scope,
+        "dedupe_months": True,
         "memory_store": OracleMemoryStore(
-            run_id=str(uuid.uuid4()),
+            run_id=scope,
             chroma_path=FOUNDER_CHROMA_PATH,
         ),
         "include_burn_context": True,
