@@ -52,17 +52,17 @@ FOUNDER_ORACLE_MODE = os.getenv("FOUNDER_ORACLE_MODE", "oracle_v4_causal")
 FOUNDER_ORACLE_FREQUENCY = 1
 
 # Which marketing-response curve the founder physics run (docs/oefa_loop_decisions.md,
-# decision 9 - an OPEN decision). "scale_aware" is the customer/CAC-anchored
-# curve with the ASSUMED saturation rate 0.20, what the founder product has
-# shipped with; "v2" is the same curve with the rate physics_v2 fitted on the
-# CAL panel (0.0727), which falsified 0.20. The product's expected_delta is a
-# prediction the founder is later scored against, and on the seeded demo
-# company ($31.9k MRR, $10.2k of marketing) the assumed curve predicts MRR
-# +41.9% over two months where the fitted one predicts +17.4%. Under the fitted
-# curve the what-if fixtures in tests/test_whatif.py no longer survive, so the
-# default stays as shipped until that trade-off is decided; set
-# FOUNDER_MARKETING_CURVE=v2 to run the fitted curve.
-FOUNDER_MARKETING_CURVE = os.getenv("FOUNDER_MARKETING_CURVE", "scale_aware")
+# decision 9). "v2" is the customer/CAC-anchored curve with the saturation
+# rate physics_v2 fitted on the CAL panel (0.0727, HOLDOUT median growth error
+# 8.1pp); "scale_aware" is the same curve with the ASSUMED rate 0.20 the
+# product shipped with before the loop, which that fit falsified (49.7pp on
+# CAL). The product's expected_delta is a prediction the founder is later
+# scored against, and at founder scale the assumed rate predicts roughly twice
+# the marketing response of the fitted one (sample company, 10% of MRR on
+# marketing: +16.9% vs +8.4% MRR over two months), so every close would have
+# read "we were high". Set FOUNDER_MARKETING_CURVE=scale_aware to reproduce
+# the pre-loop product.
+FOUNDER_MARKETING_CURVE = os.getenv("FOUNDER_MARKETING_CURVE", "v2")
 
 # The boardroom's absolute spend floors are calibrated at this MRR (spec G11).
 CALIBRATION_MRR = 50_000.0

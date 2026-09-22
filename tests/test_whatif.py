@@ -193,10 +193,20 @@ def test_projection_returns_all_policies_with_full_bands():
 
 
 def test_iqr_band_brackets_the_median():
+    """Over survivors only: a month nobody reaches is None on all three lines
+    rather than a forward-filled corpse, and there is nothing to bracket.
+    (Under the fitted marketing curve the FOUNDER fixture's recommended arm
+    runs out of cash inside the horizon, so the tail of this series is None.)"""
     result = run_whatif(FOUNDER)
     mrr = result["policies"]["recommended"]["series"]["mrr"]
+    scored = 0
     for low, mid, high in zip(mrr["p25"], mrr["median"], mrr["p75"]):
+        if mid is None:
+            assert low is None and high is None
+            continue
         assert low <= mid <= high
+        scored += 1
+    assert scored >= 1
 
 
 def test_projection_is_reproducible():
@@ -327,8 +337,12 @@ def test_a_founder_is_not_killed_by_the_engines_own_salary_slot():
 def test_the_projection_is_not_one_number_drawn_twelve_times():
     """Forward-filling a company that died in month 0 made every chart flat."""
     series = run_whatif(copy.deepcopy(FOUNDER_SMALL))["policies"][POLICY_HOLD]["series"]["mrr"]["median"]
+    assert None not in series, "a $500/month company on $2,500 of revenue does not die"
     assert len(set(series)) > 1
-    assert series[-1] > series[0]
+    # Direction is the physics' call, not this test's: with $10 of marketing
+    # the fitted curve lets churn win, the assumed one did not. What matters
+    # here is that twelve distinct months were simulated.
+    assert series[-1] != series[0]
 
 
 def test_marketing_at_founder_scale_is_not_a_money_printer():

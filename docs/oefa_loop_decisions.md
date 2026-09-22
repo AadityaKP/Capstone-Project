@@ -97,28 +97,44 @@ of horizon, which would label 4-month evidence with the 6-month ±10 % rule into
 the store the thesis reads. Memories mature from real HITL months instead,
 which genuinely arrive a month apart.
 
-## 9. OPEN — which marketing curve the founder prediction runs
+## 9. The founder prediction runs the fitted marketing curve (closed)
 
-Found while seeding the demo: the founder profile's projection physics use
+Found while seeding the demo: the founder profile's projection physics used
 the customer/CAC-anchored marketing curve with the *assumed* saturation rate
 0.20 (`scale_aware_marketing`), the constant physics_v2 falsified when it
-fitted 0.0727 (CI 0.0475–0.1113) on the CAL panel. Measured on the seeded
-company at $31.9k MRR with $10.2k of marketing:
+fitted 0.0727 (CI 0.0475–0.1113) on the CAL panel. Both curves were tested
+side by side before deciding (2026-09-22):
 
-| curve | predicted MRR over 2 months |
-|---|---|
-| founder as shipped (assumed 0.20) | +41.9 % |
-| founder with the fitted rate (`marketing_curve="v2"`) | +17.4 % |
-| review2 research physics | +42.2 % |
+| evidence | assumed 0.20 | fitted 0.0727 |
+|---|---|---|
+| CAL median 4q growth error (real companies, `calibration_report.md` §4) | 49.7 pp | 12.9 pp |
+| HOLDOUT (one touch) | falsified | 8.1 pp, 100 % sign agreement, PASS |
+| sample company, 10 % of MRR on marketing, 2-month MRR prediction | +16.9 % | +8.4 % |
+| same, 20 % of MRR | +19.7 % | +9.1 % |
+| seeded history, harness mean revenue error (synthetic, illustrative) | 20 pp high | 4 pp high |
 
-`expected_delta` is a prediction the founder is later scored on, so the
-fitted curve is the defensible one. But under it the what-if fixtures in
-`tests/test_whatif.py` no longer survive their 12-month projection (the
-recommended arm goes from surviving to 0 %), which is a product-behaviour
-change beyond this plan. The switch exists (`FOUNDER_MARKETING_CURVE=v2`)
-and defaults to the shipped curve until the trade-off is decided. Whichever
-way it goes, the prediction-error harness reports the calibration of the
-curve actually in use, and research runs never read `sim_profile`.
+With no marketing the curves agree, so the whole gap is the marketing
+response: the assumed rate predicts roughly twice the fitted one at founder
+scale, which would have made every close-the-month read "we were high".
+Decision: `FOUNDER_MARKETING_CURVE` defaults to `v2`; `scale_aware`
+reproduces the pre-loop product. Research runs never read `sim_profile`.
+
+Three consequences were handled with the switch. (1) Two what-if tests had
+pinned the assumed curve's growth (a fixture's recommended arm surviving,
+another's hold arm growing on $10 of marketing); they now assert what they
+were written to protect, that ragged paths are handled and twelve distinct
+months are simulated. (2) The demo company's cost line was chosen so it
+survives its own plan under the fitted physics: at ~$33k MRR, $36k of costs
+with $300k of cash keeps both the plan and the hold arm alive in every run,
+where the previous $47k on $200k died in every run under *either* curve.
+(3) The canned sample company was moved onto the same footing.
+
+Caveats that stay: neither curve has founder-scale data behind it (the fit
+is from companies at $10M+ revenue, and a small startup can plausibly add
+more than 7 % of its customer base in a month), so the HITL harness is the
+instrument that will settle it. The UI's "cash lasts" figure ignores the
+83.5 % gross margin the physics apply, which is why a projection can look
+harsher than the KPI tile; not changed here.
 
 ## 10. The demo runs the founder profile
 
