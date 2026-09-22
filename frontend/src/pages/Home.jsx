@@ -3,7 +3,7 @@
 import React from "react";
 import { ChevronRight, FlaskConical, RefreshCw } from "lucide-react";
 import {
-  useStore, latestMonth, previousMonth, latestAnalysis
+  useStore, latestMonth, previousMonth, latestAnalysis, latestClosedFeedback
 } from "../store.jsx";
 import {
   deriveCac, deriveLtv, monthDeltas,
@@ -13,8 +13,39 @@ import {
   runwayMonths, runwayLabel, churnLabel, churnPhrase, efficiency,
   showRuleOf40, spendRatioLabel
 } from "../founderView.js";
-import { positionSentence, refreshReasonCopy, expectedOutcomeCopy, OUTCOME } from "../copy.js";
-import { RiskChip, KpiCard, DeltaArrow, Banner, buildPlanCards, PlanCard, SimulatedTag } from "../components.jsx";
+import { positionSentence, refreshReasonCopy, expectedOutcomeCopy, DOMAIN_META } from "../copy.js";
+import { RiskChip, KpiCard, DeltaArrow, Banner, buildPlanCards, PlanCard } from "../components.jsx";
+import { predictionSentences } from "../loopView.js";
+
+// Plan section 6.3: the board's prediction error lives on the "What changed"
+// panel, in the same list as "Revenue grew 4%", because that is where the
+// founder already looks. It is a real number from the close-the-month step,
+// never a narrative.
+function predictionErrorLines(state, prev) {
+  const closed = latestClosedFeedback(state);
+  if (!closed || !prev || closed.cycle.monthId !== prev.id) return [];
+  const result = closed.feedback.result;
+  const month1 = (closed.cycle.months || [])[0];
+  if (!result || !month1) return [];
+  const lines = predictionSentences({
+    before: month1.observe?.state_before,
+    actual: result.actual_state,
+    expected: month1.execute?.expected_delta,
+    error: result.prediction_error
+  }).map((s) => ({ key: s.key, tone: s.tone, text: s.text }));
+  for (const item of result.per_action || []) {
+    if (item.done === "didnt") {
+      lines.push({
+        key: `skip-${item.action_key}`, tone: "muted",
+        text: `You didn't do the ${DOMAIN_META[item.action_key]?.title.toLowerCase() || item.action_key} step, so we're not counting this month as evidence about it.`
+      });
+    }
+  }
+  if (result.evidence && !result.evidence.written && result.evidence.credited?.length) {
+    lines.push({ key: "evidence", tone: "muted", text: `Nothing was written back as evidence: ${result.evidence.reason}.` });
+  }
+  return lines;
+}
 
 export default function Home({ navigate }) {
   const { state } = useStore();
@@ -22,6 +53,7 @@ export default function Home({ navigate }) {
   const prev = previousMonth(state);
   const analysis = latestAnalysis(state);
   const analysisIsCurrent = analysis && month && analysis.monthId === month.id;
+  const errorLines = predictionErrorLines(state, prev);
 
   if (!month) return null;
 
@@ -55,7 +87,7 @@ export default function Home({ navigate }) {
       <button
         type="button"
         className={`position-banner ${brief ? (brief.risk_level || "MEDIUM").toLowerCase() : "none"}`}
-        onClick={() => navigate("/advice")}
+        onClick={() => navigate("/plan")}
       >
         <div className="position-line">
           {brief && <RiskChip level={brief.risk_level} large />}
@@ -86,6 +118,21 @@ export default function Home({ navigate }) {
             ? "The plan below reflects your previous numbers until you re-analyse."
             : "The board hasn't reviewed these numbers yet."}
         </Banner>
+      )}
+
+      {/* Plan section 8.1: lead with the prediction error, do not bury it. */}
+      {errorLines.length > 0 && (
+        <article className="panel scored-panel">
+          <div className="panel-title-row">
+            <h3>How last month's plan held up</h3>
+            <button className="link-button" type="button" onClick={() => navigate("/plan")}>
+              What the board changed <ChevronRight size={15} />
+            </button>
+          </div>
+          <ul className="changed-list">
+            {errorLines.map((l) => <li key={l.key} className={`pe-line ${l.tone}`}>{l.text}</li>)}
+          </ul>
+        </article>
       )}
 
       {/* 2 · KPI row */}
@@ -124,8 +171,8 @@ export default function Home({ navigate }) {
         <article className="panel">
           <div className="panel-title-row">
             <h3>This month's plan</h3>
-            <button className="link-button" type="button" onClick={() => navigate("/advice")}>
-              Full advice <ChevronRight size={15} />
+            <button className="link-button" type="button" onClick={() => navigate("/plan")}>
+              The next {4} months <ChevronRight size={15} />
             </button>
           </div>
           <div className="plan-compact-grid">
@@ -153,7 +200,7 @@ export default function Home({ navigate }) {
 
       {/* 5 · evidence peek */}
       {analysisIsCurrent && (outcomeCopy || memories.length > 0) && (
-        <button type="button" className="evidence-peek" onClick={() => navigate("/advice")}>
+        <button type="button" className="evidence-peek" onClick={() => navigate(`/advice/${analysis.id}`)}>
           <FlaskConical size={15} />
           <span>
             {outcomeCopy || "The board weighed similar simulated situations for this plan."}
@@ -170,7 +217,7 @@ export default function Home({ navigate }) {
           {age != null && age > 0 && ` · ${age} day${age === 1 ? "" : "s"} ago`} · Update takes ~2 minutes
         </span>
         <button className={stale ? "primary-button small" : "secondary-button small"} type="button" onClick={() => navigate("/update")}>
-          Update my numbers
+          Close the month
         </button>
       </footer>
     </section>

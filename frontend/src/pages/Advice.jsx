@@ -4,12 +4,12 @@
 import React, { useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import {
-  useStore, latestAnalysis, latestMonth, monthById, analysisForMonth, uid
+  useStore, latestAnalysis, latestMonth, monthById, cycleById, feedbackForCycleMonth, uid
 } from "../store.jsx";
 import { positionSentence, expectedOutcomeCopy, scaleWord, FOCUS_LABELS } from "../copy.js";
 import {
   RiskChip, Banner, buildPlanCards, PlanCard, FocusBar, EvidenceList,
-  ConfidenceStrip, RiskBullets, SimulatedTag
+  ConfidenceStrip, RiskBullets, SimulatedTag, OefaStrip, monthFromAnalysis
 } from "../components.jsx";
 import { deriveCac, deriveLtv, monthName } from "../derive.js";
 import { runwayMonths } from "../founderView.js";
@@ -39,6 +39,14 @@ export default function Advice({ navigate, params }) {
   const isArchived = analysis && latestAnalysis(state) && analysis.id !== latestAnalysis(state).id;
 
   const planCards = useMemo(() => buildPlanCards(analysis, month), [analysis, month]);
+
+  // The OEFA strip, retroactively (plan section 5.1): from the cycle month
+  // this analysis came from when there is one, else synthesised from the
+  // trace so the vocabulary is the same on every surface.
+  const cycle = analysis?.cycleId ? cycleById(state, analysis.cycleId) : null;
+  const cycleMonth = cycle ? (cycle.months || [])[(analysis.monthIndex || 1) - 1] || null : null;
+  const oefaMonth = cycleMonth || monthFromAnalysis(analysis);
+  const closed = cycle ? feedbackForCycleMonth(cycle, analysis.monthIndex || 1) : null;
 
   // What-if projection (D5). Run on demand rather than with the analysis: it is
   // a separate question, and firing it automatically would spend the founder's
@@ -144,7 +152,7 @@ export default function Advice({ navigate, params }) {
     <section className="content-stack advice-page">
       {isArchived && (
         <Banner tone="info" actions={
-          <button className="secondary-button small" type="button" onClick={() => navigate("/advice")}>Latest advice</button>
+          <button className="secondary-button small" type="button" onClick={() => navigate("/plan")}>Current plan</button>
         }>
           Archived analysis from {monthName(month.enteredAt)} — shown as it was.
         </Banner>
@@ -168,6 +176,9 @@ export default function Advice({ navigate, params }) {
 
       {/* L6 strip */}
       <ConfidenceStrip analysis={analysis} month={month} estimatedCount={estimatedCount} />
+
+      {/* Observed · Decided · Expected · Changed — one vocabulary everywhere */}
+      {oefaMonth && <OefaStrip month={oefaMonth} closed={closed} defaultOpen />}
 
       {/* guarded LLM bullets */}
       <RiskBullets brief={brief} knownNumbers={known} />

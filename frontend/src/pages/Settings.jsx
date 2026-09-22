@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, CircleOff, FlaskConical, Trash2 } from "lucide-react";
 import { useStore } from "../store.jsx";
-import { health } from "../api.js";
+import { health, demoBootstrap } from "../api.js";
 import { Banner } from "../components.jsx";
 
 // One capability line: what it is, whether it is on, and the server's own
@@ -26,7 +26,9 @@ export default function Settings({ navigate }) {
   const { state, dispatch } = useStore();
   const [apiUp, setApiUp] = useState(null);
   const [loop, setLoop] = useState(null);
+  const [seeded, setSeeded] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmSeed, setConfirmSeed] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -34,9 +36,17 @@ export default function Settings({ navigate }) {
       if (!alive) return;
       setApiUp(r.ok);
       setLoop(r.ok ? r.data?.loop || null : null);
+      if (r.ok) demoBootstrap().then((b) => { if (alive) setSeeded(b.ok ? b.data : null); });
     });
     return () => { alive = false; };
   }, []);
+
+  function loadSeeded() {
+    if (!seeded) return;
+    const { seeded_at, ...workspace } = seeded;
+    dispatch({ type: "IMPORT_STATE", state: workspace });
+    navigate("/home");
+  }
 
   return (
     <section className="content-stack narrow-col">
@@ -105,6 +115,32 @@ export default function Settings({ navigate }) {
           <button className="secondary-button" type="button" onClick={() => { dispatch({ type: "EXIT_DEMO" }); navigate("/"); }}>
             Leave sample company
           </button>
+        </article>
+      )}
+
+      {seeded && !state.demo && (
+        <article className="panel">
+          <h3>Seeded demo company</h3>
+          <p className="subtle">
+            A company with six months of history and two cycles already run on the engine — one closed
+            with real numbers — so the loop has something to show from the first screen.
+          </p>
+          {!confirmSeed ? (
+            <button className="secondary-button" type="button" onClick={() => setConfirmSeed(true)}>
+              Load the seeded demo company
+            </button>
+          ) : (
+            <Banner tone="warn" actions={
+              <>
+                <button className="secondary-button small" type="button" onClick={() => setConfirmSeed(false)}>Keep mine</button>
+                <button className="danger-button small" type="button" onClick={loadSeeded}>Replace with the seeded company</button>
+              </>
+            }>
+              {state.company
+                ? `This replaces ${state.company.name} and its ${state.months.length} month${state.months.length === 1 ? "" : "s"} in this browser.`
+                : "This fills this browser with the seeded company."}
+            </Banner>
+          )}
         </article>
       )}
 

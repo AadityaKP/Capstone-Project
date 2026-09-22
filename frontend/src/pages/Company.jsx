@@ -3,14 +3,18 @@
 // editing with an instant what-changed payoff.
 
 import React, { useMemo, useState } from "react";
-import { ChevronRight, PencilLine } from "lucide-react";
-import { useStore, latestMonth, uid } from "../store.jsx";
+import { ChevronRight, LoaderCircle, PencilLine } from "lucide-react";
+import {
+  useStore, latestMonth, latestCycle, feedbackForCycleMonth, uid
+} from "../store.jsx";
 import {
   CROWDEDNESS, MATURITY, deriveCac, deriveLtv,
   money, moneyExact, pct, signedPct, signedPp, dateLabel, monthsLabel
 } from "../derive.js";
 import { runwayLabel } from "../founderView.js";
-import { ProvChip, Banner } from "../components.jsx";
+import { ProvChip, Banner, buildPlanCards } from "../components.jsx";
+import { submitCycleFeedback } from "../api.js";
+import { DONE_STATES, DONE_TO_DECISION } from "../loopView.js";
 
 function Row({ label, value, chip, chipDate }) {
   return (
@@ -92,10 +96,68 @@ const UPDATE_FIELDS = [
   { key: "price", label: "Average price", prefix: "$", optional: true }
 ];
 
+// The HITL close (plan section 6.1), merged into the update ritual rather than
+// added beside it: one screen, one set of numbers, one submit. Above the
+// number grid the founder says what happened to each of last month's actions
+// (did / partly / didn't, plus a note); the numbers follow; the server then
+// scores the prediction, writes evidence only for what was actually done, and
+// the next cycle starts from these real numbers.
+function ClosableActions({ cards, done, notes, onDone, onNote }) {
+  return (
+    <div className="close-month">
+      <h4>Last month the board asked for these — what happened?</h4>
+      <ul className="close-list">
+        {cards.map((c) => (
+          <li key={c.domain} className="close-item">
+            <div className="close-item-head">
+              <span className="plan-domain">{c.title}</span>
+              <strong>{c.headline}</strong>
+            </div>
+            <div className="did-toggle" role="group" aria-label={`${c.title}: what happened`}>
+              {DONE_STATES.map((s) => (
+                <button
+                  key={s.id} type="button"
+                  className={`did-option ${done[c.domain] === s.id ? `on ${s.id}` : ""}`}
+                  onClick={() => onDone(c.domain, s.id)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text" className="close-note" placeholder="Optional note — e.g. did $4k instead"
+              value={notes[c.domain] || ""}
+              onChange={(e) => onNote(c.domain, e.target.value)}
+            />
+            {done[c.domain] === "didnt" && (
+              <span className="close-hint">You didn't do this, so this month won't count as evidence about it.</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function UpdateRitual({ navigate }) {
   const { state, dispatch } = useStore();
   const last = latestMonth(state);
   const [values, setValues] = useState(() => ({ ...last?.values }));
+  const [done, setDone] = useState({});
+  const [notes, setNotes] = useState({});
+  const [closing, setClosing] = useState(false);
+  const [closeError, setCloseError] = useState(null);
+
+  // The plan to close: the latest cycle, if it was made on the month being
+  // closed and hasn't been closed already.
+  const cycle = latestCycle(state);
+  const closable = !state.demo && cycle && last && cycle.monthId === last.id
+    && (cycle.months || []).length > 0 && !feedbackForCycleMonth(cycle, 1);
+  const cycleAnalysis = closable ? state.analyses.find((a) => a.cycleId === cycle.id) : null;
+  const actionCards = useMemo(
+    () => (closable && cycleAnalysis ? buildPlanCards(cycleAnalysis, last).filter((c) => c.isAction) : []),
+    [closable, cycleAnalysis, last]
+  );
 
   if (!last) { navigate("/"); return null; }
 
@@ -113,29 +175,77 @@ export function UpdateRitual({ navigate }) {
     return out;
   }, [values, last]);
 
-  const valid = values.mrr > 0 && values.cash > 0 && values.costs > 0 && values.churnMonthly != null && values.churnMonthly >= 0;
+  const numbersValid = values.mrr > 0 && values.cash > 0 && values.costs > 0 && values.churnMonthly != null && values.churnMonthly >= 0;
+  const actionsAnswered = actionCards.every((c) => done[c.domain]);
+  const valid = numbersValid && actionsAnswered;
 
-  function submit() {
-    if (!valid || state.demo) return;
-    dispatch({
-      type: "ADD_MONTH",
-      month: {
-        id: uid("m"),
-        index: (last.index || 0) + 1,
-        enteredAt: new Date().toISOString(),
-        values: { ...last.values, ...values },
-        decisions: []
+  async function submit() {
+    if (!valid || state.demo || closing) return;
+    const newMonth = {
+      id: uid("m"),
+      index: (last.index || 0) + 1,
+      enteredAt: new Date().toISOString(),
+      values: { ...last.values, ...values },
+      decisions: []
+    };
+    dispatch({ type: "ADD_MONTH", month: newMonth });
+
+    if (closable && actionCards.length) {
+      setClosing(true);
+      setCloseError(null);
+      // The founder's answers become the planned month's decisions, so
+      // History shows them with the same glyphs it always used.
+      for (const c of actionCards) {
+        dispatch({
+          type: "SET_DECISION",
+          monthId: last.id,
+          decision: {
+            id: uid("d"), domain: c.domain, text: c.headline,
+            state: DONE_TO_DECISION[done[c.domain]], note: notes[c.domain] || null
+          }
+        });
       }
-    });
+      const perAction = actionCards.map((c) => ({
+        action_key: c.domain, done: done[c.domain], note: notes[c.domain] || null
+      }));
+      const actuals = {
+        mrr: newMonth.values.mrr, cash: newMonth.values.cash,
+        churn: newMonth.values.churnMonthly, costs: newMonth.values.costs ?? null
+      };
+      const r = await submitCycleFeedback(cycle.id, { monthIndex: 1, perAction, actuals });
+      dispatch({
+        type: "SET_CYCLE_FEEDBACK",
+        cycleId: cycle.id, monthIndex: 1,
+        submitted: { per_action: perAction, actuals },
+        result: r.ok ? r.data : null,
+        error: r.ok ? null : (r.offline ? "engine unreachable" : r.error)
+      });
+      setClosing(false);
+      if (!r.ok) {
+        // The numbers are saved either way; the founder is told the close did
+        // not reach the board rather than shown a plan that pretends it did.
+        setCloseError(r.offline
+          ? "Your numbers are saved, but the engine couldn't be reached to score last month's plan. The next plan will start from your numbers without that score."
+          : r.error);
+      }
+    }
     navigate("/analyzing");
   }
 
   return (
     <section className="content-stack narrow-col">
       <article className="panel">
-        <h3>Update your numbers</h3>
+        <h3>{closable && actionCards.length ? "Close the month" : "Update your numbers"}</h3>
         <p className="subtle">Pre-filled with last month ({dateLabel(last.enteredAt)}) — edit what changed. ~2 minutes.</p>
         {state.demo && <Banner tone="info">Sample company — updates are disabled here. Start your own company from the welcome screen.</Banner>}
+        {closable && actionCards.length > 0 && (
+          <ClosableActions
+            cards={actionCards} done={done} notes={notes}
+            onDone={(domain, value) => setDone({ ...done, [domain]: value })}
+            onNote={(domain, value) => setNotes({ ...notes, [domain]: value })}
+          />
+        )}
+        {closeError && <Banner tone="warn">{closeError}</Banner>}
         <div className="update-grid">
           {UPDATE_FIELDS.map((f) => (
             <label className="ffield" key={f.key}>
@@ -157,10 +267,14 @@ export function UpdateRitual({ navigate }) {
             {diffs.map((d) => <span className="diff-pill" key={d}>{d}</span>)}
           </div>
         )}
+        {actionCards.length > 0 && !actionsAnswered && (
+          <p className="subtle">Say what happened to each of the board's actions above to continue.</p>
+        )}
         <div className="wizard-foot inline">
           <button className="secondary-button" type="button" onClick={() => navigate("/company")}>Cancel</button>
-          <button className="primary-button" type="button" disabled={!valid || state.demo} onClick={submit}>
-            Save & re-analyse <ChevronRight size={16} />
+          <button className="primary-button" type="button" disabled={!valid || state.demo || closing} onClick={submit}>
+            {closing ? <><LoaderCircle size={15} className="spin" /> Scoring last month…</>
+              : <>{closable && actionCards.length ? "Close the month & plan again" : "Save & plan"} <ChevronRight size={16} /></>}
           </button>
         </div>
       </article>

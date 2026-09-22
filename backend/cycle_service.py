@@ -203,6 +203,23 @@ def _execute_cycle(cycle_id: str) -> None:
             _active.discard(cycle_id)
 
 
+def fail_orphaned_cycles() -> int:
+    """Called at startup. A cycle runs on a thread inside the server process,
+    so a restart (uvicorn --reload on a code edit, a crash, a deploy) kills
+    it silently and leaves the row 'running' forever, with the client polling
+    a plan that will never land. Mark those failed and say why."""
+    with connect() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE cycles SET status = 'failed', completed_at = ?,
+                error = 'the engine restarted while this cycle was running; re-run it from your numbers'
+            WHERE status IN ('queued', 'running')
+            """,
+            (utc_now(),),
+        )
+        return cursor.rowcount
+
+
 def get_cycle(cycle_id: str) -> dict[str, Any] | None:
     with connect() as connection:
         row = row_to_dict(

@@ -1,7 +1,8 @@
-// Local-first application store. Company, monthly snapshots, analyses and
-// decisions persist in localStorage (the client-side stand-in for the spec's
-// G2 company-months store until the backend exists). Sample mode (spec §7 S1)
-// runs entirely in memory and never touches the founder's stored data.
+// Local-first application store. Company, monthly snapshots, analyses,
+// cycles and decisions persist in localStorage (state-ownership decision (a)
+// in docs/oefa_loop_decisions.md: the browser is the founder's record; cycles
+// carry their own actuals on the server). Sample mode (spec §7 S1) runs
+// entirely in memory and never touches the founder's stored data.
 
 import React, { createContext, useContext, useEffect, useMemo, useReducer } from "react";
 import { SAMPLE } from "./sample.js";
@@ -13,6 +14,7 @@ const EMPTY = {
   company: null,
   months: [],
   analyses: [],
+  cycles: [],
   settings: { narratives: false },
   onboardingDraft: null
 };
@@ -44,6 +46,10 @@ function reducer(state, action) {
       return { ...JSON.parse(JSON.stringify(SAMPLE)), onboardingDraft: null };
     case "EXIT_DEMO":
       return load();
+    case "IMPORT_STATE":
+      // A seeded workspace (experiments/seed_demo_company.py → /api/demo/bootstrap).
+      // Replaces everything; never in demo mode.
+      return { ...EMPTY, ...action.state, demo: false, onboardingDraft: null };
     case "SAVE_DRAFT":
       return { ...state, onboardingDraft: { ...state.onboardingDraft, ...action.draft } };
     case "CREATE_COMPANY": {
@@ -52,13 +58,36 @@ function reducer(state, action) {
         onboardingDraft: null,
         company: action.company,
         months: [action.month],
-        analyses: []
+        analyses: [],
+        cycles: []
       };
     }
     case "ADD_MONTH":
       return { ...state, months: [...state.months, action.month] };
     case "ADD_ANALYSIS":
       return { ...state, analyses: [...state.analyses, action.analysis] };
+    case "ADD_CYCLE":
+      return { ...state, cycles: [...state.cycles, action.cycle] };
+    case "UPDATE_CYCLE":
+      return {
+        ...state,
+        cycles: state.cycles.map((c) => (c.id === action.cycle.id ? { ...c, ...action.cycle } : c))
+      };
+    case "SET_CYCLE_FEEDBACK":
+      return {
+        ...state,
+        cycles: state.cycles.map((c) =>
+          c.id !== action.cycleId
+            ? c
+            : {
+                ...c,
+                feedback: [
+                  ...(c.feedback || []).filter((f) => f.monthIndex !== action.monthIndex),
+                  { monthIndex: action.monthIndex, submitted: action.submitted, result: action.result, error: action.error || null, closedAt: new Date().toISOString() }
+                ]
+              }
+        )
+      };
     case "SET_DECISION": {
       const months = state.months.map((m) =>
         m.id !== action.monthId
@@ -117,6 +146,56 @@ export function analysisForMonth(state, monthId) {
 
 export function monthById(state, id) {
   return state.months.find((m) => m.id === id) || null;
+}
+
+export function latestCycle(state) {
+  const cycles = state.cycles || [];
+  return cycles.length ? cycles[cycles.length - 1] : null;
+}
+
+export function cycleForMonth(state, monthId) {
+  return [...(state.cycles || [])].reverse().find((c) => c.monthId === monthId) || null;
+}
+
+export function cycleById(state, id) {
+  return (state.cycles || []).find((c) => c.id === id) || null;
+}
+
+// The most recent close-the-month that produced a result: the prediction
+// error Home leads with, and the track record the next cycle starts from.
+export function latestClosedFeedback(state) {
+  for (const cycle of [...(state.cycles || [])].reverse()) {
+    const closed = (cycle.feedback || []).filter((f) => f.result);
+    if (closed.length) return { cycle, feedback: closed[closed.length - 1] };
+  }
+  return null;
+}
+
+export function feedbackForCycleMonth(cycle, monthIndex) {
+  return (cycle?.feedback || []).find((f) => f.monthIndex === monthIndex && f.result) || null;
+}
+
+// A cycle's month 1 is a full board analysis of the founder's current
+// numbers — the same thing /api/advise produced — so it becomes an analysis
+// record and every existing surface (Home, Advice detail, History) keeps
+// working unchanged.
+export function analysisFromCycle(cycle) {
+  const month = (cycle.months || [])[0];
+  if (!month) return null;
+  return {
+    id: uid("a"),
+    cycleId: cycle.id,
+    monthIndex: 1,
+    monthId: cycle.monthId,
+    createdAt: new Date().toISOString(),
+    source: cycle.source === "sample" ? "sample" : "cycle",
+    llm_ok: month.execute.llm_ok !== false,
+    reason: month.execute.refresh_reason,
+    brief: month.execute.brief,
+    trace: month.execute.trace,
+    display: month.execute.display || null,
+    narratives: null
+  };
 }
 
 export function uid(prefix) {

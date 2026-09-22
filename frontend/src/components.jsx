@@ -11,11 +11,14 @@ import {
   money, moneyExact, pct, signedPct, signedPp, pctOfMrr, monthsLabel
 } from "./derive.js";
 import {
-  RISK, OUTCOME, FOCUS_LABELS, CHANNEL_COPY, DOMAIN_META,
+  RISK, OUTCOME, FOCUS_LABELS, CHANNEL_COPY, DOMAIN_META, CAUSAL_STRESS,
   refreshReasonCopy, briefSourceCopy, scaleWord,
   guardBullets, rewriteMemory, SIMULATED_PREFIX, causalEvidenceCopy
 } from "./copy.js";
 import { confidenceSentence } from "./founderView.js";
+import {
+  expectedLine, predictionSentences, scoreLine, briefFreshness, actionSummary
+} from "./loopView.js";
 
 // ---- small primitives ----
 
@@ -395,6 +398,121 @@ export function MiniLine({ points, label, goodWhenDown = false, format = (v) => 
         />
       </svg>
       <span className="mini-line-value">{format(points[points.length - 1])}</span>
+    </div>
+  );
+}
+
+// ---- the OEFA strip (plan section 5.1) ----
+//
+// Observed / Decided / Expected / Changed, one component used everywhere a
+// month appears: each Plan column, the timeline, and retroactively the Advice
+// detail page. It is the Module 6 explainability payload in a form that
+// screenshots, and it is built from the server's numbers only.
+
+const TREND_WORDS = { INCREASING: "rising", FLAT: "flat", DECREASING: "falling" };
+
+// A single-month analysis (from /api/advise or an older stored one) has the
+// Observe/Execute/Expected half of a cycle month and no Feedback: the strip
+// still renders, and says the last beat is waiting on the real month.
+export function monthFromAnalysis(analysis) {
+  if (!analysis?.trace) return null;
+  const t = analysis.trace;
+  return {
+    month_index: 1,
+    projection: false,
+    observe: {
+      memory_count: t.memory_count ?? (t.retrieved_memories || []).length,
+      memories: t.retrieved_memories || [],
+      trend: null,
+      graph: { stress_node: t.causal_stress_node || t.graph_summary?.stress_node || null, enabled: t.graph_store_enabled ?? null }
+    },
+    execute: {
+      action: t.final_action,
+      brief: analysis.brief,
+      llm_ok: analysis.llm_ok !== false,
+      brief_source: t.brief_source,
+      refresh_reason: t.refresh_reason,
+      expected_delta: t.expected_delta || null,
+      proposals: t.proposals || []
+    },
+    feedback: null,
+    adapt: null
+  };
+}
+
+function Beat({ label, children, tone = "" }) {
+  return (
+    <div className={`oefa-beat ${tone}`}>
+      <span className="oefa-beat-label">{label}</span>
+      <ul className="oefa-lines">{children}</ul>
+    </div>
+  );
+}
+
+export function OefaStrip({ month, closed = null, defaultOpen = false, compact = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  if (!month) return null;
+  const { observe, execute, feedback, adapt } = month;
+  const fresh = briefFreshness(execute?.brief_source);
+  const stress = observe?.graph?.stress_node ? CAUSAL_STRESS[observe.graph.stress_node] : null;
+  const trend = observe?.trend?.mrr_trend ? TREND_WORDS[observe.trend.mrr_trend] : null;
+  const expected = execute?.expected_delta;
+  const adaptations = adapt?.adaptations || [];
+  // Closed by the founder: the actual numbers replace the simulated ones.
+  const result = closed?.result || null;
+  const changeError = result ? result.prediction_error : feedback?.prediction_error;
+  const changeBefore = observe?.state_before;
+  const changeAfter = result ? result.actual_state : feedback?.state_after;
+
+  return (
+    <div className={`oefa-strip ${open ? "open" : ""} ${compact ? "compact" : ""}`}>
+      <button className="oefa-toggle" type="button" onClick={() => setOpen(!open)}>
+        {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        <span>Observed · Decided · Expected · Changed</span>
+        <em className={`chip ${fresh.tone}`}>{fresh.label}</em>
+        {execute?.llm_ok === false && <em className="chip off">strategist unreachable</em>}
+      </button>
+      {open && (
+        <div className="oefa-body">
+          <Beat label="Observed">
+            <li>{observe?.memory_count ? `${observe.memory_count} similar past month${observe.memory_count === 1 ? "" : "s"} recalled` : "no similar past months yet"}</li>
+            {trend && <li>revenue trend {trend}</li>}
+            {stress && <li>the board's read: {stress}</li>}
+            {observe?.graph?.enabled === false && <li className="muted">causal evidence graph off</li>}
+          </Beat>
+          <Beat label="Decided">
+            {actionSummary(execute?.action).map((line) => <li key={line}>{line}</li>)}
+            <li className="muted">{refreshReasonCopy(execute?.refresh_reason)} · brief {fresh.label}</li>
+          </Beat>
+          <Beat label="Expected">
+            {expected ? <li>{expectedLine(expected)}</li> : <li className="muted">no numeric prediction on this analysis</li>}
+            {expected && <li className="muted"><SimulatedTag /></li>}
+          </Beat>
+          <Beat label={result ? "Changed (your numbers)" : "Changed"} tone={result ? "actual" : ""}>
+            {changeError ? (
+              <>
+                {predictionSentences({ before: changeBefore, actual: changeAfter, expected, error: changeError, basis: result ? "actual" : "simulated" })
+                  .map((s) => <li key={s.key} className={`pe-line ${s.tone}`}>{s.text}</li>)}
+                <li className="muted">{scoreLine(changeError)}</li>
+              </>
+            ) : (
+              <li className="muted">waiting on your real numbers — close the month to score this plan</li>
+            )}
+            {(adapt?.what_changed || []).slice(0, 3).map((line) => <li key={line}>{line}</li>)}
+            {adaptations.map((a) => <li key={a.agent}><strong>{a.agent}:</strong> {a.sentence}</li>)}
+            {feedback && !result && (
+              <li className="muted">
+                {feedback.evidence_written
+                  ? "this simulated month was written back as simulated evidence, kept apart from anything real"
+                  : "not written back as evidence (causal graph off)"}
+              </li>
+            )}
+            {result && (
+              <li className="muted">{result.evidence?.reason}</li>
+            )}
+          </Beat>
+        </div>
+      )}
     </div>
   );
 }

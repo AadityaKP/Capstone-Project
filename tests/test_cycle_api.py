@@ -237,6 +237,19 @@ def test_api_rejects_a_horizon_outside_the_bounds(db):
         assert client.post("/api/cycles", json=request(horizon=7)).status_code == 422
 
 
+def test_a_restart_fails_the_cycles_it_killed(db):
+    """The row must never stay 'running' after the thread that owned it is gone."""
+    from backend.main import app
+    queued = cycle_service.create_cycle(request(horizon=1))
+    assert queued["status"] == "queued"
+    assert cycle_service.fail_orphaned_cycles() == 1
+    with TestClient(app) as client:  # lifespan runs it again: nothing left to fail
+        cycle = client.get(f"/api/cycles/{queued['id']}").json()
+    assert cycle["status"] == "failed"
+    assert "restarted" in cycle["error"]
+    assert cycle_service.fail_orphaned_cycles() == 0
+
+
 def test_a_failing_cycle_is_marked_failed_not_left_running(db, monkeypatch):
     def boom(*_, **__):
         raise RuntimeError("engine exploded")

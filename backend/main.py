@@ -21,6 +21,7 @@ from backend.schemas import (
 from backend.advise_service import run_analysis, store_analysis
 from backend.cycle_service import (
     create_cycle,
+    fail_orphaned_cycles,
     get_cycle,
     list_cycles,
     start_cycle,
@@ -45,6 +46,9 @@ FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     initialize_database()
+    orphaned = fail_orphaned_cycles()
+    if orphaned:
+        print(f"[cycles] {orphaned} cycle(s) were running when the engine last stopped; marked failed")
     yield
 
 
@@ -191,6 +195,19 @@ def cycles_feedback(cycle_id: str, payload: CycleFeedbackRequest) -> dict:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Feedback could not be recorded: {exc}") from exc
+
+
+DEMO_BOOTSTRAP = ROOT_DIR / "data" / "demo_bootstrap.json"
+
+
+@app.get("/api/demo/bootstrap")
+def demo_bootstrap() -> dict:
+    """The seeded demo workspace written by experiments/seed_demo_company.py,
+    in the browser store's shape. 404 until the seed script has run."""
+    if not DEMO_BOOTSTRAP.exists():
+        raise HTTPException(status_code=404, detail="No seeded demo company; run experiments/seed_demo_company.py")
+    with open(DEMO_BOOTSTRAP, encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 @app.get("/api/companies/{company_id}/analyses")

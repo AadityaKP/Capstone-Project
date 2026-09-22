@@ -8,7 +8,7 @@ import { createRoot } from "react-dom/client";
 import {
   BrainCircuit, Building2, ChevronRight,
   History as HistoryIcon, LayoutDashboard, PencilLine,
-  Settings as SettingsIcon, Sparkles
+  Settings as SettingsIcon, Workflow
 } from "lucide-react";
 import "./styles.css";
 
@@ -22,20 +22,24 @@ import Analyzing from "./pages/Analyzing.jsx";
 import Home from "./pages/Home.jsx";
 import Advice from "./pages/Advice.jsx";
 import History from "./pages/History.jsx";
+import Cycle from "./pages/Cycle.jsx";
 import { CompanyView, UpdateRitual } from "./pages/Company.jsx";
 import Settings from "./pages/Settings.jsx";
 
+// Five items. "Advice" folded into "Plan" (plan section 5.4): the cycle is
+// the primary surface, and /advice/:id remains as the single-month detail
+// reached from a month in the strip or the timeline.
 const NAV = [
   { id: "home", path: "/home", label: "Home", icon: LayoutDashboard },
-  { id: "advice", path: "/advice", label: "Advice", icon: Sparkles },
+  { id: "plan", path: "/plan", label: "Plan", icon: Workflow },
   { id: "history", path: "/history", label: "History", icon: HistoryIcon },
   { id: "company", path: "/company", label: "My company", icon: Building2 },
   { id: "settings", path: "/settings", label: "Settings", icon: SettingsIcon }
 ];
 
 const TITLES = {
-  home: "Home", advice: "Advice", history: "History", company: "My company",
-  settings: "Settings", update: "Update numbers", onboarding: "Set up your company",
+  home: "Home", plan: "Plan", advice: "Advice", history: "History", company: "My company",
+  settings: "Settings", update: "Close the month", onboarding: "Set up your company",
   analyzing: "Analysis", welcome: "Welcome"
 };
 
@@ -59,6 +63,7 @@ function parseRoute(route) {
   const parts = route.split("/").filter(Boolean);
   if (parts.length === 0) return { page: "welcome", params: {} };
   if (parts[0] === "advice" && parts[1]) return { page: "advice", params: { id: parts[1] } };
+  if (parts[0] === "advice") return { page: "plan", params: {} };
   return { page: parts[0], params: {} };
 }
 
@@ -83,6 +88,7 @@ function Shell() {
     onboarding: <Onboarding navigate={navigate} />,
     analyzing: <Analyzing navigate={navigate} />,
     home: <Home navigate={navigate} />,
+    plan: <Cycle navigate={navigate} />,
     advice: <Advice navigate={navigate} params={params} />,
     history: <History navigate={navigate} />,
     company: <CompanyView navigate={navigate} />,
@@ -140,7 +146,7 @@ function Shell() {
             {state.demo && <DemoBadge />}
             {!state.demo && page !== "update" && (
               <button className="secondary-button small" type="button" onClick={() => navigate("/update")}>
-                <PencilLine size={14} /> Update numbers
+                <PencilLine size={14} /> Close the month
               </button>
             )}
           </div>

@@ -88,6 +88,47 @@ export async function advise(company, month) {
   });
 }
 
+// ---- the OEFA cycle (docs/oefa_loop_plan.md section 4) ----
+
+// Start one Observe → Execute → Feedback → Adapt cycle of `horizon` months.
+// Returns 202 immediately with the cycle id; the work runs on the server and
+// months land as they finish, so leaving the page really does keep your seat.
+// `previousTrackRecord` is what the last close-the-month returned — passing
+// it back is how the next cycle starts from your actual numbers carrying the
+// board's previous prediction error.
+export async function startCycle(company, month, { horizon = 4, previousTrackRecord = null } = {}) {
+  const base = buildAdvisePayload(company, month);
+  return request("/cycles", {
+    method: "POST",
+    body: JSON.stringify({
+      ...base,
+      horizon_months: horizon,
+      use_oracle: true,
+      previous_track_record: previousTrackRecord
+    })
+  }, 20_000);
+}
+
+// Status plus every month finished so far.
+export async function getCycle(cycleId) {
+  return request(`/cycles/${cycleId}`, {}, 15_000);
+}
+
+// Close a month with your real numbers: did/partly/didn't per action, plus
+// the actuals. The server scores the prediction, writes evidence only for the
+// actions you took, and returns the track record the next cycle starts from.
+export async function submitCycleFeedback(cycleId, { monthIndex = 1, perAction, actuals }) {
+  return request(`/cycles/${cycleId}/feedback`, {
+    method: "POST",
+    body: JSON.stringify({ month_index: monthIndex, per_action: perAction, actuals })
+  }, 60_000);
+}
+
+// The seeded demo workspace (experiments/seed_demo_company.py), if one exists.
+export async function demoBootstrap() {
+  return request("/demo/bootstrap", {}, 8_000);
+}
+
 // Twelve-month projection under three policies (D5). Pure simulation — no LLM
 // call — so it returns in well under a second and gets a short timeout rather
 // than the 120s the analysis needs. The board's plan is taken from an analysis
