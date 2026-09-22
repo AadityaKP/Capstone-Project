@@ -47,7 +47,22 @@ FOUNDER_CHROMA_PATH = os.environ.get(
 FOUNDER_ORACLE_MODE = os.getenv("FOUNDER_ORACLE_MODE", "oracle_v4_causal")
 
 # One analysis per request, so the founder Oracle refreshes on every call.
+# (The multi-month cycle overrides this to 0 so events earn the refresh -
+# see backend/cycle_service.CYCLE_ORACLE_FREQUENCY.)
 FOUNDER_ORACLE_FREQUENCY = 1
+
+# Which marketing-response curve the founder physics run (docs/oefa_loop_decisions.md,
+# decision 9 - an OPEN decision). "scale_aware" is the customer/CAC-anchored
+# curve with the ASSUMED saturation rate 0.20, what the founder product has
+# shipped with; "v2" is the same curve with the rate physics_v2 fitted on the
+# CAL panel (0.0727), which falsified 0.20. The product's expected_delta is a
+# prediction the founder is later scored against, and on the seeded demo
+# company ($31.9k MRR, $10.2k of marketing) the assumed curve predicts MRR
+# +41.9% over two months where the fitted one predicts +17.4%. Under the fitted
+# curve the what-if fixtures in tests/test_whatif.py no longer survive, so the
+# default stays as shipped until that trade-off is decided; set
+# FOUNDER_MARKETING_CURVE=v2 to run the fitted curve.
+FOUNDER_MARKETING_CURVE = os.getenv("FOUNDER_MARKETING_CURVE", "scale_aware")
 
 # The boardroom's absolute spend floors are calibrated at this MRR (spec G11).
 CALIBRATION_MRR = 50_000.0
@@ -185,10 +200,17 @@ def get_env_kwargs(gross_margin: float | None = None) -> dict[str, Any]:
     on, absolute marketing/R&D constants, revenue booked at 100% margin."""
     if not is_founder():
         return {}
+    if FOUNDER_MARKETING_CURVE not in {"scale_aware", "v2"}:
+        raise ValueError(
+            f"FOUNDER_MARKETING_CURVE must be 'v2' or 'scale_aware', got {FOUNDER_MARKETING_CURVE!r}"
+        )
     return {
         "max_months": 10_000,          # horizon is controlled by the caller
         "scheduled_shocks": False,     # research fixture, not founder physics
-        "scale_aware_marketing": True, # ships with the burn fix; see whatif_service
+        # The customer/CAC-anchored curve either way (ships with the burn fix;
+        # see whatif_service); "v2" additionally uses the fitted saturation rate.
+        "scale_aware_marketing": True,
+        "marketing_curve": FOUNDER_MARKETING_CURVE,
         "scale_aware_rnd": True,       # R&D that can move the product at all
         "gross_margin": gross_margin,
     }

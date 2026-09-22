@@ -104,6 +104,29 @@ def test_prediction_error_scores_direction_and_tolerance():
     assert error["summary"] == {"kpis_scored": 3, "within_tolerance": 2, "sign_agrees": 2, "horizon_months": 2}
 
 
+def test_founder_marketing_curve_flag_switches_the_prediction(monkeypatch):
+    """Decision 9 (open): the shipped curve assumes a saturation rate of 0.20;
+    v2 uses the rate physics_v2 fitted. The flag must reach the physics, and
+    the fitted rate must predict less growth from the same marketing spend."""
+    monkeypatch.setenv("SIM_PROFILE", "founder")
+    from backend import sim_profile
+
+    monkeypatch.setattr(sim_profile, "FOUNDER_MARKETING_CURVE", "scale_aware")
+    shipped = sim_profile.get_env_kwargs()
+    assert shipped["marketing_curve"] == "scale_aware" and shipped["scale_aware_marketing"] is True
+    monkeypatch.setattr(sim_profile, "FOUNDER_MARKETING_CURVE", "v2")
+    fitted = sim_profile.get_env_kwargs()
+    assert fitted["marketing_curve"] == "v2"
+
+    assumed = ex.predict_expected_delta(state(), ACTION, env_kwargs=shipped)
+    calibrated = ex.predict_expected_delta(state(), ACTION, env_kwargs=fitted)
+    assert calibrated["mrr_pct"] < assumed["mrr_pct"]
+
+    monkeypatch.setattr(sim_profile, "FOUNDER_MARKETING_CURVE", "nope")
+    with pytest.raises(ValueError):
+        sim_profile.get_env_kwargs()
+
+
 # --------------------------------------------------------------------------
 # present in the product path, absent on research arms
 # --------------------------------------------------------------------------

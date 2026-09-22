@@ -97,6 +97,46 @@ of horizon, which would label 4-month evidence with the 6-month ±10 % rule into
 the store the thesis reads. Memories mature from real HITL months instead,
 which genuinely arrive a month apart.
 
+## 9. OPEN — which marketing curve the founder prediction runs
+
+Found while seeding the demo: the founder profile's projection physics use
+the customer/CAC-anchored marketing curve with the *assumed* saturation rate
+0.20 (`scale_aware_marketing`), the constant physics_v2 falsified when it
+fitted 0.0727 (CI 0.0475–0.1113) on the CAL panel. Measured on the seeded
+company at $31.9k MRR with $10.2k of marketing:
+
+| curve | predicted MRR over 2 months |
+|---|---|
+| founder as shipped (assumed 0.20) | +41.9 % |
+| founder with the fitted rate (`marketing_curve="v2"`) | +17.4 % |
+| review2 research physics | +42.2 % |
+
+`expected_delta` is a prediction the founder is later scored on, so the
+fitted curve is the defensible one. But under it the what-if fixtures in
+`tests/test_whatif.py` no longer survive their 12-month projection (the
+recommended arm goes from surviving to 0 %), which is a product-behaviour
+change beyond this plan. The switch exists (`FOUNDER_MARKETING_CURVE=v2`)
+and defaults to the shipped curve until the trade-off is decided. Whichever
+way it goes, the prediction-error harness reports the calibration of the
+curve actually in use, and research runs never read `sim_profile`.
+
+## 10. The demo runs the founder profile
+
+`SIM_PROFILE` defaults to `review2` for Review 2 parity, under which the
+advisor mode is `oracle_v3`, no causal graph exists, the research physics run
+unscaled at founder size, and every founder-facing guard is off. The loop's
+Feedback step therefore cannot be live under the default. `start.ps1` sets
+`SIM_PROFILE=founder` unless told otherwise (`-Profile review2`), and
+`/api/health` names the profile so the claim on stage matches the process.
+
+## 11. A restart fails the cycles it killed
+
+Cycles run on a thread inside the API process. A restart (uvicorn `--reload`
+on a code edit, a crash) killed the thread silently and left the row
+`running`, with the client polling a plan that would never land. On startup
+every `queued`/`running` cycle is marked `failed` with a reason, and the Plan
+page shows it and offers a re-run.
+
 ## 8. Memory horizon versus cycle length
 
 `MEMORY_HORIZON_MONTHS = 6` against a 4-month cycle means memories written in
