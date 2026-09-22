@@ -62,6 +62,23 @@ def test_prediction_has_every_kpi_a_horizon_and_a_band():
     assert isinstance(delta["mrr_pct"], float)
 
 
+def test_prediction_hires_once_across_its_horizon(monkeypatch):
+    """Same rule as the what-if: a hire is a one-off, spend repeats."""
+    from env.startup_env import StartupEnv
+
+    seen = []
+    original = StartupEnv.step
+
+    def spy(self, action):
+        seen.append(int(action["hiring"]["hires"]))
+        return original(self, action)
+
+    monkeypatch.setattr(StartupEnv, "step", spy)
+    hiring = {**ACTION, "hiring": {"hires": 1, "cost_per_employee": 10_000}}
+    ex.predict_expected_delta(state(cash=600_000), hiring, horizon_months=3, n_seeds=2, env_kwargs=FOUNDER_ENV)
+    assert seen == [1, 0, 0, 1, 0, 0]
+
+
 def test_prediction_is_deterministic():
     assert predictor()(state(), ACTION) == predictor()(state(), ACTION)
 

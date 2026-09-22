@@ -204,8 +204,13 @@ def predict_expected_delta(
             env.reset(seed=seed)
             env.state = state.model_copy(deep=True)
             alive = True
-            for _ in range(horizon):
-                _, _, terminated, _, _ = env.step(deepcopy(full_action))
+            for step in range(horizon):
+                # Spend repeats across the horizon; a hire is a one-off whose
+                # payroll the state then carries (see whatif_service._without_hires).
+                this_month = deepcopy(full_action)
+                if step > 0:
+                    this_month["hiring"]["hires"] = 0
+                _, _, terminated, _, _ = env.step(this_month)
                 if terminated:
                     alive = False
                     break

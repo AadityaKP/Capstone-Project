@@ -192,6 +192,31 @@ def test_projection_returns_all_policies_with_full_bands():
             assert len(panel["p25"]) == len(panel["p75"]) == result["horizon_months"]
 
 
+def test_a_hire_in_the_plan_happens_once_not_every_month(monkeypatch):
+    """"This month's plan repeated for the horizon" is right for spend and
+    wrong for a hire: repeating `hires: 1` hired twelve people over a year
+    (each adding a salary slot to burn) and killed every company the board
+    suggested one hire to. The hire lands in month 1; its payroll then
+    recurs through the state."""
+    from backend.whatif_service import POLICY_RECOMMENDED, _rollout
+
+    seen = []
+    original = StartupEnv.step
+
+    def spy(self, action):
+        seen.append(int(action["hiring"]["hires"]))
+        return original(self, action)
+
+    monkeypatch.setattr(StartupEnv, "step", spy)
+    rich = copy.deepcopy(FOUNDER)
+    rich["config"]["initial_cash"] = 600_000
+    base = build_env_state(rich)
+    plan = _clean_action({**rich["recommended_action"], "hiring": {"hires": 1, "cost_per_employee": 10_000}})
+    _rollout(base, POLICY_RECOMMENDED, 0, plan, NOOP_ACTION, 12, None, False, 1.0)
+    assert seen == [1] + [0] * 11
+    assert plan["hiring"]["hires"] == 1, "the caller's plan is not mutated"
+
+
 def test_iqr_band_brackets_the_median():
     """Over survivors only: a month nobody reaches is None on all three lines
     rather than a forward-filled corpse, and there is nothing to bracket.

@@ -107,6 +107,12 @@ def loop_status(force: bool = False) -> dict[str, Any]:
     value = {
         "advisor_mode": sim_profile.get_oracle_mode(),
         "sim_profile": sim_profile.get_profile(),
+        # Which marketing-response curve the predictions run (decision 9):
+        # "v2" is the CAL-fitted rate, "scale_aware" the assumed one the
+        # product shipped with. Stated so the claim on stage matches the code.
+        "marketing_curve": (
+            sim_profile.FOUNDER_MARKETING_CURVE if sim_profile.is_founder() else "legacy"
+        ),
         "graph_store_enabled": graph["enabled"],
         "graph_store_reason": graph["reason"],
         "memory_store_enabled": memory["enabled"],

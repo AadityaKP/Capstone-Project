@@ -124,10 +124,21 @@ pinned the assumed curve's growth (a fixture's recommended arm surviving,
 another's hold arm growing on $10 of marketing); they now assert what they
 were written to protect, that ragged paths are handled and twelve distinct
 months are simulated. (2) The demo company's cost line was chosen so it
-survives its own plan under the fitted physics: at ~$33k MRR, $36k of costs
-with $300k of cash keeps both the plan and the hold arm alive in every run,
-where the previous $47k on $200k died in every run under *either* curve.
-(3) The canned sample company was moved onto the same footing.
+survives its own plan under the fitted physics. The board's plan for a
+company this size is ~$17k of monthly spend plus one hire, which at the
+83.5 % gross margin burns ~$27k a month on top of the cost line; at ~$33k
+MRR, $30k of costs with $350k of cash keeps that plan alive in every run
+with ~$100k left after twelve months, where the previous $47k on $200k died
+in every run under *either* curve. (3) The canned sample company was moved
+onto the same footing.
+
+Found on the way: the what-if projection repeated the whole plan every
+month of its horizon, including the hire, so a plan with `hires: 1` hired
+twelve people in a year (each adding a salary slot to burn) and killed
+every company the board suggested one hire to. A hire is a one-off; the
+projection and the `expected_delta` rollout now apply it in month 1 only
+and let the state carry its payroll (`whatif_service._without_hires`). The
+assumptions list on the projection says so.
 
 Caveats that stay: neither curve has founder-scale data behind it (the fit
 is from companies at $10M+ revenue, and a small startup can plausibly add

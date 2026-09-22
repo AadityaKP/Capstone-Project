@@ -105,6 +105,22 @@ def _clean_action(raw: dict[str, Any] | None) -> dict[str, Any]:
     return action
 
 
+def _without_hires(action: dict[str, Any]) -> dict[str, Any]:
+    """The same plan with the hiring decision already taken.
+
+    "This month's plan repeated for the horizon" is the right reading for
+    spend, and the wrong one for a hire: a hire is a one-off decision whose
+    cost recurs on its own (the engine adds the salary slot to monthly burn
+    the month it happens). Repeating `hires: 1` every month hired twelve
+    people over a year and killed every company the board suggested one hire
+    to. The hire lands in month 1; the payroll it adds is then carried by the
+    state, not re-decided.
+    """
+    once = deepcopy(action)
+    once["hiring"]["hires"] = 0
+    return once
+
+
 def _rule_based_action(state: EnvState, scale: float) -> dict[str, Any]:
     """The heuristic C-suite, scaled to the company (spec G11).
 
@@ -177,9 +193,9 @@ def _rollout(
             business_logic.inject_hard_shock(env.state, SHOCK_TYPE)
 
         if policy == POLICY_RECOMMENDED:
-            action = recommended
+            action = recommended if month == 0 else _without_hires(recommended)
         elif policy == POLICY_HOLD:
-            action = hold
+            action = hold if month == 0 else _without_hires(hold)
         else:
             action = _rule_based_action(env.state, scale)
 
@@ -466,12 +482,13 @@ def _assumptions(
         },
         {
             "field": "Plan persistence",
-            "value": "this month's plan repeated for the horizon",
+            "value": "this month's spend repeated for the horizon; any hire made once",
             "basis": "assumption",
             "source": None,
             "detail": (
                 "The board is asked once. A founder re-running the analysis monthly would "
-                "get a different path; this shows the plan held constant."
+                "get a different path; this shows the spend held constant. A hire in the "
+                "plan happens in month 1 only - its payroll then recurs on its own."
             ),
         },
         {

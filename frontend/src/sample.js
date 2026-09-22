@@ -224,11 +224,11 @@ const W2 = { efficiency: 0.28, growth: 0.19, innovation: 0.43, macro: 0.1 };
 
 // ---- cycle 1: planned on the July numbers, closed with the August ones ----
 
-const july = { mrr: 30000, cash: 320000, costs: 37000, churn: 5.2 };
-const c1m1 = { mrr: 31600, cash: 310500, costs: 37000, churn: 5.0 };
-const c1m2 = { mrr: 32900, cash: 301000, costs: 37000, churn: 4.8 };
-const c1m3 = { mrr: 34100, cash: 291500, costs: 37000, churn: 4.7 };
-const c1m4 = { mrr: 35200, cash: 282000, costs: 37000, churn: 4.6 };
+const july = { mrr: 30000, cash: 360000, costs: 31000, churn: 5.2 };
+const c1m1 = { mrr: 31600, cash: 350500, costs: 31000, churn: 5.0 };
+const c1m2 = { mrr: 32900, cash: 341000, costs: 31000, churn: 4.8 };
+const c1m3 = { mrr: 34100, cash: 331500, costs: 31000, churn: 4.7 };
+const c1m4 = { mrr: 35200, cash: 322000, costs: 31000, churn: 4.6 };
 const c1a1 = act(5000, 9500, 0, 0.03);
 const c1e1 = expectation(c1m1, { mrr_pct: 12.5, cash_pct: -4.5, churn_pp: -0.5, runway_months: -0.9 });
 
@@ -251,7 +251,7 @@ const cycle1Months = [
 ];
 
 // The close: what the founder actually did and what the numbers actually were.
-const august = { mrr: 31900, cash: 308000, costs: 36000, churn: 4.6 };
+const august = { mrr: 31900, cash: 348000, costs: 30000, churn: 4.6 };
 const c1ActualDelta = deltaBetween(july, august);
 const c1Track = trackRecord(c1a1, c1e1, c1ActualDelta, "month 1", "observed");
 const cycle1Feedback = {
@@ -263,7 +263,7 @@ const cycle1Feedback = {
       { action_key: "product", done: "partly", note: "Shipped the onboarding fix, not the reporting work" },
       { action_key: "pricing", done: "didnt", note: "Didn't feel right to raise mid-quarter" }
     ],
-    actuals: { mrr: 31900, cash: 308000, churn: 4.6, costs: 36000 }
+    actuals: { mrr: 31900, cash: 348000, churn: 4.6, costs: 30000 }
   },
   result: {
     cycle_id: "c1", month_index: 1,
@@ -289,10 +289,10 @@ const cycle1Feedback = {
 
 // ---- cycle 2: planned on the August numbers, starting from the close ----
 
-const c2m1 = { mrr: 33400, cash: 299500, costs: 36000, churn: 4.5 };
-const c2m2 = { mrr: 34700, cash: 290500, costs: 36000, churn: 4.7 };
-const c2m3 = { mrr: 35600, cash: 282500, costs: 36000, churn: 4.6 };
-const c2m4 = { mrr: 36500, cash: 274000, costs: 36000, churn: 4.5 };
+const c2m1 = { mrr: 33400, cash: 339500, costs: 30000, churn: 4.5 };
+const c2m2 = { mrr: 34700, cash: 330500, costs: 30000, churn: 4.7 };
+const c2m3 = { mrr: 35600, cash: 322500, costs: 30000, churn: 4.6 };
+const c2m4 = { mrr: 36500, cash: 314000, costs: 30000, churn: 4.5 };
 const c2a1 = act(6500, 9000);
 const c2e1 = expectation(c2m1, { mrr_pct: 9.5, cash_pct: -3.5, churn_pp: -0.3, runway_months: -0.6 });
 
@@ -367,7 +367,7 @@ export const SAMPLE = {
   months: [
     {
       id: "m1", index: 0, enteredAt: iso(2),
-      values: { mrr: 28800, cash: 338000, costs: 36000, price: 85, churnMonthly: 5.6, newCustomers: 38, marketingSpend: 6000 },
+      values: { mrr: 28800, cash: 378000, costs: 30000, price: 85, churnMonthly: 5.6, newCustomers: 38, marketingSpend: 6000 },
       decisions: [
         { id: "d1", domain: "product", text: "Allocate ≈$9k to product work", state: "accepted" },
         { id: "d2", domain: "marketing", text: "Cut marketing to ≈$3k", state: "custom", note: "Did $4k instead" },
@@ -376,7 +376,7 @@ export const SAMPLE = {
     },
     {
       id: "m2", index: 1, enteredAt: iso(1),
-      values: { mrr: 30000, cash: 320000, costs: 37000, price: 85, churnMonthly: 5.2, newCustomers: 41, marketingSpend: 6000 },
+      values: { mrr: 30000, cash: 360000, costs: 31000, price: 85, churnMonthly: 5.2, newCustomers: 41, marketingSpend: 6000 },
       decisions: [
         { id: "d4", domain: "marketing", text: "Spend ≈$5,000 on performance channels", state: "accepted" },
         { id: "d5", domain: "product", text: "Invest ≈$9,500 in product this month", state: "custom", note: "Shipped the onboarding fix, not the reporting work" },
@@ -385,7 +385,7 @@ export const SAMPLE = {
     },
     {
       id: "m3", index: 2, enteredAt: iso(0, 1),
-      values: { mrr: 31900, cash: 308000, costs: 36000, price: 85, churnMonthly: 4.6, newCustomers: 44, marketingSpend: 4000 },
+      values: { mrr: 31900, cash: 348000, costs: 30000, price: 85, churnMonthly: 4.6, newCustomers: 44, marketingSpend: 4000 },
       decisions: []
     }
   ],

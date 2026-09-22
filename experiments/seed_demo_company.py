@@ -39,19 +39,22 @@ OUT = os.path.join(ROOT, "data", "demo_bootstrap.json")
 # rough patch, so trends, memories and a prediction error all have content.
 #
 # Cost line and cash balance are chosen so the company survives its own
-# board plan under the fitted physics (decision 9): at ~$33k MRR the
-# calibrated curve keeps both the plan and the hold arm alive at $36k of
-# costs with $300k in the bank, where $47k of costs on $200k died in every
-# run. A demo company that is structurally dying teaches nothing about the loop.
+# board plan under the fitted physics (decision 9). The board's plan for a
+# company this size is roughly $17k of monthly spend plus one hire, which
+# at an 83.5% gross margin burns about $27k a month on top of the cost
+# line; at ~$33k MRR, $30k of costs with $350k in the bank keeps that plan
+# alive in every run with ~$100k left after twelve months, where the
+# earlier $47k on $200k died in every run under either curve. A demo
+# company that is structurally dying teaches nothing about the loop.
 HISTORY = [
-    {"mrr": 24_600, "cash": 375_000, "costs": 34_000, "price": 85, "churnMonthly": 6.1, "newCustomers": 31, "marketingSpend": 7_000},
-    {"mrr": 25_900, "cash": 360_000, "costs": 34_500, "price": 85, "churnMonthly": 5.9, "newCustomers": 34, "marketingSpend": 7_000},
-    {"mrr": 27_400, "cash": 346_000, "costs": 35_000, "price": 85, "churnMonthly": 5.7, "newCustomers": 36, "marketingSpend": 6_500},
-    {"mrr": 28_800, "cash": 333_000, "costs": 35_000, "price": 85, "churnMonthly": 5.6, "newCustomers": 38, "marketingSpend": 6_000},
-    {"mrr": 30_000, "cash": 321_000, "costs": 36_000, "price": 85, "churnMonthly": 5.2, "newCustomers": 41, "marketingSpend": 6_000},
-    {"mrr": 31_900, "cash": 310_000, "costs": 35_500, "price": 85, "churnMonthly": 4.6, "newCustomers": 44, "marketingSpend": 4_000},
+    {"mrr": 24_600, "cash": 425_000, "costs": 28_500, "price": 85, "churnMonthly": 6.1, "newCustomers": 31, "marketingSpend": 7_000},
+    {"mrr": 25_900, "cash": 412_000, "costs": 28_500, "price": 85, "churnMonthly": 5.9, "newCustomers": 34, "marketingSpend": 7_000},
+    {"mrr": 27_400, "cash": 399_000, "costs": 29_000, "price": 85, "churnMonthly": 5.7, "newCustomers": 36, "marketingSpend": 6_500},
+    {"mrr": 28_800, "cash": 387_000, "costs": 29_000, "price": 85, "churnMonthly": 5.6, "newCustomers": 38, "marketingSpend": 6_000},
+    {"mrr": 30_000, "cash": 375_000, "costs": 30_000, "price": 85, "churnMonthly": 5.2, "newCustomers": 41, "marketingSpend": 6_000},
+    {"mrr": 31_900, "cash": 362_000, "costs": 29_500, "price": 85, "churnMonthly": 4.6, "newCustomers": 44, "marketingSpend": 4_000},
 ]
-CURRENT = {"mrr": 33_600, "cash": 300_000, "costs": 36_000, "price": 85, "churnMonthly": 4.4, "newCustomers": 46, "marketingSpend": 5_000}
+CURRENT = {"mrr": 33_600, "cash": 350_000, "costs": 30_000, "price": 85, "churnMonthly": 4.4, "newCustomers": 46, "marketingSpend": 5_000}
 
 
 def iso(months_ago: int) -> str:
