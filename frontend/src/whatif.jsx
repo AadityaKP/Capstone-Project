@@ -68,18 +68,15 @@ function lifespan(median, alive) {
   return { last, full: full < 0 ? 0 : full };
 }
 
-// One panel: three median lines, each inside its own IQR band, on shared axes.
-// Exported for the review compare screen, which reuses it with its own policy
-// keys/colours plus three optional research overlays (all inert by default):
-//   band         horizontal reference band {p10,p25,median,p75,p90,tooltip}
-//                (the EDGAR QoQ-growth band), grey with a dashed median
+// One panel: median lines, each inside its own IQR band, on shared axes.
+// Exported so the multi-month Plan page can draw its trajectory with the same
+// grammar. Two optional overlays, both inert by default:
 //   shockMarkers [{month, type}] labelled vertical lines at scheduled shocks
-//   refLines     [{from, to, value, color}] horizontal segments (pre-shock
-//                Rule-of-40 levels, so the recovery gap is visible)
+//   refLines     [{from, to, value, color}] horizontal segments
 export function FanChart({
   title, series, alive, format, shockMonth,
   policies = POLICY_ORDER, styles = POLICY_STYLE,
-  band = null, shockMarkers = null, refLines = null, xStartLabel = "now"
+  shockMarkers = null, refLines = null, xStartLabel = "now"
 }) {
   const w = 320, h = 130, padX = 6, padTop = 8, padBottom = 18;
 
@@ -89,7 +86,6 @@ export function FanChart({
     return [...s.p25, ...s.p75, ...s.median].filter((v) => v != null);
   });
   if (!all.length) return null;
-  if (band) all.push(band.p10, band.p90);
   (refLines || []).forEach((r) => all.push(r.value));
 
   const min = Math.min(...all), max = Math.max(...all);
@@ -129,23 +125,6 @@ export function FanChart({
       <svg viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`${title} projection`}>
         {zeroY !== null && (
           <line x1={padX} x2={w - padX} y1={zeroY} y2={zeroY} className="wi-zero" />
-        )}
-        {band && (
-          <g>
-            <rect
-              x={padX} width={w - padX * 2}
-              y={y(band.p90)} height={Math.max(y(band.p10) - y(band.p90), 0)}
-              className="wi-edgar-band"
-            >
-              <title>{band.tooltip}</title>
-            </rect>
-            <line
-              x1={padX} x2={w - padX} y1={y(band.median)} y2={y(band.median)}
-              className="wi-edgar-median"
-            >
-              <title>{band.tooltip}</title>
-            </line>
-          </g>
         )}
         {shockMonth != null && shockMonth < months && (
           <line
