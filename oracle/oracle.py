@@ -84,6 +84,10 @@ class Oracle:
         self.churn_benchmark_pct = churn_benchmark_pct
         self.state_history = deque(maxlen=5)
         self.pending_memories = deque()
+        # Product-only switch: the cycle turns this off for its simulated
+        # months 2..H so a real pending month can never mature against a
+        # simulated snapshot (plan section 4.1). Retrieval keeps working.
+        self.memory_writes_enabled = True
         self.global_month = 0
         self.episode_global_start = 0
         self.current_episode_seed = None
@@ -484,7 +488,7 @@ class Oracle:
         return "|".join(flags) if flags else "NORMAL"
 
     def _mature_pending_memories(self, current_snapshot) -> None:
-        if self.memory_store is None:
+        if self.memory_store is None or not self.memory_writes_enabled:
             return
 
         while self.pending_memories:

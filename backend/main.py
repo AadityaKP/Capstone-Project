@@ -12,11 +12,20 @@ from fastapi.staticfiles import StaticFiles
 from backend.database import connect, initialize_database, parse_json_fields, row_to_dict, utc_now
 from backend.schemas import (
     AdviseRequest,
+    CycleFeedbackRequest,
+    CycleRequest,
     ScenarioCreate,
     SimulationCreate,
     WhatIfRequest,
 )
 from backend.advise_service import run_analysis, store_analysis
+from backend.cycle_service import (
+    create_cycle,
+    get_cycle,
+    list_cycles,
+    start_cycle,
+    submit_feedback,
+)
 from backend.loop_status import loop_status
 from backend.sim_profile import get_oracle_mode, get_profile
 from backend.whatif_service import run_whatif
@@ -141,6 +150,47 @@ def whatif(payload: WhatIfRequest) -> dict:
         raise HTTPException(
             status_code=503, detail=f"Projection engine unavailable: {exc}"
         ) from exc
+
+
+@app.post("/api/cycles", status_code=202)
+def cycles_create(payload: CycleRequest) -> dict:
+    """Start one Observe -> Execute -> Feedback -> Adapt cycle of H months.
+
+    Returns immediately; the work runs on a background thread and months land
+    as they finish. One Boardroom.decide() is 20-90s on the local model, so
+    four months can be minutes - well past the client's single-request budget,
+    which is why this is not synchronous like /api/advise.
+    """
+    cycle = create_cycle(payload.model_dump())
+    start_cycle(cycle["id"])
+    return cycle
+
+
+@app.get("/api/cycles/{cycle_id}")
+def cycles_detail(cycle_id: str) -> dict:
+    """Status plus every month finished so far, plus any HITL close."""
+    cycle = get_cycle(cycle_id)
+    if cycle is None:
+        raise HTTPException(status_code=404, detail="Cycle not found")
+    return cycle
+
+
+@app.get("/api/companies/{company_id}/cycles")
+def company_cycles(company_id: str, limit: int = Query(default=10, ge=1, le=50)) -> list[dict]:
+    return list_cycles(company_id, limit)
+
+
+@app.post("/api/cycles/{cycle_id}/feedback")
+def cycles_feedback(cycle_id: str, payload: CycleFeedbackRequest) -> dict:
+    """The HITL close: did the improvements actually happen (plan section 6)."""
+    try:
+        return submit_feedback(cycle_id, payload.model_dump())
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Cycle not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Feedback could not be recorded: {exc}") from exc
 
 
 @app.get("/api/companies/{company_id}/analyses")
