@@ -1,79 +1,43 @@
 // S4 Analysis in progress — starts the board's cycle and hands off.
 //
 // The cycle runs on the server (POST /api/cycles → 202) and its months land
-// one by one on the Plan page, which polls for them. That is what makes
-// "you can leave this page; we'll keep your seat" true: the run no longer
-// lives in a page-local effect that navigating away would kill.
+// one by one; the app-level CycleRunProvider polls for them, so "you can
+// leave this page; we'll keep your seat" is true regardless of which page
+// the founder is on.
 //
 // When the engine API is unreachable the founder gets a truthful card, never
 // a fabricated result.
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { AlertTriangle, LoaderCircle } from "lucide-react";
-import { useStore, latestMonth, latestClosedFeedback } from "../store.jsx";
-import { startCycle } from "../api.js";
+import { useStore, latestMonth } from "../store.jsx";
+import { useCycleRun } from "../cycleRun.jsx";
 import { ProgressStages, Banner } from "../components.jsx";
 
-export const CYCLE_HORIZON = 4;
+export { CYCLE_HORIZON } from "../cycleRun.jsx";
 
 export default function Analyzing({ navigate }) {
-  const { state, dispatch } = useStore();
-  const [failed, setFailed] = useState(null);
-  const runningRef = useRef(false);
-
+  const { state } = useStore();
+  const { start, startError } = useCycleRun();
   const month = latestMonth(state);
   const narrativesOn = !!state.settings.narratives;
+  const ranRef = useRef(false);
 
-  const run = useCallback(async () => {
-    if (runningRef.current) return;
-    runningRef.current = true;
-    setFailed(null);
-
-    // The last close-the-month's record: the board starts this cycle already
-    // knowing how its previous prediction went (plan section 6.2 item 5).
-    const closed = latestClosedFeedback(state);
-    const previousTrackRecord = closed?.feedback?.result?.track_record || null;
-
-    const result = await startCycle(
-      state.company,
-      { ...month, history: state.months.slice(0, -1).map((m) => m.values) },
-      { horizon: CYCLE_HORIZON, previousTrackRecord }
-    );
-
-    runningRef.current = false;
-    if (!result.ok) {
-      setFailed(result);
-      return;
-    }
-    const cycle = result.data;
-    dispatch({
-      type: "ADD_CYCLE",
-      cycle: {
-        id: cycle.id,
-        monthId: month.id,
-        createdAt: new Date().toISOString(),
-        source: "api",
-        status: cycle.status,
-        horizon: cycle.horizon_months || CYCLE_HORIZON,
-        months: cycle.months || [],
-        summary: cycle.summary || null,
-        meta: cycle.meta || null,
-        feedback: [],
-        startedFromTrackRecord: !!previousTrackRecord
-      }
-    });
-    navigate("/plan");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.company, month, state.months, state.cycles, dispatch, navigate]);
+  async function run() {
+    const result = await start();
+    if (result.ok) navigate("/plan");
+  }
 
   useEffect(() => {
     if (state.demo) { navigate("/plan"); return; }
     if (!state.company || !month) { navigate("/"); return; }
+    if (ranRef.current) return;
+    ranRef.current = true;
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (failed) {
+  if (startError) {
     return (
       <section className="empty-state">
         <AlertTriangle size={40} className="warn-icon" />
@@ -83,7 +47,7 @@ export default function Analyzing({ navigate }) {
           (<code>/api/cycles</code>), which isn't responding — start the backend and retry,
           or continue and plan later. Nothing is made up in the meantime.
         </p>
-        {failed.error && !failed.offline && <p className="narrow subtle">{failed.error}</p>}
+        {startError.error && !startError.offline && <p className="narrow subtle">{startError.error}</p>}
         <div className="welcome-actions">
           <button className="primary-button" type="button" onClick={run}>Retry</button>
           <button className="secondary-button" type="button" onClick={() => navigate("/home")}>

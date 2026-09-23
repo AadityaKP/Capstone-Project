@@ -8,19 +8,18 @@
 // that when a month closes the projected card is replaced in place by the
 // actual one and the prediction error is the diff in the same slot.
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo } from "react";
 import { AlertTriangle, ChevronRight, LoaderCircle, RefreshCw, Workflow } from "lucide-react";
 import {
-  useStore, latestCycle, latestMonth, monthById, analysisFromCycle, feedbackForCycleMonth, uid
+  useStore, latestCycle, latestMonth, monthById, feedbackForCycleMonth
 } from "../store.jsx";
-import { getCycle } from "../api.js";
-import { money, pct, signedPct, signedPp, monthName } from "../derive.js";
+import { useCycleRun } from "../cycleRun.jsx";
+import { money, pct, signedPct, monthName } from "../derive.js";
 import { runwayLabel } from "../founderView.js";
 import { Banner, OefaStrip, RiskChip, SimulatedTag } from "../components.jsx";
 import { FanChart } from "../whatif.jsx";
 import { actionSummary, briefFreshness, predictionSentences, scoreLine } from "../loopView.js";
 
-const POLL_MS = 2500;
 const STYLE = { cycle: { color: "var(--purple)", band: "rgba(60, 52, 137, 0.16)" } };
 
 function monthLabel(baseIso, offset) {
@@ -183,48 +182,14 @@ function HistoryEntry({ month, prev }) {
 // ---- the page ----
 
 export default function Cycle({ navigate }) {
-  const { state, dispatch } = useStore();
+  const { state } = useStore();
+  const { pollError, elapsed } = useCycleRun();
   const cycle = latestCycle(state);
   const baseMonth = cycle ? monthById(state, cycle.monthId) : latestMonth(state);
   const current = latestMonth(state);
-  const [pollError, setPollError] = useState(null);
-  const [elapsed, setElapsed] = useState(0);
-  const timerRef = useRef(null);
 
   const running = cycle && !state.demo && ["queued", "running"].includes(cycle.status);
   const analysisForCycle = cycle ? state.analyses.find((a) => a.cycleId === cycle.id) : null;
-
-  // Poll while the cycle runs. Months are dispatched as they land, and month
-  // 1 becomes an analysis record the moment it exists so Home has a plan.
-  useEffect(() => {
-    if (!running) return undefined;
-    let alive = true;
-    const started = Date.now() - (cycle.months?.length ? 0 : 0);
-    const tick = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
-    async function poll() {
-      const r = await getCycle(cycle.id);
-      if (!alive) return;
-      if (!r.ok) {
-        setPollError(r.offline ? "Lost contact with the engine — it keeps running; this page will catch up when it's back." : r.error);
-        return;
-      }
-      setPollError(null);
-      const c = r.data;
-      dispatch({ type: "UPDATE_CYCLE", cycle: { id: c.id, status: c.status, months: c.months || [], summary: c.summary || null, meta: c.meta || null, error: c.error || null } });
-    }
-    poll();
-    timerRef.current = setInterval(poll, POLL_MS);
-    return () => { alive = false; clearInterval(timerRef.current); clearInterval(tick); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cycle?.id, running]);
-
-  useEffect(() => {
-    if (!cycle || state.demo || analysisForCycle) return;
-    if (!(cycle.months || []).length) return;
-    const analysis = analysisFromCycle(cycle);
-    if (analysis) dispatch({ type: "ADD_ANALYSIS", analysis });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cycle?.id, (cycle?.months || []).length]);
 
   const months = cycle?.months || [];
   const horizon = cycle?.horizon || cycle?.summary?.horizon_months || 4;

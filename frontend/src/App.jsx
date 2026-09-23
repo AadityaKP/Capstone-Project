@@ -13,6 +13,7 @@ import {
 import "./styles.css";
 
 import { StoreProvider, useStore, latestMonth } from "./store.jsx";
+import { CycleRunProvider } from "./cycleRun.jsx";
 import { dateLabel } from "./derive.js";
 import { DemoBadge } from "./components.jsx";
 
@@ -160,7 +161,9 @@ function Shell() {
 export default function App() {
   return (
     <StoreProvider>
-      <Shell />
+      <CycleRunProvider>
+        <Shell />
+      </CycleRunProvider>
     </StoreProvider>
   );
 }

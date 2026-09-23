@@ -64,9 +64,18 @@ function reducer(state, action) {
     }
     case "ADD_MONTH":
       return { ...state, months: [...state.months, action.month] };
-    case "ADD_ANALYSIS":
-      return { ...state, analyses: [...state.analyses, action.analysis] };
+    case "ADD_ANALYSIS": {
+      // Idempotent for cycle-born analyses: the promotion effect can run twice
+      // under React.StrictMode before the store updates. Analyses without a
+      // cycleId (the pre-loop /api/advise path) are appended as before.
+      const a = action.analysis;
+      if (a.cycleId && state.analyses.some((x) => x.cycleId === a.cycleId && (x.monthIndex || 1) === (a.monthIndex || 1))) {
+        return state;
+      }
+      return { ...state, analyses: [...state.analyses, a] };
+    }
     case "ADD_CYCLE":
+      if ((state.cycles || []).some((c) => c.id === action.cycle.id)) return state;
       return { ...state, cycles: [...state.cycles, action.cycle] };
     case "UPDATE_CYCLE":
       return {
