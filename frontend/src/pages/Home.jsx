@@ -23,9 +23,10 @@ import {
 } from "../founderView.js";
 import { positionSentence, DOMAIN_META } from "../copy.js";
 import {
-  RiskChip, KpiCard, DeltaArrow, Banner, ProgressStages, buildPlanCards, PlanCard, confidenceLine
+  RiskChip, KpiCard, DeltaArrow, Notice, ProgressStages, buildPlanCards, PlanCard, confidenceLine
 } from "../components.jsx";
 import { predictionSentences, scoreLine, cashDeathMonth } from "../loopView.js";
+import { pickNotice, rulesOnlyMonths } from "../notice.js";
 import Outlook, { defaultOutlookMetric } from "../outlook.jsx";
 
 // Plan section 6.3: the board's prediction error is a real number from the
@@ -139,8 +140,16 @@ export default function Home({ navigate }) {
   const holding = planCards.filter((c) => !c.isAction).map((c) => c.title.toLowerCase());
   const deathMonth = cycleIsCurrent ? cashDeathMonth(cycleMonths) : null;
   const record = lastMonthRecord(state, month, prev, cycle);
-  const rulesOnly = (cycleIsCurrent && cycle.summary && cycle.summary.llm_ok_months === 0 && cycle.meta?.use_oracle !== false)
-    || (analysisIsCurrent && analysis.llm_ok === false);
+  // Rules-only: from the current cycle's months when there is one (whole or
+  // partial), else from the current analysis. A cycle run deliberately
+  // without the strategist (meta.use_oracle false) is not a failure.
+  const rulesOnly = cycleIsCurrent
+    ? (cycle.meta?.use_oracle === false ? null
+      : rulesOnlyMonths(cycleMonths) || (cycle.summary?.llm_ok_months === 0 ? "all" : null))
+    : (analysisIsCurrent && analysis.llm_ok === false ? "all" : null);
+  // The plan on screen was made on an earlier month: one inline sentence in
+  // the plan section, not a banner.
+  const stale = !running && !!analysis && !analysisIsCurrent;
 
   const runLabel = cycle ? "Re-run" : "Run the plan";
   const runButton = !demo && !running && (
@@ -149,49 +158,27 @@ export default function Home({ navigate }) {
     </button>
   );
 
-  // ---- notice slot: at most one, in priority order ----
-  let notice = null;
-  if (startError && startError !== dismissedError) {
-    notice = (
-      <Banner tone="warn" icon={<AlertTriangle size={17} />} actions={
-        <>
-          <button className="primary-button small" type="button" disabled={starting} onClick={() => start()}>Retry</button>
-          <button className="secondary-button small" type="button" onClick={() => setDismissedError(startError)}>Continue without a plan</button>
-        </>
-      }>
-        The analysis service couldn't be reached, so no plan was started. Your numbers are
-        saved; nothing is made up in the meantime.
-        {startError.error && !startError.offline && <> ({startError.error})</>}
-      </Banner>
-    );
-  } else if (failed) {
-    notice = (
-      <Banner tone="warn" icon={<AlertTriangle size={17} />} actions={runButton}>
-        The cycle failed on the engine: {cycle.error || "unknown error"}. Nothing here is made up —
-        re-run it from your numbers.
-      </Banner>
-    );
-  } else if (pollError) {
-    notice = <Banner tone="warn" icon={<AlertTriangle size={17} />}>{pollError}</Banner>;
-  } else if (rulesOnly) {
-    notice = (
-      <Banner tone="warn" icon={<AlertTriangle size={17} />}>
-        The AI strategist couldn't be reached for this plan. It comes from the board's
-        built-in rules — still grounded in your numbers, just without the strategist's read.
-      </Banner>
-    );
-  } else if (!running && analysis && !analysisIsCurrent) {
-    notice = (
-      <Banner tone="info" actions={runButton}>
-        The plan below reflects your previous numbers until the board plans again.
-      </Banner>
-    );
-  }
+  // ---- notice slot: at most one (notice.js) ----
+  const { notice, inline } = pickNotice({
+    startError: startError && startError !== dismissedError ? startError : null,
+    failed: failed ? { error: cycle.error } : null,
+    pollError,
+    rulesOnly,
+    actions: {
+      retry: () => start(),
+      dismiss: () => setDismissedError(startError),
+      rerun: demo ? null : () => start()
+    }
+  });
+  const planNotes = [
+    stale ? "On your previous numbers until the board plans again." : null,
+    ...inline.filter((n) => n.kind === "rules-only").map((n) => n.text)
+  ].filter(Boolean);
 
   return (
     <section className="content-stack this-month">
       {/* 1 · notice slot */}
-      {notice}
+      <Notice notice={notice} />
 
       {/* 2 · status line */}
       <div className={`position-banner static ${brief ? (brief.risk_level || "MEDIUM").toLowerCase() : "none"}`}>
@@ -296,9 +283,9 @@ export default function Home({ navigate }) {
                   Month {Math.min(cycleMonths.length + 1, horizon)} of {horizon} · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
                 </span>
               )}
-              {!running && !notice && runButton && cycleIsCurrent && (
+              {!running && !demo && !failed && (
                 <button className="link-button" type="button" disabled={starting} onClick={() => start()}>
-                  <RefreshCw size={14} /> Re-run
+                  <RefreshCw size={14} /> {stale ? "Plan again" : "Re-run"}
                 </button>
               )}
               <button className="link-button" type="button" onClick={() => navigate(`/advice/${analysis.id}`)}>
@@ -306,6 +293,9 @@ export default function Home({ navigate }) {
               </button>
             </div>
           </div>
+          {planNotes.length > 0 && (
+            <p className="plan-note">{planNotes.join(" ")}</p>
+          )}
           {actionCards.length > 0 ? (
             <div className="plan-grid">
               {actionCards.map((c) => <PlanCard key={c.domain} card={c} />)}

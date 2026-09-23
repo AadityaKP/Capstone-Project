@@ -8,15 +8,16 @@
 // weighed it · How the board got here.
 
 import React, { useState } from "react";
-import { AlertTriangle, ChevronRight, RefreshCw } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import {
   useStore, latestAnalysis, latestMonth, monthById, cycleById, feedbackForCycleMonth
 } from "../store.jsx";
 import { expectedOutcomeCopy, scaleWord, FOCUS_LABELS } from "../copy.js";
 import {
-  Banner, FocusBar, EvidenceList, ConfidenceStrip, RiskBullets, SimulatedTag,
+  Notice, FocusBar, EvidenceList, ConfidenceStrip, RiskBullets, SimulatedTag,
   OefaStrip, monthFromAnalysis, observedLines, Expandable
 } from "../components.jsx";
+import { pickNotice, rulesOnlyMonths } from "../notice.js";
 import { deriveCac, deriveLtv, monthName, monthOffsetLabel } from "../derive.js";
 import { runwayMonths } from "../founderView.js";
 import WhatIfPanel, { WhatIfAssumptions } from "../whatif.jsx";
@@ -121,25 +122,27 @@ export default function Advice({ navigate, params }) {
   const observed = observedLines(thisMonth?.month?.observe);
   const hasAssumptions = correctable.length > 0 || internalCount > 0 || (whatIf?.assumptions?.length > 0);
 
+  const rulesOnly = cycle
+    ? (cycle.meta?.use_oracle === false ? null : rulesOnlyMonths(cycleMonths))
+    : (analysis.llm_ok === false ? "all" : null);
+  const { notice, inline } = pickNotice({
+    rulesOnly,
+    archived: isArchived ? { monthName: monthName(month.enteredAt) } : null,
+    actions: { current: () => navigate("/home") }
+  });
+
   return (
     <section className="content-stack advice-page">
-      {/* notice slot: one of archived / rules-only */}
-      {isArchived ? (
-        <Banner tone="info" actions={
-          <button className="secondary-button small" type="button" onClick={() => navigate("/home")}>Current plan</button>
-        }>
-          Archived analysis from {monthName(month.enteredAt)} — shown as it was.
-        </Banner>
-      ) : analysis.llm_ok === false ? (
-        <Banner tone="warn" icon={<AlertTriangle size={17} />}>
-          The AI strategist couldn't be reached for this analysis. This plan comes from the
-          board's built-in rules — still grounded in your numbers, just without the
-          strategist's read. Re-analyse when the service is back.
-        </Banner>
-      ) : null}
-      {isArchived && analysis.llm_ok === false && (
-        <p className="subtle inline-note">This archived plan came from the board's built-in rules; the strategist was unreachable at the time.</p>
-      )}
+      {/* notice slot: at most one (notice.js); what lost the slot is one line */}
+      <Notice notice={notice} />
+      {inline.map((n) => (
+        <p key={n.kind} className="subtle inline-note">
+          {n.text}
+          {n.kind === "archived" && (
+            <> <button className="link-button" type="button" onClick={() => navigate("/home")}>Current plan <ChevronRight size={14} /></button></>
+          )}
+        </p>
+      ))}
 
       {/* Summary */}
       <article className="panel summary-panel">

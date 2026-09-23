@@ -1057,7 +1057,7 @@ code {
   white-space: nowrap;
 }
 
-.prov-chip.provided { background: #dff6ee; color: var(--green); }
+
 .prov-chip.estimated { background: #fbecd5; color: var(--amber); }
 .prov-chip.derived { background: #e8e6f7; color: var(--purple); }
 .prov-chip.simulated { background: #dbeeff; color: var(--blue); }
@@ -1729,6 +1729,8 @@ code {
   margin-bottom: -10px;
 }
 .plan-confidence { font-size: 14px; font-weight: 700; color: var(--ink); }
+.plan-note { margin: -8px 0 0; color: var(--amber); font-size: 13px; font-weight: 700; }
+.ledger-source { margin: 4px 0 0; }
 .plan-section-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .holding-line { margin: -10px 0 0; color: var(--muted); font-size: 13px; }
 .cash-death-line {

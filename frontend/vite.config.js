@@ -13,5 +13,12 @@ export default defineConfig({
     proxy: {
       "/api": `http://127.0.0.1:${apiPort}`
     }
+  },
+  // The honesty checklist (docs/ui_simplification_plan.md D3) lives under
+  // test/, never under src/: tests/test_founder_contract.py scans every file
+  // there for engine vocabulary, and a cycle fixture would trip it.
+  test: {
+    environment: "jsdom",
+    include: ["test/**/*.test.jsx"]
   }
 });

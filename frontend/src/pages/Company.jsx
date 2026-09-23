@@ -9,20 +9,22 @@ import {
 } from "../store.jsx";
 import {
   CROWDEDNESS, MATURITY, deriveCac, deriveLtv,
-  money, moneyExact, pct, signedPct, signedPp, dateLabel, monthsLabel
+  money, moneyExact, pct, signedPct, signedPp, dateLabel, monthName
 } from "../derive.js";
 import { runwayLabel } from "../founderView.js";
-import { ProvChip, Banner, buildPlanCards } from "../components.jsx";
+import { ProvChip, Banner, Notice, buildPlanCards } from "../components.jsx";
+import { pickNotice } from "../notice.js";
 import { submitCycleFeedback } from "../api.js";
 import { useCycleRun } from "../cycleRun.jsx";
 import { DONE_STATES, DONE_TO_DECISION } from "../loopView.js";
 
-function Row({ label, value, chip, chipDate }) {
+// A value the founder gave carries no marker; only the exceptions do.
+function Row({ label, value, chip = "provided" }) {
   return (
     <div className="ledger-row">
       <span className="ledger-label">{label}</span>
       <strong className="ledger-value">{value}</strong>
-      <ProvChip kind={chip} date={chipDate} />
+      <ProvChip kind={chip} />
     </div>
   );
 }
@@ -50,19 +52,20 @@ export function CompanyView({ navigate }) {
           </button>
         </div>
         {company.whatYouSell && <p className="subtle">{company.whatYouSell}</p>}
+        <p className="subtle ledger-source">From your {monthName(month.enteredAt)} close ({entered}). Values without a marker are yours as you entered them.</p>
 
         <div className="ledger">
           <span className="ledger-section">Money</span>
-          <Row label="Monthly recurring revenue" value={moneyExact(v.mrr)} chip="provided" chipDate={entered} />
-          <Row label="Cash in the bank" value={moneyExact(v.cash)} chip="provided" chipDate={entered} />
-          <Row label="Total monthly costs" value={moneyExact(v.costs)} chip="provided" chipDate={entered} />
+          <Row label="Monthly recurring revenue" value={moneyExact(v.mrr)} />
+          <Row label="Cash in the bank" value={moneyExact(v.cash)} />
+          <Row label="Total monthly costs" value={moneyExact(v.costs)} />
           <Row label="Cash lasts" value={runwayLabel(v)} chip="derived" />
 
           <span className="ledger-section">Customers</span>
-          <Row label="Average price" value={`$${v.price}/user/mo`} chip="provided" chipDate={entered} />
-          <Row label="Monthly churn" value={`${pct(v.churnMonthly)}/mo`} chip="provided" chipDate={entered} />
-          {v.newCustomers != null && <Row label="New customers last month" value={v.newCustomers} chip="provided" chipDate={entered} />}
-          {v.marketingSpend != null && <Row label="Marketing spend last month" value={moneyExact(v.marketingSpend)} chip="provided" chipDate={entered} />}
+          <Row label="Average price" value={`$${v.price}/user/mo`} />
+          <Row label="Monthly churn" value={`${pct(v.churnMonthly)}/mo`} />
+          {v.newCustomers != null && <Row label="New customers last month" value={v.newCustomers} />}
+          {v.marketingSpend != null && <Row label="Marketing spend last month" value={moneyExact(v.marketingSpend)} />}
           <Row
             label="Customer acquisition cost"
             value={cac.value ? money(cac.value) : "unknown"}
@@ -71,18 +74,17 @@ export function CompanyView({ navigate }) {
           <Row label="Customer lifetime value" value={ltv ? money(ltv) : "—"} chip="derived" />
 
           <span className="ledger-section">Company & market</span>
-          <Row label="Company age" value={`${ageNow} months`} chip="provided" />
-          <Row label="Market crowdedness" value={crowd?.label || "—"} chip="provided" />
+          <Row label="Company age" value={`${ageNow} months`} />
+          <Row label="Market crowdedness" value={crowd?.label || "—"} />
           <Row label="Product maturity" value={maturity?.label || "Not set"} chip={maturity ? "provided" : "estimated"} />
-          {company.headcountReal && <Row label="Team size" value={`${company.headcountReal} people`} chip="provided" />}
+          {company.headcountReal && <Row label="Team size" value={`${company.headcountReal} people`} />}
           <Row label="Market conditions (rates, confidence)" value="Typical conditions assumed" chip="estimated" />
         </div>
       </article>
 
-      <Banner tone="info">
-        Every value above feeds the board's analysis exactly as labelled — nothing else is
-        collected or observed. "Estimated" values are the system's assumptions, not measurements.
-      </Banner>
+      <p className="subtle">
+        Every value above feeds the board's analysis exactly as labelled; estimated values are the system's assumptions, not measurements.
+      </p>
     </section>
   );
 }
@@ -245,7 +247,7 @@ export function UpdateRitual({ navigate }) {
       <article className="panel">
         <h3>{closable && actionCards.length ? "Close the month" : "Update your numbers"}</h3>
         <p className="subtle">Pre-filled with last month ({dateLabel(last.enteredAt)}) — edit what changed. ~2 minutes.</p>
-        {state.demo && <Banner tone="info">Sample company — updates are disabled here. Start your own company from the welcome screen.</Banner>}
+        <Notice notice={pickNotice({ demo: state.demo }).notice} />
         {closable && actionCards.length > 0 && (
           <ClosableActions
             cards={actionCards} done={done} notes={notes}

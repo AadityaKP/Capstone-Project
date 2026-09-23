@@ -383,7 +383,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
       <p className="wi-caveat">{result.caveat}</p>
 
       {display.rule_of_40_withheld_because && (
-        <p className="wi-caveat">{display.rule_of_40_withheld_because}</p>
+        <p className="subtle">{display.rule_of_40_withheld_because}</p>
       )}
 
       <button type="button" className="link-button" onClick={() => setShowCharts(!showCharts)}>

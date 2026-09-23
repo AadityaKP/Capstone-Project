@@ -33,14 +33,40 @@ export function RiskChip({ level, large = false }) {
   );
 }
 
-export function ProvChip({ kind, date }) {
+// Markers only on exceptions (Phase E): a value the founder gave needs no
+// chip, so the chips that remain — estimated, derived, simulated — stand out.
+export function ProvChip({ kind }) {
   const copy = {
-    provided: date ? `You provided · ${date}` : "You provided",
     estimated: "Estimated by the system",
     derived: "Derived",
     simulated: "Simulated"
   };
-  return <span className={`prov-chip ${kind}`}>{copy[kind] || kind}</span>;
+  if (!copy[kind]) return null;
+  return <span className={`prov-chip ${kind}`}>{copy[kind]}</span>;
+}
+
+// One notice, rendered from what pickNotice (notice.js) chose.
+export function Notice({ notice }) {
+  if (!notice) return null;
+  return (
+    <Banner
+      tone={notice.tone}
+      icon={notice.tone === "warn" ? <AlertTriangle size={17} /> : null}
+      actions={notice.actions.length ? notice.actions.map((act) => (
+        <button
+          key={act.label}
+          className={`${act.primary ? "primary-button" : "secondary-button"} small`}
+          type="button"
+          disabled={!!act.disabled}
+          onClick={act.onClick}
+        >
+          {act.label}
+        </button>
+      )) : null}
+    >
+      {notice.text}
+    </Banner>
+  );
 }
 
 export function DeltaArrow({ value, goodWhenDown = false, format = signedPct }) {
@@ -530,7 +556,6 @@ export function OefaStrip({ month, closed = null, defaultOpen = false, title = n
           </Beat>
           <Beat label="Expected">
             {expected ? <li>{expectedLine(expected)}</li> : <li className="muted">no numeric prediction on this analysis</li>}
-            {expected && <li className="muted"><SimulatedTag /></li>}
           </Beat>
           <Beat label={changedLabel} tone={result ? "actual" : ""}>
             {changeError && !result && (

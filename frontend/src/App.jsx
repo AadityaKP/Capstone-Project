@@ -4,7 +4,6 @@
 // deliberately absent from every founder surface (spec §19).
 
 import React, { useCallback, useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
 import {
   BrainCircuit, Building2, ChevronRight,
   History as HistoryIcon, LayoutDashboard, PencilLine,
@@ -67,7 +66,7 @@ function parseRoute(route) {
   return { page: parts[0], params: {} };
 }
 
-function Shell() {
+export function Shell() {
   const { state } = useStore();
   const [route, navigate] = useHashRoute();
   const { page, params } = parseRoute(route);
@@ -170,9 +169,3 @@ export default function App() {
     </StoreProvider>
   );
 }
-
-createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);

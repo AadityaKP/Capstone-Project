@@ -122,8 +122,9 @@ function reducer(state, action) {
 
 const StoreContext = createContext(null);
 
-export function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, load);
+// `initialState` is for tests and fixtures; the app itself loads from storage.
+export function StoreProvider({ children, initialState = null }) {
+  const [state, dispatch] = useReducer(reducer, initialState, (given) => given || load());
   useEffect(() => persist(state), [state]);
   const value = useMemo(() => ({ state, dispatch }), [state]);
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
