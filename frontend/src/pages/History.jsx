@@ -1,14 +1,19 @@
 // S10 History — one vertical monthly timeline (spec §14): numbers → advice →
-// decisions → matured outcomes. Mini-charts appear once 3 snapshots exist.
+// decisions → how the plan held up → matured outcomes. Mini-charts appear
+// once 3 snapshots exist. Each entry expands to its own record of the plan
+// made on that month (docs/ui_simplification_plan.md Phase F.1).
 
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useStore, analysisForMonth } from "../store.jsx";
+import {
+  useStore, analysisForMonth, cycleForMonth, feedbackForCycleMonth
+} from "../store.jsx";
 import {
   money, pct, signedPct, signedPp, monthName, monthDeltas, monthsLabel
 } from "../derive.js";
 import { runwayMonths, runwayLabel } from "../founderView.js";
 import { RiskChip, MiniLine, OutcomeBadge } from "../components.jsx";
+import { predictionSentences, scoreLine } from "../loopView.js";
 
 // Mirror of the engine's outcome labelling (classify_realized_outcome): ±10% MRR
 // over a 6-month horizon. Pure arithmetic on the founder's own numbers.
@@ -22,7 +27,33 @@ function maturedOutcome(months, index) {
   return "STAGNATION";
 }
 
-function MonthEntry({ month, prev, analysis, outcome, navigate }) {
+// How the plan made on `month` held up: the close's scored prediction, and
+// what the board did with it in the cycle planned on the following month.
+function heldUp(state, month, next) {
+  const cycle = cycleForMonth(state, month.id);
+  const closed = cycle ? feedbackForCycleMonth(cycle, 1) : null;
+  const month1 = cycle?.months?.[0];
+  if (!closed?.result || !month1) return null;
+  const result = closed.result;
+  const lines = predictionSentences({
+    before: month1.observe?.state_before,
+    actual: result.actual_state,
+    expected: month1.execute?.expected_delta,
+    error: result.prediction_error
+  });
+  const answering = next ? cycleForMonth(state, next.id) : null;
+  const adapt = answering && answering.id !== cycle.id ? answering.months?.[0]?.adapt : null;
+  let changed = null;
+  if (adapt) {
+    const adaptations = adapt.adaptations || [];
+    if (adaptations.length) changed = adaptations.map((a) => `${a.agent}: ${a.sentence}`);
+    else if (answering.startedFromTrackRecord) changed = ["The board planned the next month with this result in hand."];
+  }
+  return { lines, score: scoreLine(result.prediction_error), changed };
+}
+
+function MonthEntry({ month, prev, next, analysis, outcome, navigate }) {
+  const { state } = useStore();
   const [open, setOpen] = useState(false);
   const v = month.values;
   const deltas = monthDeltas(month, prev);
@@ -35,7 +66,9 @@ function MonthEntry({ month, prev, analysis, outcome, navigate }) {
   for (const d of month.decisions || []) byDomain.set(d.domain || d.id, d);
   const decisions = [...byDomain.values()];
   const asked = decisions.filter((d) => d.state !== "suggested");
-  const accepted = asked.filter((d) => d.state === "accepted").length;
+  const did = asked.filter((d) => d.state === "accepted").length;
+  const partly = asked.filter((d) => d.state === "custom").length;
+  const record = heldUp(state, month, next);
 
   return (
     <li className="timeline-entry">
@@ -56,11 +89,9 @@ function MonthEntry({ month, prev, analysis, outcome, navigate }) {
         )}
         {asked.length > 0 && (
           <p className="timeline-decisions">
-            You accepted {accepted} of {asked.length} action{asked.length === 1 ? "" : "s"}
-            {asked.some((d) => d.state === "custom") && " · adjusted one yourself"}
+            Did {did} of {asked.length}{partly > 0 && ` · partly ${partly}`}
           </p>
         )}
-        {outcome && <OutcomeBadge outcome={outcome} />}
         {open && (
           <div className="timeline-detail">
             <ul>
@@ -73,9 +104,22 @@ function MonthEntry({ month, prev, analysis, outcome, navigate }) {
                 </li>
               ))}
             </ul>
+            {record && (
+              <div className="held-up">
+                <span className="held-up-title">How the plan held up</span>
+                <ul className="changed-list">
+                  {record.lines.map((s) => <li key={s.key} className={`pe-line ${s.tone}`}>{s.text}</li>)}
+                  <li className="muted">{record.score}</li>
+                </ul>
+                {record.changed && (
+                  <p className="board-changed"><strong>What the board changed:</strong> {record.changed.join(" ")}</p>
+                )}
+              </div>
+            )}
+            {outcome && <OutcomeBadge outcome={outcome} />}
             {analysis && (
               <button className="link-button" type="button" onClick={() => navigate(`/advice/${analysis.id}`)}>
-                Open full advice <ChevronRight size={14} />
+                Why this plan <ChevronRight size={14} />
               </button>
             )}
           </div>
@@ -120,6 +164,7 @@ export default function History({ navigate }) {
             key={m.id}
             month={m}
             prev={newestFirst[i + 1] || null}
+            next={newestFirst[i - 1] || null}
             analysis={analysisForMonth(state, m.id)}
             outcome={maturedOutcome(months, months.indexOf(m))}
             navigate={navigate}

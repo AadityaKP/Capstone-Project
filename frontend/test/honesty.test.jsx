@@ -148,6 +148,28 @@ describe("the one-notice rule", () => {
   });
 });
 
+describe("rule 6 — the numbers we guessed are asked for at the moment of choice", () => {
+  it("Close groups the optional numbers under 'numbers we estimated' when the board guessed one, open from the deep link", () => {
+    const state = ownState((s) => {
+      s.analyses[s.analyses.length - 1].trace.assumed_fields = [
+        { field: "Acquisition cost", value: "$50", why: "not supplied", correctable: true },
+        { field: "Unemployment", value: "4.0%", why: "typical conditions", correctable: false }
+      ];
+    });
+    const { container } = renderAt("/update/fill", state);
+    expect(container.querySelector(".fill-group.open")).not.toBeNull();
+    expect(container.textContent).toMatch(/Numbers we estimated/);
+    expect(container.textContent).toMatch(/Acquisition cost/);
+    expect(container.querySelectorAll(".update-grid .ffield").length).toBe(7);
+  });
+
+  it("Close keeps every number inline when nothing was guessed", () => {
+    const { container } = renderAt("/update", ownState());
+    expect(container.querySelector(".fill-group")).toBeNull();
+    expect(container.querySelectorAll(".update-grid .ffield").length).toBe(7);
+  });
+});
+
 describe("rule 4 — no simulated-versus-simulated sentence outside the trace", () => {
   it("'the simulation did' appears only inside How the board got here", () => {
     const { container } = renderAt("/advice/a3", ownState());

@@ -41,12 +41,27 @@ function NumInput({ value, onChange, prefix, suffix, placeholder }) {
   );
 }
 
+// The optional fields of a step, behind one toggle (Phase F.4): the eight
+// required numbers are enough for a first analysis; everything else raises
+// the confidence the board can claim, and says so.
+function MoreDetail({ open, onToggle, children }) {
+  return (
+    <div className="more-detail">
+      <button className="link-button" type="button" onClick={onToggle}>
+        {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />} Add more detail — raises confidence
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
 export default function Onboarding({ navigate }) {
   const { state, dispatch } = useStore();
   const draft = state.onboardingDraft || {};
   const [step, setStep] = useState(draft._step || 0);
   const [annualMode, setAnnualMode] = useState(false);
-  const [enrichOpen, setEnrichOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState({});
+  const toggleMore = () => setMoreOpen({ ...moreOpen, [step]: !moreOpen[step] });
   const [touched, setTouched] = useState({});
 
   const set = (patch) => dispatch({ type: "SAVE_DRAFT", draft: { ...patch, _step: step } });
@@ -128,9 +143,6 @@ export default function Onboarding({ navigate }) {
           <Field label="Company name" error={touched.name && errors.name}>
             <input type="text" value={draft.name ?? ""} onChange={(e) => set({ name: e.target.value })} placeholder="Acme Analytics" />
           </Field>
-          <Field label="What you sell (optional)" help="One line, just for your own screens.">
-            <input type="text" value={draft.whatYouSell ?? ""} onChange={(e) => set({ whatYouSell: e.target.value })} placeholder="Usage analytics for e-commerce teams" />
-          </Field>
           <Field label="Company age" help="Months since first paying customers — retention behaves differently as companies age." error={touched.ageMonths && errors.ageMonths}>
             <NumInput value={draft.ageMonths} onChange={(v) => set({ ageMonths: v })} suffix="months" />
           </Field>
@@ -143,6 +155,14 @@ export default function Onboarding({ navigate }) {
               ))}
             </div>
           </Field>
+          <MoreDetail open={!!moreOpen[0]} onToggle={toggleMore}>
+            <Field label="What you sell" help="One line, just for your own screens.">
+              <input type="text" value={draft.whatYouSell ?? ""} onChange={(e) => set({ whatYouSell: e.target.value })} placeholder="Usage analytics for e-commerce teams" />
+            </Field>
+            <Field label="Team size (people)" help="For your screens — plan math uses your costs, not headcount.">
+              <NumInput value={draft.headcountReal} onChange={(v) => set({ headcountReal: v })} suffix="people" />
+            </Field>
+          </MoreDetail>
         </div>
       )}
 
@@ -159,15 +179,20 @@ export default function Onboarding({ navigate }) {
           <Field label="Total monthly costs" help="Payroll + tools + rent + marketing + everything. If it is just you and a few subscriptions, say so — the number is used exactly as you enter it." error={touched.costs && errors.costs}>
             <NumInput value={draft.costs} onChange={(v) => set({ costs: v })} prefix="$" suffix="/month" />
           </Field>
-          <Field label="Marketing spend last month (optional)" help="Unlocks acquisition-cost analysis together with new customers.">
-            <NumInput value={draft.marketingSpend} onChange={(v) => set({ marketingSpend: v })} prefix="$" />
-          </Field>
           {draft.cash > 0 && draft.costs > 0 && draft.mrr != null && (
             <div className="live-note">
               <strong>{runway}</strong>
               <span> — assuming revenue and costs stay flat.</span>
             </div>
           )}
+          <MoreDetail open={!!moreOpen[1]} onToggle={toggleMore}>
+            <Field label="Marketing spend last month" help="Unlocks acquisition-cost analysis together with new customers.">
+              <NumInput value={draft.marketingSpend} onChange={(v) => set({ marketingSpend: v })} prefix="$" />
+            </Field>
+            <Field label="Acquisition cost, if you track it" help="Overrides the derived figure.">
+              <NumInput value={draft.cacDirect} onChange={(v) => set({ cacDirect: v })} prefix="$" />
+            </Field>
+          </MoreDetail>
         </div>
       )}
 
@@ -199,19 +224,6 @@ export default function Onboarding({ navigate }) {
               <span className="ffield-help">= {pct(draft.churnMonthly)} per month</span>
             )}
           </Field>
-          <Field label="New customers last month (optional)" help="With marketing spend, this computes your acquisition cost.">
-            <NumInput value={draft.newCustomers} onChange={(v) => set({ newCustomers: v })} suffix="customers" />
-          </Field>
-          <Field label="Product maturity (optional)" help="Your own judgment — used as a rough proxy, always labelled estimated.">
-            <div className="choice-row">
-              {MATURITY.map((m) => (
-                <button key={m.id} type="button" className={`choice ${draft.maturity === m.id ? "on" : ""}`} onClick={() => set({ maturity: m.id })}>
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </Field>
-
           {(cac.value || ltv) && (
             <div className="live-note">
               <strong>{efficiency(ltv, cac.value, draft.newCustomers).label}</strong>
@@ -221,18 +233,21 @@ export default function Onboarding({ navigate }) {
 
           <div className="enough-banner">
             <strong>That's enough for your first analysis.</strong>
-            <button className="link-button" type="button" onClick={() => setEnrichOpen(!enrichOpen)}>
-              {enrichOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />} Add detail first (optional)
-            </button>
           </div>
-          {enrichOpen && (
+          <MoreDetail open={!!moreOpen[2]} onToggle={toggleMore}>
+            <Field label="New customers last month" help="With marketing spend, this computes your acquisition cost.">
+              <NumInput value={draft.newCustomers} onChange={(v) => set({ newCustomers: v })} suffix="customers" />
+            </Field>
+            <Field label="Product maturity" help="Your own judgment — used as a rough proxy, always labelled estimated.">
+              <div className="choice-row">
+                {MATURITY.map((m) => (
+                  <button key={m.id} type="button" className={`choice ${draft.maturity === m.id ? "on" : ""}`} onClick={() => set({ maturity: m.id })}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
             <div className="enrich-grid">
-              <Field label="Acquisition cost, if you track it" help="Overrides the derived figure.">
-                <NumInput value={draft.cacDirect} onChange={(v) => set({ cacDirect: v })} prefix="$" />
-              </Field>
-              <Field label="Team size (people)" help="For your screens — plan math uses your costs, not headcount.">
-                <NumInput value={draft.headcountReal} onChange={(v) => set({ headcountReal: v })} suffix="people" />
-              </Field>
               <Field label="Enterprise churn %/mo (if known)">
                 <NumInput value={draft.churnEnt} onChange={(v) => set({ churnEnt: v })} suffix="%" />
               </Field>
@@ -243,7 +258,7 @@ export default function Onboarding({ navigate }) {
                 <NumInput value={draft.churnB2c} onChange={(v) => set({ churnB2c: v })} suffix="%" />
               </Field>
             </div>
-          )}
+          </MoreDetail>
         </div>
       )}
 

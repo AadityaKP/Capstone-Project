@@ -205,7 +205,7 @@ export default function Advice({ navigate, params }) {
                   </li>
                 ))}
               </ul>
-              <button className="link-button" type="button" onClick={() => navigate("/update")}>
+              <button className="link-button" type="button" onClick={() => navigate("/update/fill")}>
                 Fill these in <ChevronRight size={15} />
               </button>
             </>

@@ -3,9 +3,9 @@
 // editing with an instant what-changed payoff.
 
 import React, { useMemo, useState } from "react";
-import { ChevronRight, LoaderCircle, PencilLine } from "lucide-react";
+import { ChevronDown, ChevronRight, LoaderCircle, PencilLine } from "lucide-react";
 import {
-  useStore, latestMonth, latestCycle, feedbackForCycleMonth, uid
+  useStore, latestMonth, latestCycle, latestAnalysis, feedbackForCycleMonth, uid
 } from "../store.jsx";
 import {
   CROWDEDNESS, MATURITY, deriveCac, deriveLtv,
@@ -99,6 +99,23 @@ const UPDATE_FIELDS = [
   { key: "price", label: "Average price", prefix: "$", optional: true }
 ];
 
+function NumberField({ field, values, onChange }) {
+  return (
+    <label className="ffield">
+      <span className="ffield-label">{field.label}{field.optional ? " (optional)" : ""}</span>
+      <span className="num-input">
+        {field.prefix && <em>{field.prefix}</em>}
+        <input
+          type="number" inputMode="decimal" step="any"
+          value={values[field.key] ?? ""}
+          onChange={(e) => onChange(field.key, e.target.value === "" ? null : Number(e.target.value))}
+        />
+        {field.suffix && <em>{field.suffix}</em>}
+      </span>
+    </label>
+  );
+}
+
 // The HITL close (plan section 6.1), merged into the update ritual rather than
 // added beside it: one screen, one set of numbers, one submit. Above the
 // number grid the founder says what happened to each of last month's actions
@@ -142,7 +159,7 @@ function ClosableActions({ cards, done, notes, onDone, onNote }) {
   );
 }
 
-export function UpdateRitual({ navigate }) {
+export function UpdateRitual({ navigate, params = {} }) {
   const { state, dispatch } = useStore();
   const { requestStart } = useCycleRun();
   const last = latestMonth(state);
@@ -151,6 +168,14 @@ export function UpdateRitual({ navigate }) {
   const [notes, setNotes] = useState({});
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState(null);
+  // The optional numbers collapse into "numbers we estimated" when the latest
+  // analysis had to guess something the founder could supply (its
+  // assumed_fields marked correctable; older analyses carry no flag and are
+  // treated as correctable, as Why this plan does). "Fill these in" on Why
+  // deep-links here with the group open.
+  const guessed = (latestAnalysis(state)?.trace?.assumed_fields || []).filter((a) => a.correctable !== false);
+  const [fillOpen, setFillOpen] = useState(!!params.fill);
+  const setValue = (key, value) => setValues((prev) => ({ ...prev, [key]: value }));
 
   // The plan to close: the latest cycle, if it was made on the month being
   // closed and hasn't been closed already.
@@ -257,21 +282,32 @@ export function UpdateRitual({ navigate }) {
         )}
         {closeError && <Banner tone="warn">{closeError}</Banner>}
         <div className="update-grid">
-          {UPDATE_FIELDS.map((f) => (
-            <label className="ffield" key={f.key}>
-              <span className="ffield-label">{f.label}{f.optional ? " (optional)" : ""}</span>
-              <span className="num-input">
-                {f.prefix && <em>{f.prefix}</em>}
-                <input
-                  type="number" inputMode="decimal" step="any"
-                  value={values[f.key] ?? ""}
-                  onChange={(e) => setValues({ ...values, [f.key]: e.target.value === "" ? null : Number(e.target.value) })}
-                />
-                {f.suffix && <em>{f.suffix}</em>}
-              </span>
-            </label>
+          {UPDATE_FIELDS.filter((f) => !f.optional || !guessed.length).map((f) => (
+            <NumberField key={f.key} field={f} values={values} onChange={setValue} />
           ))}
         </div>
+        {guessed.length > 0 && (
+          <div className={`fill-group ${fillOpen ? "open" : ""}`}>
+            <button className="link-button" type="button" onClick={() => setFillOpen(!fillOpen)}>
+              {fillOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+              Numbers we estimated — replace them if you know them ({guessed.length})
+            </button>
+            {fillOpen && (
+              <>
+                <ul className="wi-assumptions">
+                  {guessed.map((a) => (
+                    <li key={a.field}><strong>{a.field}:</strong> {String(a.value)}<span className="wi-assumption-detail">{a.why}</span></li>
+                  ))}
+                </ul>
+                <div className="update-grid">
+                  {UPDATE_FIELDS.filter((f) => f.optional).map((f) => (
+                    <NumberField key={f.key} field={f} values={values} onChange={setValue} />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
         {diffs.length > 0 && (
           <div className="diff-row">
             {diffs.map((d) => <span className="diff-pill" key={d}>{d}</span>)}

@@ -1731,6 +1731,13 @@ code {
 .plan-confidence { font-size: 14px; font-weight: 700; color: var(--ink); }
 .plan-note { margin: -8px 0 0; color: var(--amber); font-size: 13px; font-weight: 700; }
 .ledger-source { margin: 4px 0 0; }
+.fill-group { display: grid; gap: 10px; border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; margin: 0 0 14px; }
+.fill-group .update-grid { margin: 0; }
+.held-up { display: grid; gap: 4px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.held-up-title { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--purple); }
+.held-up .changed-list { margin: 2px 0; }
+.more-detail { display: grid; gap: 14px; }
+.more-detail > .link-button { justify-self: start; }
 .plan-section-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .holding-line { margin: -10px 0 0; color: var(--muted); font-size: 13px; }
 .cash-death-line {

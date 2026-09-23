@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, CircleOff, FlaskConical, Trash2 } from "lucide-react";
 import { useStore } from "../store.jsx";
 import { health, demoBootstrap } from "../api.js";
-import { Banner } from "../components.jsx";
+import { Banner, Expandable } from "../components.jsx";
 
 // One capability line: what it is, whether it is on, and the server's own
 // reason. The reason is shown verbatim because the failure modes behind these
@@ -65,16 +65,16 @@ export default function Settings({ navigate }) {
         </label>
       </article>
 
-      <article className="panel">
-        <h3>Analysis service</h3>
+      {/* Engine status, collapsed: the connection line and the learning
+          loop's three capabilities, each stated rather than assumed. A plan
+          that claims the board learns while the graph is unreachable is the
+          one thing this product must never show. */}
+      <Expandable title={`Engine status${apiUp == null ? "" : apiUp ? " · connected" : " · not reachable"}`}>
         <p className="status-line">
           {apiUp == null ? "Checking…" : apiUp
             ? (<><CheckCircle2 size={16} className="ok-icon" /> Connected — analyses run against the engine.</>)
             : (<><CircleOff size={16} className="warn-icon" /> Not reachable. Data entry and history work; analyses need the engine service at <code>/api</code>.</>)}
         </p>
-        {/* The learning loop's three capabilities, each stated rather than
-            assumed. A plan that claims the board learns while the graph is
-            unreachable is the one thing this product must never show. */}
         {loop && (
           <>
             <p className="subtle cap-intro">
@@ -106,7 +106,7 @@ export default function Settings({ navigate }) {
             </ul>
           </>
         )}
-      </article>
+      </Expandable>
 
       {state.demo && (
         <article className="panel">

@@ -63,6 +63,8 @@ function parseRoute(route) {
   if (parts.length === 0) return { page: "welcome", params: {} };
   if (parts[0] === "advice" && parts[1]) return { page: "advice", params: { id: parts[1] } };
   if (parts[0] === "advice" || parts[0] === "plan") return { page: "home", params: {} };
+  // #/update/fill opens the Close form with the estimated numbers expanded.
+  if (parts[0] === "update" && parts[1] === "fill") return { page: "update", params: { fill: true } };
   return { page: parts[0], params: {} };
 }
 
@@ -93,7 +95,7 @@ export function Shell() {
     advice: <Advice key={params.id || "latest"} navigate={navigate} params={params} />,
     history: <History navigate={navigate} />,
     company: <CompanyView navigate={navigate} />,
-    update: <UpdateRitual navigate={navigate} />,
+    update: <UpdateRitual navigate={navigate} params={params} />,
     settings: <Settings navigate={navigate} />
   };
   const content = pages[page] || pages.home;

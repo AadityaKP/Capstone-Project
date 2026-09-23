@@ -210,10 +210,13 @@ export default function Home({ navigate }) {
         <KpiCard
           label="Revenue" value={money(v.mrr)}
           delta={prev ? <DeltaArrow value={deltas?.mrrPct} /> : null}
-          sub={spendRatioLabel(v) ? `you spend ${spendRatioLabel(v)} earned` : "per month"}
-          hint={showRuleOf40(v.mrr)
-            ? "Monthly recurring revenue."
-            : "Monthly recurring revenue, and what you spend for each dollar of it. Rule of 40, the usual SaaS benchmark, doesn't mean anything below about $1M a year."}
+          sub="per month"
+          hint={[
+            "Monthly recurring revenue.",
+            spendRatioLabel(v) ? `You spend ${spendRatioLabel(v)} earned.` : null,
+            showRuleOf40(v.mrr) ? null
+              : "Rule of 40, the usual SaaS benchmark, doesn't mean anything below about $1M a year."
+          ].filter(Boolean).join(" ")}
         />
         <KpiCard
           label="Customers lost" value={churnLabel(v.churnMonthly)}
@@ -223,8 +226,8 @@ export default function Home({ navigate }) {
         />
         <KpiCard
           label="Winning customers" value={eff.label}
-          sub={eff.detail}
-          hint="Healthy when what a customer pays back over their life is at least 3× what they cost to win."
+          sub={eff.band === "unknown" ? "" : "lifetime value vs cost to win"}
+          hint={`${eff.detail} Healthy when what a customer pays back over their life is at least 3× what they cost to win.`}
           band={efficiencyWatch ? "watch" : null}
         />
       </div>
