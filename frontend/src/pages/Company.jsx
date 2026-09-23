@@ -14,6 +14,7 @@ import {
 import { runwayLabel } from "../founderView.js";
 import { ProvChip, Banner, buildPlanCards } from "../components.jsx";
 import { submitCycleFeedback } from "../api.js";
+import { useCycleRun } from "../cycleRun.jsx";
 import { DONE_STATES, DONE_TO_DECISION } from "../loopView.js";
 
 function Row({ label, value, chip, chipDate }) {
@@ -141,6 +142,7 @@ function ClosableActions({ cards, done, notes, onDone, onNote }) {
 
 export function UpdateRitual({ navigate }) {
   const { state, dispatch } = useStore();
+  const { requestStart } = useCycleRun();
   const last = latestMonth(state);
   const [values, setValues] = useState(() => ({ ...last?.values }));
   const [done, setDone] = useState({});
@@ -229,7 +231,13 @@ export function UpdateRitual({ navigate }) {
           : r.error);
       }
     }
-    navigate("/analyzing");
+    // The next cycle is asked for, not started here: the provider's effect
+    // runs start() on the render that already holds the new month and the
+    // feedback result. `await start()` from this handler would build the
+    // cycle from the closure's stale state — without the month just closed
+    // and without the track record.
+    requestStart();
+    navigate("/home");
   }
 
   return (

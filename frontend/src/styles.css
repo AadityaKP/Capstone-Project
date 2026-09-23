@@ -1107,17 +1107,7 @@ code {
 
 .position-line strong { font-size: 16.5px; line-height: 1.4; text-wrap: balance; }
 
-.position-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--purple);
-  font-weight: 700;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.stale-note { color: var(--amber); font-style: normal; font-weight: 700; }
+.position-basis { color: var(--muted); font-size: 13px; white-space: nowrap; }
 
 /* ---- KPI cards (founder variant) ---- */
 
@@ -1164,12 +1154,6 @@ code {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-}
-
-.plan-compact-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
 }
 
 .plan-card {
@@ -1584,7 +1568,7 @@ code {
 
 @media (max-width: 980px) {
   .founder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .plan-grid, .plan-compact-grid, .bullets-grid, .enrich-grid, .update-grid { grid-template-columns: 1fr; }
+  .plan-grid, .bullets-grid, .enrich-grid, .update-grid { grid-template-columns: 1fr; }
   .history-charts { grid-template-columns: 1fr; }
   .how-grid { grid-template-columns: 1fr; }
   .position-banner { flex-direction: column; align-items: flex-start; }
@@ -1710,56 +1694,7 @@ code {
 .cap-row em { font-style: normal; color: var(--muted); font-size: 12.5px; }
 .cap-row.off strong { color: var(--amber); }
 
-/* ---- Plan page: month strip, OEFA strip, forward timeline (plan section 5) ---- */
-
-.plan-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.plan-head h2 { margin: 0 0 4px; font-size: 20px; }
-.plan-head p { margin: 0; }
-
-.month-strip {
-  display: grid; gap: 12px;
-  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
-}
-@media (max-width: 900px) { .month-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .month-strip { grid-template-columns: minmax(0, 1fr); } }
-
-.month-col {
-  background: #fff; border: 1px solid var(--line); border-radius: 14px;
-  padding: 14px; display: grid; gap: 10px; align-content: start;
-  opacity: 0.86;
-}
-.month-col.dominant {
-  opacity: 1; border-color: var(--purple); box-shadow: 0 6px 22px rgba(60, 52, 137, 0.10);
-}
-.month-col.closed { border-color: var(--green, #2f8f5b); opacity: 1; }
-.month-col.pending { opacity: 0.7; border-style: dashed; min-height: 180px; }
-.month-col-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.month-col-label { font-weight: 700; font-size: 14px; margin-right: auto; }
-.month-col-wait { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; }
-.month-action-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 13px; }
-.month-col.dominant .month-action-lines { font-size: 14px; font-weight: 600; }
-.month-state-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px;
-  border-top: 1px solid var(--line); padding-top: 8px;
-}
-.month-state-grid span { display: grid; gap: 1px; }
-.month-state-grid small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-.month-state-grid strong { font-size: 14px; font-variant-numeric: tabular-nums; }
-.month-dead { margin: 0; display: flex; gap: 6px; align-items: center; color: var(--red); font-size: 12.5px; }
-
-.chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 11px; font-weight: 600; font-style: normal;
-  padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line);
-  color: var(--muted); background: #f7f7fa; white-space: nowrap;
-}
-.chip.live { color: #fff; background: var(--purple); border-color: var(--purple); }
-.chip.projection { color: var(--muted); background: #f1f1f6; border-style: dashed; }
-.chip.actual { color: #fff; background: var(--green, #2f8f5b); border-color: var(--green, #2f8f5b); }
-.chip.fresh { color: var(--purple); background: #efedf9; border-color: #d9d5f0; }
-.chip.reused { color: var(--muted); }
-.chip.off { color: var(--amber); background: #fff5e6; border-color: #f5d9a8; }
-.chip.on { color: var(--green, #2f8f5b); }
+/* ---- the OEFA strip (plan section 5.1), under "How the board got here" ---- */
 
 .oefa-strip { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 8px; }
 .oefa-toggle {
@@ -1776,7 +1711,7 @@ code {
 }
 .oefa-beat.actual .oefa-beat-label { color: var(--green, #2f8f5b); }
 .oefa-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 12.5px; }
-.oefa-lines li.muted, .pe-diff li.muted, .changed-list li.muted { color: var(--muted); }
+.oefa-lines li.muted, .changed-list li.muted { color: var(--muted); }
 .oefa-lines .sim-tag { font-size: 11px; }
 
 .pe-line { border-left: 3px solid var(--line); padding-left: 8px; }
@@ -1785,20 +1720,47 @@ code {
 .pe-line.bad { border-color: var(--red); }
 .pe-line.muted { border-color: transparent; color: var(--muted); }
 
-.wi-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 760px) { .wi-grid.three { grid-template-columns: minmax(0, 1fr); } }
-
-.timeline.forward .timeline-entry.projected .timeline-card { border-style: dashed; opacity: 0.9; }
-.timeline.forward .timeline-entry.actual .timeline-card { border-color: var(--green, #2f8f5b); }
-.timeline-head.static { cursor: default; display: flex; gap: 8px; align-items: center; }
-.timeline-now {
-  list-style: none; display: flex; align-items: center; gap: 10px; margin: 4px 0 4px 6px;
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--purple);
-}
-.timeline-now::before, .timeline-now::after { content: ""; flex: 1; border-top: 2px dashed var(--purple); opacity: 0.5; }
-.pe-diff { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; font-size: 12.5px; }
-
 .scored-panel { border-left: 4px solid var(--purple); }
+.board-changed { margin: 4px 0 0; font-size: 13.5px; color: #45464f; line-height: 1.5; }
+
+/* ---- This month: plan section, outlook ---- */
+.plan-section-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-bottom: -10px;
+}
+.plan-confidence { font-size: 14px; font-weight: 700; color: var(--ink); }
+.plan-section-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.holding-line { margin: -10px 0 0; color: var(--muted); font-size: 13px; }
+.cash-death-line {
+  margin: -6px 0 0; display: flex; gap: 6px; align-items: center; color: var(--red); font-size: 13px; font-weight: 700;
+}
+.planning-panel { display: grid; gap: 10px; justify-items: start; }
+.planning-panel h3 { margin: 0; font-size: 16px; }
+.empty-plan { display: grid; gap: 8px; justify-items: center; text-align: center; padding: 28px 18px; }
+.empty-plan h3 { margin: 0; font-size: 18px; }
+.empty-plan p { margin: 0 0 6px; }
+
+.outlook { display: grid; gap: 12px; }
+.outlook .panel-title-row { margin-bottom: 0; }
+.outlook .wi-chart svg { max-height: 240px; }
+.outlook .expandable { border: 0; padding: 0; }
+.outlook .expand-head { padding: 6px 0; }
+.outlook .expand-head h3 { font-size: 14px; }
+.outlook .expand-body { padding: 0 0 6px; }
+.metric-switch { display: inline-flex; gap: 4px; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.metric-option {
+  border: 0; background: transparent; border-radius: 999px; padding: 4px 11px;
+  font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer;
+}
+.metric-option.on { background: var(--purple); color: #fff; }
+.wi-projected rect { fill: #f3f2f9; }
+.wi-projected text { font-size: 8px; fill: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.wi-marker circle { fill: var(--green); stroke: #fff; stroke-width: 1.5; }
+.wi-marker text { font-size: 8.5px; fill: var(--green); font-weight: 700; }
+.next-months { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.next-months li { display: flex; gap: 10px; align-items: baseline; }
+.next-months .muted { color: var(--muted); }
+.next-month-label { flex: 0 0 72px; font-weight: 700; color: var(--purple); font-size: 12.5px; }
 
 /* ---- close the month (plan section 6.1) ---- */
 .close-month { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fbfbfd; }
@@ -1820,11 +1782,5 @@ code {
 
 .oefa-toggle span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* columns must be able to shrink: min-content of a "$200k" cell or a nowrap
-   toggle otherwise pushes the column past its grid track */
-.month-strip { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-.month-col { min-width: 0; overflow: hidden; }
-.month-state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.month-state-grid strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .oefa-toggle { min-width: 0; }
 .oefa-toggle span { min-width: 0; flex: 1 1 auto; }

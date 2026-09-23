@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 // (CheckCircle2 and Circle remain for ProgressStages.)
 import {
-  money, moneyExact, pct, signedPct, signedPp, pctOfMrr, monthsLabel
+  money, moneyExact, pct, signedPct, signedPp, pctOfMrr, monthsLabel, deriveCac
 } from "./derive.js";
 import {
   RISK, OUTCOME, FOCUS_LABELS, CHANNEL_COPY, DOMAIN_META, CAUSAL_STRESS,
@@ -74,6 +74,20 @@ export function SimulatedTag() {
 
 export function DemoBadge() {
   return <span className="demo-badge">Sample company — data is illustrative</span>;
+}
+
+// One collapsed section: a panel whose body renders only once opened.
+export function Expandable({ title, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <article className={`panel expandable ${open ? "open" : ""}`}>
+      <button className="expand-head" type="button" onClick={() => setOpen(!open)}>
+        {open ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
+        <h3>{title}</h3>
+      </button>
+      {open && <div className="expand-body">{children}</div>}
+    </article>
+  );
 }
 
 // ---- KPI card (§9) ----
@@ -303,11 +317,28 @@ export function EvidenceList({ analysis }) {
 // They are now one sentence in which the count caps the band, computed by
 // founder_view on the server; confidenceSentence is the fallback for analyses
 // stored before display blocks existed.
-export function ConfidenceStrip({ analysis, month, estimatedCount = 0 }) {
+// How many of the analysis's inputs were guessed. The server reports what it
+// actually assumed (trace.assumed_fields); the client-side count is only the
+// fallback for analyses stored before that field existed.
+export function estimatedInputCount(analysis, month, company) {
+  const assumed = analysis?.trace?.assumed_fields;
+  if (assumed) return assumed.length;
+  const cac = month?.values ? deriveCac(month.values) : { source: "estimated" };
+  return (cac.source === "estimated" ? 1 : 0) + (company?.maturity ? 0 : 1) + 1;
+}
+
+// The one confidence sentence, verbatim from the server's display block (the
+// assumption count caps the band there); never shortened or recomposed here.
+export function confidenceLine(analysis, month, company) {
   if (!analysis) return null;
-  const sentence = analysis.display?.confidence?.sentence
+  return analysis.display?.confidence?.sentence
     || analysis.trace?.display?.confidence?.sentence
-    || confidenceSentence(analysis.brief?.confidence, estimatedCount);
+    || confidenceSentence(analysis.brief?.confidence, estimatedInputCount(analysis, month, company));
+}
+
+export function ConfidenceStrip({ analysis, month, company = null }) {
+  if (!analysis) return null;
+  const sentence = confidenceLine(analysis, month, company);
   const reason = refreshReasonCopy(analysis.trace?.refresh_reason || analysis.reason);
   const reuse = briefSourceCopy(analysis.trace?.brief_source);
   return (

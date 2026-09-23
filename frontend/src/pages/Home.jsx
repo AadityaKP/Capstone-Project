@@ -1,32 +1,43 @@
-// S5 Home — "where am I, what should I do, what changed" in 30 seconds (spec §9).
+// This month — am I OK, what do I do, how did last month go, where does this
+// take me (docs/ui_simplification_plan.md Phase C). The Plan page folded into
+// here: months land visibly on the Outlook as the board deliberates, and the
+// OEFA beats sit one click away under Why this plan.
+//
+// Top to bottom: notice slot (0–1) · status line · KPI row · Last month
+// (conditional) · This month's plan · Outlook. The no-plan / planning /
+// failed states render in place; nothing navigates away.
 
-import React from "react";
-import { ChevronRight, RefreshCw } from "lucide-react";
+import React, { useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronRight, RefreshCw, Workflow } from "lucide-react";
 import {
-  useStore, latestMonth, previousMonth, latestAnalysis, latestClosedFeedback
+  useStore, latestMonth, previousMonth, latestAnalysis, latestClosedFeedback,
+  latestCycle, feedbackForCycleMonth, monthById
 } from "../store.jsx";
+import { useCycleRun } from "../cycleRun.jsx";
 import {
-  deriveCac, deriveLtv, monthDeltas,
-  money, signedPp, daysSince, dateLabel
+  deriveCac, deriveLtv, monthDeltas, money, signedPp, daysSince, monthName
 } from "../derive.js";
 import {
   runwayMonths, runwayLabel, churnLabel, churnPhrase, efficiency,
   showRuleOf40, spendRatioLabel
 } from "../founderView.js";
 import { positionSentence, DOMAIN_META } from "../copy.js";
-import { RiskChip, KpiCard, DeltaArrow, Banner, buildPlanCards, PlanCard } from "../components.jsx";
-import { predictionSentences } from "../loopView.js";
+import {
+  RiskChip, KpiCard, DeltaArrow, Banner, ProgressStages, buildPlanCards, PlanCard, confidenceLine
+} from "../components.jsx";
+import { predictionSentences, scoreLine, cashDeathMonth } from "../loopView.js";
+import Outlook, { defaultOutlookMetric } from "../outlook.jsx";
 
-// Plan section 6.3: the board's prediction error lives on the "What changed"
-// panel, in the same list as "Revenue grew 4%", because that is where the
-// founder already looks. It is a real number from the close-the-month step,
-// never a narrative.
-function predictionErrorLines(state, prev) {
+// Plan section 6.3: the board's prediction error is a real number from the
+// close-the-month step, never a narrative. It is shown only when the closed
+// cycle was planned on the previous month and the close produced a result.
+function lastMonthRecord(state, month, prev, cycle) {
   const closed = latestClosedFeedback(state);
-  if (!closed || !prev || closed.cycle.monthId !== prev.id) return [];
+  if (!closed || !prev || closed.cycle.monthId !== prev.id) return null;
   const result = closed.feedback.result;
   const month1 = (closed.cycle.months || [])[0];
-  if (!result || !month1) return [];
+  if (!result || !month1) return null;
+
   const lines = predictionSentences({
     before: month1.observe?.state_before,
     actual: result.actual_state,
@@ -44,18 +55,74 @@ function predictionErrorLines(state, prev) {
   if (result.evidence && !result.evidence.written && result.evidence.credited?.length) {
     lines.push({ key: "evidence", tone: "muted", text: `Nothing was written back as evidence: ${result.evidence.reason}.` });
   }
-  return lines;
+
+  // "What the board changed" reads only from the cycle that answered this
+  // close: not the closed cycle itself (whose month-1 adapt block is from its
+  // own earlier run) and planned on the latest month. Nothing while it is
+  // still running; its adaptations once month 1 has landed; otherwise, when
+  // it started from the track record, the one sentence that is true (D4).
+  const answering = cycle && cycle.id !== closed.cycle.id && cycle.monthId === month.id ? cycle : null;
+  let changed = null;
+  const adapt = answering?.months?.[0]?.adapt;
+  if (adapt) {
+    const adaptations = adapt.adaptations || [];
+    if (adaptations.length) changed = adaptations.map((a) => `${a.agent}: ${a.sentence}`);
+    else if (answering.startedFromTrackRecord) changed = ["The board planned this month with last month's result in hand."];
+  }
+
+  return { lines, score: scoreLine(result.prediction_error), changed };
+}
+
+function NoActionPanel({ cards }) {
+  const [showHeld, setShowHeld] = useState(false);
+  return (
+    <article className="panel no-action-panel">
+      <h3>Nothing to change this month</h3>
+      <p className="subtle">
+        The board isn't asking you to spend, hire or move price. Hold what you're
+        doing and close the month when it ends.
+      </p>
+      <button className="link-button" type="button" onClick={() => setShowHeld(!showHeld)}>
+        {showHeld ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+        {showHeld ? "Hide" : "Show"} what each advisor said
+      </button>
+      {showHeld && (
+        <div className="plan-grid">
+          {cards.map((c) => <PlanCard key={c.domain} card={c} compact />)}
+        </div>
+      )}
+    </article>
+  );
 }
 
 export default function Home({ navigate }) {
   const { state } = useStore();
+  const { start, starting, startError, pollError, elapsed } = useCycleRun();
+  const [dismissedError, setDismissedError] = useState(null);
   const month = latestMonth(state);
   const prev = previousMonth(state);
-  const analysis = latestAnalysis(state);
-  const analysisIsCurrent = analysis && month && analysis.monthId === month.id;
-  const errorLines = predictionErrorLines(state, prev);
-
   if (!month) return null;
+
+  const demo = !!state.demo;
+  const cycle = latestCycle(state);
+  const cycleIsCurrent = !!cycle && cycle.monthId === month.id;
+  const running = cycleIsCurrent && !demo && ["queued", "running"].includes(cycle.status);
+  const failed = cycleIsCurrent && cycle.status === "failed";
+  const cycleMonths = cycle?.months || [];
+  const horizon = cycle?.horizon || cycle?.summary?.horizon_months || 4;
+  const cycleAnalysis = cycle ? state.analyses.find((a) => a.cycleId === cycle.id) : null;
+
+  // The plan on screen: while a new cycle deliberates, only its own month 1
+  // counts (the previous plan is not shown as if it were this month's).
+  const latest = latestAnalysis(state);
+  const analysis = running ? cycleAnalysis : latest;
+  const analysisIsCurrent = !!analysis && analysis.monthId === month.id;
+  const brief = analysis?.brief;
+  const topWeightKey = analysis?.trace?.applied_weights
+    ? Object.keys(analysis.trace.applied_weights).sort(
+        (a, b) => analysis.trace.applied_weights[b] - analysis.trace.applied_weights[a]
+      )[0]
+    : "innovation";
 
   const v = month.values;
   const runway = runwayMonths(v);
@@ -64,79 +131,94 @@ export default function Home({ navigate }) {
   const eff = efficiency(ltv, cac.value, v.newCustomers);
   const deltas = monthDeltas(month, prev);
   const age = daysSince(month.enteredAt);
-  const stale = age != null && age > 35;
+  const runwayWatch = runway !== null && runway < 12;
+  const efficiencyWatch = eff.band === "unhealthy";
 
-  const brief = analysis?.brief;
-  const topWeightKey = analysis?.trace?.applied_weights
-    ? Object.keys(analysis.trace.applied_weights).sort(
-        (a, b) => analysis.trace.applied_weights[b] - analysis.trace.applied_weights[a]
-      )[0]
-    : "innovation";
+  const planCards = analysis ? buildPlanCards(analysis, month) : [];
+  const actionCards = planCards.filter((c) => c.isAction);
+  const holding = planCards.filter((c) => !c.isAction).map((c) => c.title.toLowerCase());
+  const deathMonth = cycleIsCurrent ? cashDeathMonth(cycleMonths) : null;
+  const record = lastMonthRecord(state, month, prev, cycle);
+  const rulesOnly = (cycleIsCurrent && cycle.summary && cycle.summary.llm_ok_months === 0 && cycle.meta?.use_oracle !== false)
+    || (analysisIsCurrent && analysis.llm_ok === false);
 
-  const planCards = analysisIsCurrent ? buildPlanCards(analysis, month) : [];
+  const runLabel = cycle ? "Re-run" : "Run the plan";
+  const runButton = !demo && !running && (
+    <button className="primary-button small" type="button" disabled={starting} onClick={() => start()}>
+      <RefreshCw size={14} /> {starting ? "Starting…" : runLabel}
+    </button>
+  );
+
+  // ---- notice slot: at most one, in priority order ----
+  let notice = null;
+  if (startError && startError !== dismissedError) {
+    notice = (
+      <Banner tone="warn" icon={<AlertTriangle size={17} />} actions={
+        <>
+          <button className="primary-button small" type="button" disabled={starting} onClick={() => start()}>Retry</button>
+          <button className="secondary-button small" type="button" onClick={() => setDismissedError(startError)}>Continue without a plan</button>
+        </>
+      }>
+        The analysis service couldn't be reached, so no plan was started. Your numbers are
+        saved; nothing is made up in the meantime.
+        {startError.error && !startError.offline && <> ({startError.error})</>}
+      </Banner>
+    );
+  } else if (failed) {
+    notice = (
+      <Banner tone="warn" icon={<AlertTriangle size={17} />} actions={runButton}>
+        The cycle failed on the engine: {cycle.error || "unknown error"}. Nothing here is made up —
+        re-run it from your numbers.
+      </Banner>
+    );
+  } else if (pollError) {
+    notice = <Banner tone="warn" icon={<AlertTriangle size={17} />}>{pollError}</Banner>;
+  } else if (rulesOnly) {
+    notice = (
+      <Banner tone="warn" icon={<AlertTriangle size={17} />}>
+        The AI strategist couldn't be reached for this plan. It comes from the board's
+        built-in rules — still grounded in your numbers, just without the strategist's read.
+      </Banner>
+    );
+  } else if (!running && analysis && !analysisIsCurrent) {
+    notice = (
+      <Banner tone="info" actions={runButton}>
+        The plan below reflects your previous numbers until the board plans again.
+      </Banner>
+    );
+  }
 
   return (
-    <section className="content-stack">
-      {/* 1 · position banner */}
-      <button
-        type="button"
-        className={`position-banner ${brief ? (brief.risk_level || "MEDIUM").toLowerCase() : "none"}`}
-        onClick={() => navigate("/plan")}
-      >
+    <section className="content-stack this-month">
+      {/* 1 · notice slot */}
+      {notice}
+
+      {/* 2 · status line */}
+      <div className={`position-banner static ${brief ? (brief.risk_level || "MEDIUM").toLowerCase() : "none"}`}>
         <div className="position-line">
           {brief && <RiskChip level={brief.risk_level} large />}
           <strong>
-            {analysisIsCurrent
+            {analysis
               ? positionSentence({ ...brief, _topFocus: topWeightKey })
-              : analysis
-                ? "Your numbers changed since the last analysis — run a fresh one."
-                : "No analysis yet — run your first one."}
+              : running
+                ? "The board is reading your numbers."
+                : "No plan yet — run your first one."}
           </strong>
         </div>
-        <span className="position-cta">
-          {stale && <em className="stale-note">based on numbers from {dateLabel(month.enteredAt)} · </em>}
-          Details <ChevronRight size={15} />
+        <span className="position-basis">
+          Based on your {monthName(month.enteredAt)} numbers
+          {age != null && age > 0 && ` · ${age} day${age === 1 ? "" : "s"} ago`}
         </span>
-      </button>
+      </div>
 
-      {!analysisIsCurrent && (
-        <Banner
-          tone="info"
-          actions={
-            <button className="primary-button small" type="button" onClick={() => navigate("/analyzing")}>
-              <RefreshCw size={14} /> {analysis ? "Re-analyse" : "Run analysis"}
-            </button>
-          }
-        >
-          {analysis
-            ? "The plan below reflects your previous numbers until you re-analyse."
-            : "The board hasn't reviewed these numbers yet."}
-        </Banner>
-      )}
-
-      {/* Plan section 8.1: lead with the prediction error, do not bury it. */}
-      {errorLines.length > 0 && (
-        <article className="panel scored-panel">
-          <div className="panel-title-row">
-            <h3>How last month's plan held up</h3>
-            <button className="link-button" type="button" onClick={() => navigate("/plan")}>
-              What the board changed <ChevronRight size={15} />
-            </button>
-          </div>
-          <ul className="changed-list">
-            {errorLines.map((l) => <li key={l.key} className={`pe-line ${l.tone}`}>{l.text}</li>)}
-          </ul>
-        </article>
-      )}
-
-      {/* 2 · KPI row */}
+      {/* 3 · KPI row */}
       <div className="kpi-grid founder-grid">
         <KpiCard
           label="Cash lasts" value={runwayLabel(v)}
           delta={prev && deltas?.runway != null ? <DeltaArrow value={deltas.runway} format={(x) => `${x > 0 ? "+" : ""}${x.toFixed(1)} mo`} /> : null}
           sub={runway === null ? "revenue covers your costs" : "at your current costs"}
           hint="Cash in the bank divided by what you spend each month beyond what you earn, assuming both stay flat."
-          band={runway !== null && runway < 12 ? "watch" : null}
+          band={runwayWatch ? "watch" : null}
         />
         <KpiCard
           label="Revenue" value={money(v.mrr)}
@@ -156,25 +238,104 @@ export default function Home({ navigate }) {
           label="Winning customers" value={eff.label}
           sub={eff.detail}
           hint="Healthy when what a customer pays back over their life is at least 3× what they cost to win."
-          band={eff.band === "unhealthy" ? "watch" : null}
+          band={efficiencyWatch ? "watch" : null}
         />
       </div>
 
-      {/* 3 · this month's plan */}
-      {planCards.length > 0 && (
-        <article className="panel">
+      {/* 4 · last month */}
+      {record && (
+        <article className="panel scored-panel">
           <div className="panel-title-row">
-            <h3>This month's plan</h3>
-            <button className="link-button" type="button" onClick={() => navigate("/plan")}>
-              The next {4} months <ChevronRight size={15} />
+            <h3>How last month's plan held up</h3>
+            <button className="link-button" type="button" onClick={() => navigate("/history")}>
+              Details <ChevronRight size={15} />
             </button>
           </div>
-          <div className="plan-compact-grid">
-            {planCards.map((c) => <PlanCard key={c.domain} card={c} compact />)}
-          </div>
+          <ul className="changed-list">
+            {record.lines.map((l) => <li key={l.key} className={`pe-line ${l.tone}`}>{l.text}</li>)}
+            <li className="muted">{record.score}</li>
+          </ul>
+          {record.changed && (
+            <p className="board-changed">
+              <strong>What the board changed:</strong> {record.changed.join(" ")}
+            </p>
+          )}
         </article>
       )}
 
+      {/* 5 · this month's plan, or the state that stands in for it */}
+      {running && !analysis && (
+        <article className="panel planning-panel">
+          <h3>Your board is planning</h3>
+          <ProgressStages stage={Math.min(cycleMonths.length, 2)} narrativesOn={!!state.settings.narratives} />
+          <p className="subtle elapsed">
+            Month {Math.min(cycleMonths.length + 1, horizon)} of {horizon} · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+          </p>
+        </article>
+      )}
+
+      {!running && !analysis && !failed && (
+        <article className="panel empty-plan">
+          <Workflow size={28} className="warn-icon" />
+          <h3>No plan yet</h3>
+          <p className="subtle narrow">
+            The board plans {horizon} months at a time: it decides this month, simulates what follows,
+            checks its own prediction and adapts before the next month. Run it on your current numbers.
+          </p>
+          {runButton}
+        </article>
+      )}
+
+      {analysis && (
+        <>
+          <div className="plan-section-head">
+            <span className="plan-confidence">{confidenceLine(analysis, month, state.company)}</span>
+            <div className="plan-section-actions">
+              {running && (
+                <span className="subtle elapsed">
+                  Month {Math.min(cycleMonths.length + 1, horizon)} of {horizon} · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+                </span>
+              )}
+              {!running && !notice && runButton && cycleIsCurrent && (
+                <button className="link-button" type="button" disabled={starting} onClick={() => start()}>
+                  <RefreshCw size={14} /> Re-run
+                </button>
+              )}
+              <button className="link-button" type="button" onClick={() => navigate(`/advice/${analysis.id}`)}>
+                Why this plan <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+          {actionCards.length > 0 ? (
+            <div className="plan-grid">
+              {actionCards.map((c) => <PlanCard key={c.domain} card={c} />)}
+            </div>
+          ) : (
+            <NoActionPanel cards={planCards} />
+          )}
+          {actionCards.length > 0 && holding.length > 0 && (
+            <p className="holding-line">Holding: {holding.join(", ")}.</p>
+          )}
+          {deathMonth != null && (
+            <p className="cash-death-line">
+              <AlertTriangle size={14} /> In simulation this plan runs out of cash around month {deathMonth}.
+            </p>
+          )}
+        </>
+      )}
+
+      {/* 6 · outlook — grows month by month as the cycle lands; a cycle made
+          on the previous month keeps its own base month and shows the close
+          as a marked point */}
+      {cycle && cycleMonths.length > 0 && (
+        <Outlook
+          key={cycle.id}
+          cycle={cycle}
+          baseIso={(monthById(state, cycle.monthId) || month).enteredAt}
+          closedMonth1={feedbackForCycleMonth(cycle, 1)}
+          initialMetric={defaultOutlookMetric({ runwayWatch, efficiencyWatch })}
+        />
+      )}
     </section>
   );
 }

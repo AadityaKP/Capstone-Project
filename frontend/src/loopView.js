@@ -103,6 +103,21 @@ export function briefFreshness(source) {
   return { label: "rules only", tone: "off" };
 }
 
+// The one caveat under the Outlook chart. The shaded region says "this is the
+// model"; the band is the spread across simulated runs; dashed keeps meaning
+// "some runs ran out of cash" (docs/ui_simplification_plan.md D2).
+export const OUTLOOK_CAVEAT =
+  "The shaded months are the board's plan simulated forward, not a forecast: the band is " +
+  "the spread across simulated runs, and your real numbers replace the projection each " +
+  "time you close a month.";
+
+// First horizon month (1-based) in which the simulated company ran out of
+// cash, or null when it survived every landed month.
+export function cashDeathMonth(months) {
+  const i = (months || []).findIndex((m) => m?.feedback?.state_after?.survived === false);
+  return i < 0 ? null : i + 1;
+}
+
 // Which of the plan's four domains were actually actions this month.
 export function actionSummary(action) {
   if (!action) return [];

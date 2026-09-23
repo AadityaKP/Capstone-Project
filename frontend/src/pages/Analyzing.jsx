@@ -1,4 +1,5 @@
-// S4 Analysis in progress — starts the board's cycle and hands off.
+// S4 Analysis in progress — the onboarding wait screen. It starts the first
+// cycle and hands off to This month; every later run happens on This month.
 //
 // The cycle runs on the server (POST /api/cycles → 202) and its months land
 // one by one; the app-level CycleRunProvider polls for them, so "you can
@@ -25,11 +26,11 @@ export default function Analyzing({ navigate }) {
 
   async function run() {
     const result = await start();
-    if (result.ok) navigate("/plan");
+    if (result.ok) navigate("/home");
   }
 
   useEffect(() => {
-    if (state.demo) { navigate("/plan"); return; }
+    if (state.demo) { navigate("/home"); return; }
     if (!state.company || !month) { navigate("/"); return; }
     if (ranRef.current) return;
     ranRef.current = true;
@@ -68,7 +69,7 @@ export default function Analyzing({ navigate }) {
       <h2>Convening your advisory board…</h2>
       <ProgressStages stage={0} narrativesOn={narrativesOn} />
       <p className="narrow subtle">
-        The board deliberates one month at a time and each month appears on the Plan page as
+        The board deliberates one month at a time and each month appears on This month as
         it lands. You can leave this page; the cycle keeps running on the engine.
       </p>
     </section>

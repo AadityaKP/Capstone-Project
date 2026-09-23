@@ -73,10 +73,17 @@ function lifespan(median, alive) {
 // grammar. Two optional overlays, both inert by default:
 //   shockMarkers [{month, type}] labelled vertical lines at scheduled shocks
 //   refLines     [{from, to, value, color}] horizontal segments
+//   shadeFrom    month index from which everything to the right is the model's
+//                projection: a light background band labelled "projected".
+//                Dashed keeps meaning "some runs died" (oefa_loop_plan.md 5.2).
+//   markers      [{month, value, label}] filled points, e.g. a closed month's
+//                actual numbers
+//   xEndLabel    the right-hand axis label (defaults to "{n} mo")
 export function FanChart({
   title, series, alive, format, shockMonth,
   policies = POLICY_ORDER, styles = POLICY_STYLE,
-  shockMarkers = null, refLines = null, xStartLabel = "now"
+  shockMarkers = null, refLines = null, xStartLabel = "now",
+  shadeFrom = null, markers = null, xEndLabel = null
 }) {
   const w = 320, h = 130, padX = 6, padTop = 8, padBottom = 18;
 
@@ -87,6 +94,7 @@ export function FanChart({
   });
   if (!all.length) return null;
   (refLines || []).forEach((r) => all.push(r.value));
+  (markers || []).forEach((m) => { if (m.value != null) all.push(m.value); });
 
   const min = Math.min(...all), max = Math.max(...all);
   const span = max - min || 1;
@@ -123,6 +131,12 @@ export function FanChart({
     <div className="wi-chart">
       <span className="wi-chart-title">{title}</span>
       <svg viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`${title} projection`}>
+        {shadeFrom != null && shadeFrom < months && (
+          <g className="wi-projected">
+            <rect x={x(shadeFrom)} y={padTop - 4} width={w - padX - x(shadeFrom)} height={h - padTop - padBottom + 8} />
+            <text x={w - padX - 2} y={padTop + 4} textAnchor="end">projected</text>
+          </g>
+        )}
         {zeroY !== null && (
           <line x1={padX} x2={w - padX} y1={zeroY} y2={zeroY} className="wi-zero" />
         )}
@@ -194,9 +208,15 @@ export function FanChart({
             </g>
           );
         })}
+        {(markers || []).filter((m) => m.value != null && m.month < months).map((m) => (
+          <g key={`m-${m.month}`} className="wi-marker">
+            <circle cx={x(m.month)} cy={y(m.value)} r="3.6" />
+            {m.label && <text x={x(m.month) + 6} y={y(m.value) - 5}>{m.label}</text>}
+          </g>
+        ))}
         <text x={padX} y={h - 5} className="wi-axis">{xStartLabel}</text>
         <text x={w - padX} y={h - 5} className="wi-axis" textAnchor="end">
-          {months} mo
+          {xEndLabel || `${months} mo`}
         </text>
       </svg>
       <span className="wi-chart-end">

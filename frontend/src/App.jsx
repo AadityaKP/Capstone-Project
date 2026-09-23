@@ -8,7 +8,7 @@ import { createRoot } from "react-dom/client";
 import {
   BrainCircuit, Building2, ChevronRight,
   History as HistoryIcon, LayoutDashboard, PencilLine,
-  Settings as SettingsIcon, Workflow
+  Settings as SettingsIcon
 } from "lucide-react";
 import "./styles.css";
 
@@ -23,23 +23,22 @@ import Analyzing from "./pages/Analyzing.jsx";
 import Home from "./pages/Home.jsx";
 import Advice from "./pages/Advice.jsx";
 import History from "./pages/History.jsx";
-import Cycle from "./pages/Cycle.jsx";
 import { CompanyView, UpdateRitual } from "./pages/Company.jsx";
 import Settings from "./pages/Settings.jsx";
 
-// Five items. "Advice" folded into "Plan" (plan section 5.4): the cycle is
-// the primary surface, and /advice/:id remains as the single-month detail
-// reached from a month in the strip or the timeline.
+// Four items (docs/ui_simplification_plan.md §3). The Plan page folded into
+// This month; /advice/:id is "Why this plan", reached from the plan itself
+// or from a History entry. Routes keep their old names (D5) so deep links
+// and the seeded demo keep working; only the labels changed.
 const NAV = [
-  { id: "home", path: "/home", label: "Home", icon: LayoutDashboard },
-  { id: "plan", path: "/plan", label: "Plan", icon: Workflow },
+  { id: "home", path: "/home", label: "This month", icon: LayoutDashboard },
   { id: "history", path: "/history", label: "History", icon: HistoryIcon },
   { id: "company", path: "/company", label: "My company", icon: Building2 },
   { id: "settings", path: "/settings", label: "Settings", icon: SettingsIcon }
 ];
 
 const TITLES = {
-  home: "Home", plan: "Plan", advice: "Advice", history: "History", company: "My company",
+  home: "This month", advice: "Why this plan", history: "History", company: "My company",
   settings: "Settings", update: "Close the month", onboarding: "Set up your company",
   analyzing: "Analysis", welcome: "Welcome"
 };
@@ -64,7 +63,7 @@ function parseRoute(route) {
   const parts = route.split("/").filter(Boolean);
   if (parts.length === 0) return { page: "welcome", params: {} };
   if (parts[0] === "advice" && parts[1]) return { page: "advice", params: { id: parts[1] } };
-  if (parts[0] === "advice") return { page: "plan", params: {} };
+  if (parts[0] === "advice" || parts[0] === "plan") return { page: "home", params: {} };
   return { page: parts[0], params: {} };
 }
 
@@ -90,7 +89,6 @@ function Shell() {
     onboarding: <Onboarding navigate={navigate} />,
     analyzing: <Analyzing navigate={navigate} />,
     home: <Home navigate={navigate} />,
-    plan: <Cycle navigate={navigate} />,
     // Keyed on the analysis so expander state does not carry over between
     // one analysis and the next.
     advice: <Advice key={params.id || "latest"} navigate={navigate} params={params} />,
@@ -138,7 +136,7 @@ function Shell() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p>{TITLES[page] || "Home"}</p>
+            <p>{TITLES[page] || TITLES.home}</p>
             <h1>{state.company?.name}</h1>
           </div>
           <div className="topbar-actions">

@@ -8,33 +8,20 @@
 // weighed it · How the board got here.
 
 import React, { useState } from "react";
-import { AlertTriangle, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { AlertTriangle, ChevronRight, RefreshCw } from "lucide-react";
 import {
   useStore, latestAnalysis, latestMonth, monthById, cycleById, feedbackForCycleMonth
 } from "../store.jsx";
 import { expectedOutcomeCopy, scaleWord, FOCUS_LABELS } from "../copy.js";
 import {
   Banner, FocusBar, EvidenceList, ConfidenceStrip, RiskBullets, SimulatedTag,
-  OefaStrip, monthFromAnalysis, observedLines
+  OefaStrip, monthFromAnalysis, observedLines, Expandable
 } from "../components.jsx";
 import { deriveCac, deriveLtv, monthName, monthOffsetLabel } from "../derive.js";
 import { runwayMonths } from "../founderView.js";
 import WhatIfPanel, { WhatIfAssumptions } from "../whatif.jsx";
 import { whatif as fetchWhatIf } from "../api.js";
 import { loopLines } from "../loopView.js";
-
-export function Expandable({ title, children, defaultOpen = false }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <article className={`panel expandable ${open ? "open" : ""}`}>
-      <button className="expand-head" type="button" onClick={() => setOpen(!open)}>
-        {open ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
-        <h3>{title}</h3>
-      </button>
-      {open && <div className="expand-body">{children}</div>}
-    </article>
-  );
-}
 
 export default function Advice({ navigate, params }) {
   const { state } = useStore();
@@ -95,9 +82,9 @@ export default function Advice({ navigate, params }) {
     return (
       <section className="empty-state">
         <h2>No analysis yet</h2>
-        <p className="narrow">Run your first analysis and the board's advice will appear here.</p>
-        <button className="primary-button" type="button" onClick={() => navigate("/analyzing")}>
-          <RefreshCw size={15} /> Run analysis
+        <p className="narrow">Run the plan from This month and the board's reasons will appear here.</p>
+        <button className="primary-button" type="button" onClick={() => navigate("/home")}>
+          <RefreshCw size={15} /> This month
         </button>
       </section>
     );
@@ -116,16 +103,9 @@ export default function Advice({ navigate, params }) {
   // comparing LLM claims against known numbers must not be handed a null.
   const known = [v.mrr, v.cash, v.costs, v.price, v.churnMonthly, v.newCustomers,
                  v.marketingSpend, cac.value, deriveLtv(v), runwayMonths(v)].filter((n) => n != null);
-  // The server reports what it actually assumed (trace.assumed_fields). The old
-  // client-side count could not see the macro fields the server fills in and so
-  // understated them; it stays only as a fallback for analyses stored before
-  // that field existed.
-  const assumedFields = trace.assumed_fields || null;
-  const estimatedCount = assumedFields
-    ? assumedFields.length
-    : (cac.source === "estimated" ? 1 : 0) + (state.company?.maturity ? 0 : 1) + 1;
   // Older stored analyses have no `correctable` flag; treating them as
   // correctable keeps the previous behaviour rather than hiding them.
+  const assumedFields = trace.assumed_fields || null;
   const correctable = (assumedFields || []).filter((a) => a.correctable !== false);
   const internalCount = (assumedFields || []).length - correctable.length;
 
@@ -146,7 +126,7 @@ export default function Advice({ navigate, params }) {
       {/* notice slot: one of archived / rules-only */}
       {isArchived ? (
         <Banner tone="info" actions={
-          <button className="secondary-button small" type="button" onClick={() => navigate("/plan")}>Current plan</button>
+          <button className="secondary-button small" type="button" onClick={() => navigate("/home")}>Current plan</button>
         }>
           Archived analysis from {monthName(month.enteredAt)} — shown as it was.
         </Banner>
@@ -164,7 +144,7 @@ export default function Advice({ navigate, params }) {
       {/* Summary */}
       <article className="panel summary-panel">
         <h3>{weights ? `The board's top focus is ${FOCUS_LABELS[topWeightKey]}.` : "The board's read of this month."}</h3>
-        <ConfidenceStrip analysis={analysis} month={month} estimatedCount={estimatedCount} />
+        <ConfidenceStrip analysis={analysis} month={month} company={state.company} />
       </article>
 
       {/* guarded LLM bullets */}
