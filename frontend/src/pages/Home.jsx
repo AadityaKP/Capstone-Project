@@ -1,19 +1,19 @@
 // S5 Home — "where am I, what should I do, what changed" in 30 seconds (spec §9).
 
 import React from "react";
-import { ChevronRight, FlaskConical, RefreshCw } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import {
   useStore, latestMonth, previousMonth, latestAnalysis, latestClosedFeedback
 } from "../store.jsx";
 import {
   deriveCac, deriveLtv, monthDeltas,
-  money, signedPct, signedPp, daysSince, dateLabel, eventTrigger
+  money, signedPp, daysSince, dateLabel
 } from "../derive.js";
 import {
   runwayMonths, runwayLabel, churnLabel, churnPhrase, efficiency,
   showRuleOf40, spendRatioLabel
 } from "../founderView.js";
-import { positionSentence, refreshReasonCopy, expectedOutcomeCopy, DOMAIN_META } from "../copy.js";
+import { positionSentence, DOMAIN_META } from "../copy.js";
 import { RiskChip, KpiCard, DeltaArrow, Banner, buildPlanCards, PlanCard } from "../components.jsx";
 import { predictionSentences } from "../loopView.js";
 
@@ -74,12 +74,6 @@ export default function Home({ navigate }) {
     : "innovation";
 
   const planCards = analysisIsCurrent ? buildPlanCards(analysis, month) : [];
-  const memories = analysis?.trace?.retrieved_memories || [];
-  const outcomeCopy = brief?.expected_outcome ? expectedOutcomeCopy(brief.expected_outcome) : null;
-
-  const changeReason = analysisIsCurrent
-    ? refreshReasonCopy(analysis.trace?.refresh_reason || analysis.reason)
-    : null;
 
   return (
     <section className="content-stack">
@@ -181,45 +175,6 @@ export default function Home({ navigate }) {
         </article>
       )}
 
-      {/* 4 · what changed */}
-      {(prev || changeReason) && (
-        <article className="panel changed-panel">
-          <h3>What changed</h3>
-          <ul className="changed-list">
-            {prev && deltas?.mrrPct != null && <li>Revenue {deltas.mrrPct >= 0 ? "grew" : "fell"} {signedPct(deltas.mrrPct)} since last update.</li>}
-            {prev && deltas?.churnPp != null && Math.abs(deltas.churnPp) >= 0.05 && (
-              <li>Churn {deltas.churnPp > 0 ? "rose" : "improved"} {signedPp(Math.abs(deltas.churnPp) * (deltas.churnPp > 0 ? 1 : -1))}.</li>
-            )}
-            {changeReason && <li>Last analysis: {changeReason}.</li>}
-          </ul>
-          <button className="link-button" type="button" onClick={() => navigate("/history")}>
-            See history <ChevronRight size={15} />
-          </button>
-        </article>
-      )}
-
-      {/* 5 · evidence peek */}
-      {analysisIsCurrent && (outcomeCopy || memories.length > 0) && (
-        <button type="button" className="evidence-peek" onClick={() => navigate(`/advice/${analysis.id}`)}>
-          <FlaskConical size={15} />
-          <span>
-            {outcomeCopy || "The board weighed similar simulated situations for this plan."}
-            {" "}<em>Simulated scenarios, not real companies.</em>
-          </span>
-          <ChevronRight size={15} />
-        </button>
-      )}
-
-      {/* 6 · freshness footer */}
-      <footer className={`freshness-footer ${stale ? "stale" : ""}`}>
-        <span>
-          Numbers from {dateLabel(month.enteredAt)}
-          {age != null && age > 0 && ` · ${age} day${age === 1 ? "" : "s"} ago`} · Update takes ~2 minutes
-        </span>
-        <button className={stale ? "primary-button small" : "secondary-button small"} type="button" onClick={() => navigate("/update")}>
-          Close the month
-        </button>
-      </footer>
     </section>
   );
 }

@@ -8,7 +8,7 @@
 // that when a month closes the projected card is replaced in place by the
 // actual one and the prediction error is the diff in the same slot.
 
-import React, { useMemo } from "react";
+import React from "react";
 import { AlertTriangle, ChevronRight, LoaderCircle, RefreshCw, Workflow } from "lucide-react";
 import {
   useStore, latestCycle, latestMonth, monthById, feedbackForCycleMonth
@@ -18,7 +18,7 @@ import { money, pct, signedPct, monthName } from "../derive.js";
 import { runwayLabel } from "../founderView.js";
 import { Banner, OefaStrip, RiskChip, SimulatedTag } from "../components.jsx";
 import { FanChart } from "../whatif.jsx";
-import { actionSummary, briefFreshness, predictionSentences, scoreLine } from "../loopView.js";
+import { actionSummary, predictionSentences, scoreLine } from "../loopView.js";
 
 const STYLE = { cycle: { color: "var(--purple)", band: "rgba(60, 52, 137, 0.16)" } };
 
@@ -48,7 +48,6 @@ function MonthColumn({ index, month, baseIso, dominant, closed, onOpenAdvice }) 
     );
   }
   const after = closed?.result?.actual_state || month.feedback?.state_after;
-  const fresh = briefFreshness(month.execute.brief_source);
   const dead = month.feedback?.state_after?.survived === false;
   return (
     <article className={`month-col ${dominant ? "dominant" : ""} ${closed ? "closed" : ""}`}>
@@ -57,7 +56,6 @@ function MonthColumn({ index, month, baseIso, dominant, closed, onOpenAdvice }) 
         {dominant ? <span className="chip live">this month</span>
           : closed ? <span className="chip actual">closed</span>
           : <span className="chip projection">projection</span>}
-        <em className={`chip ${fresh.tone}`}>{fresh.label}</em>
       </div>
       {month.execute.brief?.risk_level && <RiskChip level={month.execute.brief.risk_level} />}
       <ul className="month-action-lines">
@@ -70,7 +68,7 @@ function MonthColumn({ index, month, baseIso, dominant, closed, onOpenAdvice }) 
         <span><small>Churn</small><strong>{after?.churn_pct != null ? pct(after.churn_pct) : "—"}</strong></span>
       </div>
       {dead && <p className="month-dead"><AlertTriangle size={13} /> ran out of cash in simulation</p>}
-      <OefaStrip month={month} closed={closed} defaultOpen={dominant} compact />
+      <OefaStrip month={month} closed={closed} compact />
       {dominant && onOpenAdvice && (
         <button className="link-button" type="button" onClick={onOpenAdvice}>
           Full advice <ChevronRight size={14} />
@@ -214,17 +212,6 @@ export default function Cycle({ navigate }) {
   }
 
   const summary = cycle.summary;
-  const loopLines = useMemo(() => {
-    if (!summary) return [];
-    return [
-      `${summary.fresh_briefs} fresh strategist read${summary.fresh_briefs === 1 ? "" : "s"}, ${summary.reused_briefs} reused`,
-      summary.graph_store_enabled
-        ? "what happened each month was written back as simulated evidence"
-        : "causal evidence graph off — nothing was written back",
-      summary.memory_scope ? "memory scoped to your company" : "ran without memory",
-      `${summary.total_latency_s?.toFixed?.(0) ?? summary.total_latency_s}s of deliberation`
-    ];
-  }, [summary]);
 
   return (
     <section className="content-stack plan-page">
@@ -254,14 +241,11 @@ export default function Cycle({ navigate }) {
 
       <div className="plan-head">
         <div>
-          <h2>{horizon} months, planned together</h2>
-          <p className="subtle">
-            {running
-              ? `Month ${Math.min(months.length + 1, horizon)} of ${horizon} is being deliberated · ${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")} elapsed`
-              : cycle.startedFromTrackRecord
-                ? "Started from your actual numbers, carrying last month's prediction error."
-                : "Month 1 is the decision for this week. The rest is the plan, simulated forward and checked against itself."}
-          </p>
+          {running && (
+            <p className="subtle">
+              Month {Math.min(months.length + 1, horizon)} of {horizon} is being deliberated · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} elapsed
+            </p>
+          )}
         </div>
         {!running && !state.demo && (
           <button className="secondary-button small" type="button" onClick={() => navigate("/analyzing")}>
@@ -283,10 +267,6 @@ export default function Cycle({ navigate }) {
           />
         ))}
       </div>
-
-      {loopLines.length > 0 && (
-        <ul className="loop-lines">{loopLines.map((l) => <li key={l}>{l}</li>)}</ul>
-      )}
 
       <TrajectoryChart months={months} opening={opening} />
 

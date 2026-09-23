@@ -14,7 +14,7 @@ import "./styles.css";
 
 import { StoreProvider, useStore, latestMonth } from "./store.jsx";
 import { CycleRunProvider } from "./cycleRun.jsx";
-import { dateLabel } from "./derive.js";
+import { daysSince } from "./derive.js";
 import { DemoBadge } from "./components.jsx";
 
 import Welcome from "./pages/Welcome.jsx";
@@ -83,6 +83,7 @@ function Shell() {
 
   const bare = ["welcome", "onboarding", "analyzing"].includes(page) || !hasCompany;
   const month = latestMonth(state);
+  const closeDue = month ? (daysSince(month.enteredAt) ?? 0) > 35 : false;
 
   const pages = {
     welcome: <Welcome navigate={navigate} />,
@@ -131,11 +132,6 @@ function Shell() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-status">
-          <span>Advisor</span>
-          <strong>{state.demo ? "Sample company" : "Ready"}</strong>
-          <small>{month ? `numbers from ${dateLabel(month.enteredAt)}` : "no data yet"}</small>
-        </div>
       </aside>
       <section className="workspace">
         <header className="topbar">
@@ -145,8 +141,15 @@ function Shell() {
           </div>
           <div className="topbar-actions">
             {state.demo && <DemoBadge />}
+            {/* Primary on age only: "not current" is true from the moment a
+                founder closes until month 1 lands, and "failed" wants Re-run,
+                not Close. Both belong to the notice slot on This month. */}
             {!state.demo && page !== "update" && (
-              <button className="secondary-button small" type="button" onClick={() => navigate("/update")}>
+              <button
+                className={`${closeDue ? "primary-button" : "secondary-button"} small`}
+                type="button"
+                onClick={() => navigate("/update")}
+              >
                 <PencilLine size={14} /> Close the month
               </button>
             )}

@@ -6,9 +6,9 @@ import { AlertTriangle, ChevronDown, ChevronRight, RefreshCw } from "lucide-reac
 import {
   useStore, latestAnalysis, latestMonth, monthById, cycleById, feedbackForCycleMonth, uid
 } from "../store.jsx";
-import { positionSentence, expectedOutcomeCopy, scaleWord, FOCUS_LABELS } from "../copy.js";
+import { expectedOutcomeCopy, scaleWord, FOCUS_LABELS } from "../copy.js";
 import {
-  RiskChip, Banner, buildPlanCards, PlanCard, FocusBar, EvidenceList,
+  Banner, buildPlanCards, PlanCard, FocusBar, EvidenceList,
   ConfidenceStrip, RiskBullets, SimulatedTag, OefaStrip, monthFromAnalysis
 } from "../components.jsx";
 import { deriveCac, deriveLtv, monthName } from "../derive.js";
@@ -142,12 +142,6 @@ export default function Advice({ navigate, params }) {
     ...(brief?.recommended_focus || []).slice(0, 2).map((f) => `Recommended focus: ${f.toLowerCase?.() || f}.`)
   ].filter(Boolean);
 
-  const nextUpdate = (() => {
-    const d = new Date(month.enteredAt);
-    d.setMonth(d.getMonth() + 1, 1);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  })();
-
   return (
     <section className="content-stack advice-page">
       {isArchived && (
@@ -166,19 +160,11 @@ export default function Advice({ navigate, params }) {
         </Banner>
       )}
 
-      {/* L1 */}
-      <div className={`position-banner static ${(brief?.risk_level || "MEDIUM").toLowerCase()}`}>
-        <div className="position-line">
-          <RiskChip level={brief?.risk_level} large />
-          <strong>{positionSentence({ ...brief, _topFocus: topWeightKey })}</strong>
-        </div>
-      </div>
-
       {/* L6 strip */}
       <ConfidenceStrip analysis={analysis} month={month} estimatedCount={estimatedCount} />
 
       {/* Observed · Decided · Expected · Changed — one vocabulary everywhere */}
-      {oefaMonth && <OefaStrip month={oefaMonth} closed={closed} defaultOpen />}
+      {oefaMonth && <OefaStrip month={oefaMonth} closed={closed} />}
 
       {/* guarded LLM bullets */}
       <RiskBullets brief={brief} knownNumbers={known} />
@@ -292,35 +278,6 @@ export default function Advice({ navigate, params }) {
         </Expandable>
       )}
 
-      {/* L7 */}
-      <article className="panel checklist-panel">
-        <h3>Next actions</h3>
-        <ul className="checklist">
-          {planCards.filter((c) => c.isAction).map((c) => {
-            const d = decisionFor(c.domain);
-            const on = d?.state === "accepted";
-            return (
-              <li key={c.domain}>
-                <button
-                  type="button"
-                  className={`check-item ${on ? "on" : ""}`}
-                  onClick={() => !state.demo && decide(c, on ? "suggested" : "accepted")}
-                  disabled={state.demo}
-                >
-                  <span className="checkbox">{on ? "✓" : ""}</span>
-                  {c.headline}
-                </button>
-              </li>
-            );
-          })}
-          <li>
-            <button type="button" className="check-item" onClick={() => navigate("/update")}>
-              <span className="checkbox" />
-              Update numbers around {nextUpdate}
-            </button>
-          </li>
-        </ul>
-      </article>
     </section>
   );
 }
