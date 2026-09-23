@@ -1,22 +1,29 @@
-// S6/S7 Advice — the full monthly analysis in seven layers with progressive
-// disclosure (spec §10). Collapsed default: verdict, four cards, checklist.
+// Why this plan — why the board recommends it and how far to trust it
+// (docs/ui_simplification_plan.md Phase D). The actions themselves are
+// rendered on This month and the Close form; this page carries the reasons,
+// the evidence, the assumptions and the loop trace, each one click deep.
+//
+// Order: notice slot · Summary · Watch-outs / Working in your favour · the
+// plan against doing nothing · Evidence · Assumptions · How the board
+// weighed it · How the board got here.
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import {
-  useStore, latestAnalysis, latestMonth, monthById, cycleById, feedbackForCycleMonth, uid
+  useStore, latestAnalysis, latestMonth, monthById, cycleById, feedbackForCycleMonth
 } from "../store.jsx";
 import { expectedOutcomeCopy, scaleWord, FOCUS_LABELS } from "../copy.js";
 import {
-  Banner, buildPlanCards, PlanCard, FocusBar, EvidenceList,
-  ConfidenceStrip, RiskBullets, SimulatedTag, OefaStrip, monthFromAnalysis
+  Banner, FocusBar, EvidenceList, ConfidenceStrip, RiskBullets, SimulatedTag,
+  OefaStrip, monthFromAnalysis, observedLines
 } from "../components.jsx";
-import { deriveCac, deriveLtv, monthName } from "../derive.js";
+import { deriveCac, deriveLtv, monthName, monthOffsetLabel } from "../derive.js";
 import { runwayMonths } from "../founderView.js";
-import WhatIfPanel from "../whatif.jsx";
+import WhatIfPanel, { WhatIfAssumptions } from "../whatif.jsx";
 import { whatif as fetchWhatIf } from "../api.js";
+import { loopLines } from "../loopView.js";
 
-function Expandable({ title, children, defaultOpen = false }) {
+export function Expandable({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <article className={`panel expandable ${open ? "open" : ""}`}>
@@ -30,7 +37,7 @@ function Expandable({ title, children, defaultOpen = false }) {
 }
 
 export default function Advice({ navigate, params }) {
-  const { state, dispatch } = useStore();
+  const { state } = useStore();
 
   const analysis = params?.id
     ? state.analyses.find((a) => a.id === params.id) || latestAnalysis(state)
@@ -38,15 +45,21 @@ export default function Advice({ navigate, params }) {
   const month = analysis ? monthById(state, analysis.monthId) : latestMonth(state);
   const isArchived = analysis && latestAnalysis(state) && analysis.id !== latestAnalysis(state).id;
 
-  const planCards = useMemo(() => buildPlanCards(analysis, month), [analysis, month]);
-
-  // The OEFA strip, retroactively (plan section 5.1): from the cycle month
-  // this analysis came from when there is one, else synthesised from the
-  // trace so the vocabulary is the same on every surface.
+  // The loop trace (plan section 5.1): every horizon month of the cycle this
+  // analysis came from, month 1 with the founder's close when there is one;
+  // synthesised from the trace for pre-cycle analyses so the vocabulary is
+  // the same on every surface.
   const cycle = analysis?.cycleId ? cycleById(state, analysis.cycleId) : null;
-  const cycleMonth = cycle ? (cycle.months || [])[(analysis.monthIndex || 1) - 1] || null : null;
-  const oefaMonth = cycleMonth || monthFromAnalysis(analysis);
-  const closed = cycle ? feedbackForCycleMonth(cycle, analysis.monthIndex || 1) : null;
+  const cycleMonths = cycle ? (cycle.months || []) : [];
+  const traceMonths = cycleMonths.length
+    ? cycleMonths.map((m, i) => ({
+        key: m.month_index || i + 1,
+        title: monthOffsetLabel(month?.enteredAt, i),
+        month: m,
+        closed: feedbackForCycleMonth(cycle, m.month_index || i + 1)
+      }))
+    : [{ key: 1, title: null, month: monthFromAnalysis(analysis), closed: null }].filter((t) => t.month);
+  const thisMonth = traceMonths.find((t) => t.key === (analysis?.monthIndex || 1)) || traceMonths[0] || null;
 
   // What-if projection (D5). Run on demand rather than with the analysis: it is
   // a separate question, and firing it automatically would spend the founder's
@@ -55,7 +68,6 @@ export default function Advice({ navigate, params }) {
   const [whatIfLoading, setWhatIfLoading] = useState(false);
   const [whatIfError, setWhatIfError] = useState(null);
   const [shockMode, setShockMode] = useState(false);
-  const [showHeld, setShowHeld] = useState(false);
 
   async function runWhatIf(shock) {
     setWhatIfLoading(true);
@@ -117,93 +129,48 @@ export default function Advice({ navigate, params }) {
   const correctable = (assumedFields || []).filter((a) => a.correctable !== false);
   const internalCount = (assumedFields || []).length - correctable.length;
 
-  const decisions = month.decisions || [];
-  const decisionFor = (domain) => decisions.find((d) => d.domain === domain) || null;
-
-  function decide(card, nextState) {
-    const existing = decisionFor(card.domain);
-    dispatch({
-      type: "SET_DECISION",
-      monthId: month.id,
-      decision: {
-        id: existing?.id || uid("d"),
-        domain: card.domain,
-        text: card.headline,
-        state: nextState
-      }
-    });
-  }
-
+  // The top-focus sentence lives in the Summary; the rest of the reasoning
+  // stays under "How the board weighed it".
   const reasoningBullets = [
-    weights ? `The board's top focus is ${FOCUS_LABELS[topWeightKey]}.` : null,
     scaleWord(trace.marketing_spend_change_pct) ? `Marketing was ${scaleWord(trace.marketing_spend_change_pct)} after the board's risk read.` : null,
     scaleWord(trace.rd_spend_change_pct) ? `Product investment was ${scaleWord(trace.rd_spend_change_pct)} to match retention pressure.` : null,
     trace.hires_change < 0 ? "Hiring was paused at the board's risk level." : null,
     ...(brief?.recommended_focus || []).slice(0, 2).map((f) => `Recommended focus: ${f.toLowerCase?.() || f}.`)
   ].filter(Boolean);
 
+  const observed = observedLines(thisMonth?.month?.observe);
+  const hasAssumptions = correctable.length > 0 || internalCount > 0 || (whatIf?.assumptions?.length > 0);
+
   return (
     <section className="content-stack advice-page">
-      {isArchived && (
+      {/* notice slot: one of archived / rules-only */}
+      {isArchived ? (
         <Banner tone="info" actions={
           <button className="secondary-button small" type="button" onClick={() => navigate("/plan")}>Current plan</button>
         }>
           Archived analysis from {monthName(month.enteredAt)} — shown as it was.
         </Banner>
-      )}
-
-      {analysis.llm_ok === false && (
+      ) : analysis.llm_ok === false ? (
         <Banner tone="warn" icon={<AlertTriangle size={17} />}>
           The AI strategist couldn't be reached for this analysis. This plan comes from the
           board's built-in rules — still grounded in your numbers, just without the
           strategist's read. Re-analyse when the service is back.
         </Banner>
+      ) : null}
+      {isArchived && analysis.llm_ok === false && (
+        <p className="subtle inline-note">This archived plan came from the board's built-in rules; the strategist was unreachable at the time.</p>
       )}
 
-      {/* L6 strip */}
-      <ConfidenceStrip analysis={analysis} month={month} estimatedCount={estimatedCount} />
-
-      {/* Observed · Decided · Expected · Changed — one vocabulary everywhere */}
-      {oefaMonth && <OefaStrip month={oefaMonth} closed={closed} />}
+      {/* Summary */}
+      <article className="panel summary-panel">
+        <h3>{weights ? `The board's top focus is ${FOCUS_LABELS[topWeightKey]}.` : "The board's read of this month."}</h3>
+        <ConfidenceStrip analysis={analysis} month={month} estimatedCount={estimatedCount} />
+      </article>
 
       {/* guarded LLM bullets */}
       <RiskBullets brief={brief} knownNumbers={known} />
 
-      {/* L2 cards. When the board's recommendation is to change nothing, say so
-          once rather than rendering four cards that each ask the founder to
-          confirm they did nothing — which is also what was polluting the
-          accepted-action signal memory.py learns from. */}
-      {planCards.every((c) => !c.isAction) ? (
-        <article className="panel no-action-panel">
-          <h3>Nothing to change this month</h3>
-          <p className="subtle">
-            The board isn't asking you to spend, hire or move price. Hold what you're
-            doing and update your numbers next month.
-          </p>
-          <button className="link-button" type="button" onClick={() => setShowHeld(!showHeld)}>
-            {showHeld ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-            {showHeld ? "Hide" : "Show"} what each advisor said
-          </button>
-          {showHeld && (
-            <div className="plan-grid">
-              {planCards.map((c) => <PlanCard key={c.domain} card={c} compact />)}
-            </div>
-          )}
-        </article>
-      ) : (
-        <div className="plan-grid">
-          {planCards.map((c) => (
-            <PlanCard
-              key={c.domain}
-              card={c}
-              decisionState={decisionFor(c.domain)?.state || null}
-              onDecide={state.demo || !c.isAction ? null : decide}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* D5 — what taking this plan actually does, against two baselines */}
+      {/* D5 — what taking this plan actually does, against doing nothing */}
       <WhatIfPanel
         result={whatIf}
         loading={whatIfLoading}
@@ -213,71 +180,105 @@ export default function Advice({ navigate, params }) {
         onToggleShock={toggleShock}
       />
 
-      {/* L3 */}
-      <Expandable title="Why this plan">
-        <FocusBar weights={weights} />
-        <ul className="reason-list">
-          {reasoningBullets.map((b) => <li key={b}>{b}</li>)}
-        </ul>
-        {analysis.narratives && (
-          <p className="subtle">Each card above carries its advisor's own reasoning.</p>
+      {/* Evidence */}
+      <Expandable title="Evidence — what this is based on">
+        {observed.length > 0 && (
+          <ul className="reason-list">
+            {observed.map((l) => <li key={l.key} className={l.muted ? "muted" : ""}>{l.text}</li>)}
+          </ul>
+        )}
+        <EvidenceList analysis={analysis} />
+        {brief?.expected_outcome && (
+          <div className="outcome-block">
+            <p className="outcome-line">{expectedOutcomeCopy(brief.expected_outcome)}</p>
+            {/* A single qualitative label the model returns alongside the
+                brief — not a simulated range. The modelled range is the
+                projection above. */}
+            <p className="subtle">
+              <SimulatedTag /> — the board's one-line read on the next 6–12 months, not a
+              forecast of your company.
+            </p>
+          </div>
         )}
       </Expandable>
 
-      {/* L4 */}
-      <Expandable title="Evidence — what this is based on">
-        <EvidenceList analysis={analysis} />
-      </Expandable>
-
-      {/* Nothing silently assumed: every field the founder did not supply, with
-          the value used and why, as reported by the server that used it. */}
-      {/* Split, not listed. Interest rate, consumer confidence, unemployment,
+      {/* Assumptions. Interest rate, consumer confidence, unemployment,
           valuation multiple and innovation factor are simulator internals; no
-          founder has an opinion on any of them, and inviting one to "enter
-          anything here you actually know" invited an invented number into the
-          analysis. They collapse to one sentence. What is left is what a
-          founder could genuinely supply, and is worth asking for. */}
-      {correctable.length > 0 && (
-        <Expandable title={`Numbers we guessed (${correctable.length})`}>
-          <p className="subtle">
-            You didn't give us these, so the board used the values below. Each one is
-            something you could look up, and each one changes the advice.
-          </p>
-          <ul className="wi-assumptions">
-            {correctable.map((a) => (
-              <li key={a.field}>
-                <strong>{a.field}:</strong> {String(a.value)}
-                <span className="wi-assumption-detail">{a.why}</span>
-              </li>
-            ))}
-          </ul>
-          <button className="link-button" type="button" onClick={() => navigate("/update")}>
-            Fill these in <ChevronRight size={15} />
-          </button>
+          founder has an opinion on any of them, so they collapse to one
+          sentence. What is left is what a founder could genuinely supply. */}
+      {hasAssumptions && (
+        <Expandable title={correctable.length ? `Assumptions — numbers we guessed (${correctable.length})` : "Assumptions"}>
+          {correctable.length > 0 && (
+            <>
+              <p className="subtle">
+                You didn't give us these, so the board used the values below. Each one is
+                something you could look up, and each one changes the advice.
+              </p>
+              <ul className="wi-assumptions">
+                {correctable.map((a) => (
+                  <li key={a.field}>
+                    <strong>{a.field}:</strong> {String(a.value)}
+                    <span className="wi-assumption-detail">{a.why}</span>
+                  </li>
+                ))}
+              </ul>
+              <button className="link-button" type="button" onClick={() => navigate("/update")}>
+                Fill these in <ChevronRight size={15} />
+              </button>
+            </>
+          )}
+          {whatIf?.assumptions?.length > 0 && (
+            <>
+              <p className="subtle">What the projection above assumed:</p>
+              <WhatIfAssumptions assumptions={whatIf.assumptions} />
+            </>
+          )}
           {internalCount > 0 && (
-            <p className="subtle">This also assumes normal market conditions.</p>
+            <p className="subtle">This analysis also assumes normal market conditions.</p>
           )}
         </Expandable>
       )}
-      {correctable.length === 0 && internalCount > 0 && (
-        <p className="subtle assumption-line">This analysis assumes normal market conditions.</p>
-      )}
 
-      {/* L5 (qualitative in MVP) */}
-      {brief?.expected_outcome && (
-        <Expandable title="Expected, in simulation">
-          <p className="outcome-line">{expectedOutcomeCopy(brief.expected_outcome)}</p>
-          {/* This is a single qualitative label the model returns alongside the
-              brief — not a simulated range. The earlier copy here described it as
-              "a scenario range from a calibrated simulation", which was the
-              projection panel's claim, not this one's. The projection is above. */}
-          <p className="subtle">
-            <SimulatedTag /> — the board's one-line read on the next 6–12 months, not a
-            forecast of your company. For a modelled range, see the projection above.
-          </p>
+      {/* How the board weighed it */}
+      <Expandable title="How the board weighed it">
+        <FocusBar weights={weights} />
+        {reasoningBullets.length > 0 && (
+          <ul className="reason-list">
+            {reasoningBullets.map((b) => <li key={b}>{b}</li>)}
+          </ul>
+        )}
+        {analysis.narratives && (
+          <p className="subtle">Each action on This month carries its advisor's own reasoning.</p>
+        )}
+      </Expandable>
+
+      {/* How the board got here: the OEFA beats for every month of the cycle */}
+      {traceMonths.length > 0 && (
+        <Expandable title="How the board got here">
+          {cycle?.summary && (
+            <ul className="trace-lines">
+              {loopLines(cycle.summary).map((l) => <li key={l}>{l}</li>)}
+            </ul>
+          )}
+          {cycleMonths.length > 0 && (
+            <p className="subtle">
+              Month 1 is the decision for this month. Months 2 onward are the model's physics
+              compounded, checked against themselves, not a forecast.
+            </p>
+          )}
+          <div className="trace-months">
+            {traceMonths.map((t) => (
+              <OefaStrip
+                key={t.key}
+                month={t.month}
+                closed={t.closed}
+                title={t.title}
+                defaultOpen={t === thisMonth}
+              />
+            ))}
+          </div>
         </Expandable>
       )}
-
     </section>
   );
 }

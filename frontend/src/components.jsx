@@ -7,6 +7,7 @@ import {
   AlertTriangle, ArrowDownRight, ArrowUpRight, CheckCircle2, ChevronDown,
   ChevronRight, Circle, FlaskConical, Info, Minus, ShieldAlert, Sparkles
 } from "lucide-react";
+// (CheckCircle2 and Circle remain for ProgressStages.)
 import {
   money, moneyExact, pct, signedPct, signedPp, pctOfMrr, monthsLabel
 } from "./derive.js";
@@ -212,7 +213,11 @@ export function buildPlanCards(analysis, month) {
   return cards;
 }
 
-export function PlanCard({ card, compact = false, decisionState = null, onDecide = null }) {
+// The accept toggle that used to sit here is gone: the founder says what they
+// did on the Close form, once, and that answer is the decision History reads.
+// A pre-commit toggle produced a second decision per domain and inflated the
+// "accepted n of m" denominator.
+export function PlanCard({ card, compact = false }) {
   const [open, setOpen] = useState(false);
   return (
     <article className={`plan-card ${card.starred ? "starred" : ""} ${compact ? "compact" : ""}`}>
@@ -221,30 +226,18 @@ export function PlanCard({ card, compact = false, decisionState = null, onDecide
         {card.starred && <span className="priority-pill">Priority</span>}
       </div>
       <strong className="plan-headline">{card.headline}</strong>
-      <span className="plan-meta">
-        {card.share != null && <>≈{Math.round(card.share)}% of MRR</>}
-        {card.sub && <> · {card.sub}</>}
-      </span>
+      {card.sub && <span className="plan-meta">{card.sub}</span>}
       {!compact && <p className="plan-rationale">{card.rationale}</p>}
       {!compact && (
         <div className="plan-actions">
           <button className="link-button" type="button" onClick={() => setOpen(!open)}>
             {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />} Why this number?
           </button>
-          {onDecide && (
-            <button
-              className={`accept-button ${decisionState === "accepted" ? "on" : ""}`}
-              type="button"
-              onClick={() => onDecide(card, decisionState === "accepted" ? "suggested" : "accepted")}
-            >
-              {decisionState === "accepted" ? <CheckCircle2 size={15} /> : <Circle size={15} />}
-              {decisionState === "accepted" ? "Doing this" : "I'm doing this"}
-            </button>
-          )}
         </div>
       )}
       {!compact && open && (
         <ol className="plan-chain">
+          {card.share != null && <li>≈{Math.round(card.share)}% of your monthly revenue</li>}
           {card.chain.map((step) => <li key={step}>{step}</li>)}
         </ol>
       )}
@@ -449,46 +442,69 @@ function Beat({ label, children, tone = "" }) {
   );
 }
 
-export function OefaStrip({ month, closed = null, defaultOpen = false, compact = false }) {
+// The Observed beat's sentences, shared with the Evidence section on Why this
+// plan so the two say the same thing about what the board recalled.
+export function observedLines(observe) {
+  if (!observe) return [];
+  const stress = observe.graph?.stress_node ? CAUSAL_STRESS[observe.graph.stress_node] : null;
+  const trend = observe.trend?.mrr_trend ? TREND_WORDS[observe.trend.mrr_trend] : null;
+  const lines = [
+    { key: "memory", text: observe.memory_count ? `${observe.memory_count} similar past month${observe.memory_count === 1 ? "" : "s"} recalled` : "no similar past months yet" }
+  ];
+  if (trend) lines.push({ key: "trend", text: `revenue trend ${trend}` });
+  if (stress) lines.push({ key: "stress", text: `the board's read: ${stress}` });
+  if (observe.graph?.enabled === false) lines.push({ key: "graph", text: "causal evidence graph off", muted: true });
+  return lines;
+}
+
+// Weight moves in the founder's words: the server reports {key, from, to, delta}.
+function weightMoveLine(move) {
+  const label = FOCUS_LABELS[move.key] || move.key;
+  return `${label} focus ${move.delta > 0 ? "up" : "down"} to ${Math.round(move.to * 100)}%`;
+}
+
+export function OefaStrip({ month, closed = null, defaultOpen = false, title = null }) {
   const [open, setOpen] = useState(defaultOpen);
   if (!month) return null;
   const { observe, execute, feedback, adapt } = month;
   const fresh = briefFreshness(execute?.brief_source);
-  const stress = observe?.graph?.stress_node ? CAUSAL_STRESS[observe.graph.stress_node] : null;
-  const trend = observe?.trend?.mrr_trend ? TREND_WORDS[observe.trend.mrr_trend] : null;
   const expected = execute?.expected_delta;
   const adaptations = adapt?.adaptations || [];
+  const weightMoves = adapt?.weight_moves || [];
+  // The server also narrates weight moves in what_changed; with the moves
+  // rendered in their own words those lines would be a second copy.
+  const whatChanged = (adapt?.what_changed || []).filter((line) => !(weightMoves.length && / weight /.test(line)));
   // Closed by the founder: the actual numbers replace the simulated ones.
   const result = closed?.result || null;
   const changeError = result ? result.prediction_error : feedback?.prediction_error;
   const changeBefore = observe?.state_before;
   const changeAfter = result ? result.actual_state : feedback?.state_after;
+  const changedLabel = result ? "Changed (your numbers)" : changeError ? "Changed (in simulation)" : "Changed";
 
   return (
-    <div className={`oefa-strip ${open ? "open" : ""} ${compact ? "compact" : ""}`}>
+    <div className={`oefa-strip ${open ? "open" : ""}`}>
       <button className="oefa-toggle" type="button" onClick={() => setOpen(!open)}>
         {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <span>Observed · Decided · Expected · Changed</span>
-        <em className={`chip ${fresh.tone}`}>{fresh.label}</em>
-        {execute?.llm_ok === false && <em className="chip off">strategist unreachable</em>}
+        <span>{title ? `${title} · ` : ""}Observed · Decided · Expected · Changed</span>
       </button>
       {open && (
         <div className="oefa-body">
           <Beat label="Observed">
-            <li>{observe?.memory_count ? `${observe.memory_count} similar past month${observe.memory_count === 1 ? "" : "s"} recalled` : "no similar past months yet"}</li>
-            {trend && <li>revenue trend {trend}</li>}
-            {stress && <li>the board's read: {stress}</li>}
-            {observe?.graph?.enabled === false && <li className="muted">causal evidence graph off</li>}
+            {observedLines(observe).map((l) => <li key={l.key} className={l.muted ? "muted" : ""}>{l.text}</li>)}
           </Beat>
           <Beat label="Decided">
             {actionSummary(execute?.action).map((line) => <li key={line}>{line}</li>)}
             <li className="muted">{refreshReasonCopy(execute?.refresh_reason)} · brief {fresh.label}</li>
+            {execute?.llm_ok === false && <li className="muted">strategist unreachable — built-in rules</li>}
           </Beat>
           <Beat label="Expected">
             {expected ? <li>{expectedLine(expected)}</li> : <li className="muted">no numeric prediction on this analysis</li>}
             {expected && <li className="muted"><SimulatedTag /></li>}
           </Beat>
-          <Beat label={result ? "Changed (your numbers)" : "Changed"} tone={result ? "actual" : ""}>
+          <Beat label={changedLabel} tone={result ? "actual" : ""}>
+            {changeError && !result && (
+              <li className="muted">model consistency check, not accuracy</li>
+            )}
             {changeError ? (
               <>
                 {predictionSentences({ before: changeBefore, actual: changeAfter, expected, error: changeError, basis: result ? "actual" : "simulated" })
@@ -498,7 +514,8 @@ export function OefaStrip({ month, closed = null, defaultOpen = false, compact =
             ) : (
               <li className="muted">waiting on your real numbers — close the month to score this plan</li>
             )}
-            {(adapt?.what_changed || []).slice(0, 3).map((line) => <li key={line}>{line}</li>)}
+            {whatChanged.slice(0, 3).map((line) => <li key={line}>{line}</li>)}
+            {weightMoves.map((m) => <li key={m.key}>{weightMoveLine(m)}</li>)}
             {adaptations.map((a) => <li key={a.agent}><strong>{a.agent}:</strong> {a.sentence}</li>)}
             {feedback && !result && (
               <li className="muted">

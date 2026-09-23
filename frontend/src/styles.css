@@ -1213,22 +1213,6 @@ code {
 
 .plan-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 
-.accept-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: white;
-  color: #4c4d57;
-  padding: 6px 13px;
-  font-size: 12.5px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.accept-button.on { border-color: var(--green); background: #dff6ee; color: var(--green); }
-
 .plan-chain {
   margin: 4px 0 0;
   padding: 10px 12px 10px 28px;
@@ -1582,7 +1566,19 @@ code {
 
 .danger-panel { border-color: #f3d7d7; }
 
-.advice-page .position-banner { cursor: default; }
+.summary-panel { display: grid; gap: 12px; }
+.summary-panel h3 { margin: 0; font-size: 17px; line-height: 1.4; text-wrap: balance; }
+.inline-note { margin: -12px 0 0; }
+.outcome-block { display: grid; gap: 6px; }
+.outcome-line { margin: 0; font-size: 14px; }
+.reason-list li.muted { color: var(--muted); }
+.trace-lines {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px;
+  font-size: 12.5px; color: var(--muted);
+}
+.trace-lines li::before { content: "·"; margin-right: 6px; }
+.trace-months { display: grid; gap: 10px; }
+.trace-months .oefa-strip { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
 
 /* ---- responsive ---- */
 
@@ -1621,6 +1617,9 @@ code {
 .wi-shock-toggle:hover { border-color: var(--amber); color: var(--amber); }
 .wi-shock-toggle.on { border-color: var(--amber); background: #fdf4e7; color: var(--amber); }
 
+.wi-charts { display: grid; gap: 12px; border-top: 1px dashed var(--line); padding-top: 12px; }
+.wi-legend-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.wi-shock-on { display: inline-flex; align-items: center; gap: 5px; color: var(--amber); font-size: 12.5px; font-weight: 700; }
 .wi-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
 .wi-legend span, .wi-table td:first-child { display: inline-flex; align-items: center; gap: 7px; }
 .wi-legend i, .wi-table td:first-child i {
@@ -1769,9 +1768,8 @@ code {
   color: var(--ink); cursor: pointer; text-align: left;
 }
 .oefa-toggle span { margin-right: auto; }
-.oefa-body { display: grid; gap: 10px; }
-.oefa-strip:not(.compact) .oefa-body { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-@media (max-width: 900px) { .oefa-strip:not(.compact) .oefa-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.oefa-body { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .oefa-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .oefa-beat { display: grid; gap: 4px; align-content: start; }
 .oefa-beat-label {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--purple);
@@ -1820,10 +1818,6 @@ code {
 .close-note { font: inherit; font-size: 13px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; }
 .close-hint { font-size: 12px; color: var(--muted); }
 
-/* compact strips (inside a month column): the head already carries the
-   freshness chip, so the toggle is one short line and nothing wraps */
-.oefa-strip.compact .oefa-toggle { font-size: 12px; }
-.oefa-strip.compact .oefa-toggle .chip { display: none; }
 .oefa-toggle span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* columns must be able to shrink: min-content of a "$200k" cell or a nowrap

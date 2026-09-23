@@ -83,6 +83,20 @@ export function scoreLine(error) {
   return `${s.sign_agrees} of ${s.kpis_scored} predictions moved in the right direction; ${s.within_tolerance} landed within tolerance.`;
 }
 
+// What the whole cycle did, from its summary block: the loop's own health,
+// stated once in the trace section rather than on the plan.
+export function loopLines(summary) {
+  if (!summary) return [];
+  return [
+    `${summary.fresh_briefs} fresh strategist read${summary.fresh_briefs === 1 ? "" : "s"}, ${summary.reused_briefs} reused`,
+    summary.graph_store_enabled
+      ? "what happened each month was written back as simulated evidence"
+      : "causal evidence graph off — nothing was written back",
+    summary.memory_scope ? "memory scoped to your company" : "ran without memory",
+    `${summary.total_latency_s?.toFixed?.(0) ?? summary.total_latency_s}s of deliberation`
+  ];
+}
+
 export function briefFreshness(source) {
   if (source === "llm") return { label: "fresh read", tone: "fresh" };
   if (source === "cache_hit" || source === "reuse") return { label: "reused", tone: "reused" };

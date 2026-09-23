@@ -91,7 +91,9 @@ function Shell() {
     analyzing: <Analyzing navigate={navigate} />,
     home: <Home navigate={navigate} />,
     plan: <Cycle navigate={navigate} />,
-    advice: <Advice navigate={navigate} params={params} />,
+    // Keyed on the analysis so expander state does not carry over between
+    // one analysis and the next.
+    advice: <Advice key={params.id || "latest"} navigate={navigate} params={params} />,
     history: <History navigate={navigate} />,
     company: <CompanyView navigate={navigate} />,
     update: <UpdateRitual navigate={navigate} />,

@@ -26,8 +26,16 @@ function MonthEntry({ month, prev, analysis, outcome, navigate }) {
   const [open, setOpen] = useState(false);
   const v = month.values;
   const deltas = monthDeltas(month, prev);
-  const decisions = month.decisions || [];
-  const accepted = decisions.filter((d) => d.state === "accepted").length;
+  // One decision per domain, last entry wins: the Close form appends its
+  // answer after any earlier toggle, so its answer is the one that counts.
+  // Legacy "suggested" rows (a toggle switched back off) still render, with
+  // ○, but are not something the founder was asked about, so they leave the
+  // denominator.
+  const byDomain = new Map();
+  for (const d of month.decisions || []) byDomain.set(d.domain || d.id, d);
+  const decisions = [...byDomain.values()];
+  const asked = decisions.filter((d) => d.state !== "suggested");
+  const accepted = asked.filter((d) => d.state === "accepted").length;
 
   return (
     <li className="timeline-entry">
@@ -46,10 +54,10 @@ function MonthEntry({ month, prev, analysis, outcome, navigate }) {
         {analysis?.brief?.recommended_focus?.length > 0 && (
           <p className="timeline-plan">Plan: {analysis.brief.recommended_focus.join(" · ").toLowerCase()}</p>
         )}
-        {decisions.length > 0 && (
+        {asked.length > 0 && (
           <p className="timeline-decisions">
-            You accepted {accepted} of {decisions.length} action{decisions.length === 1 ? "" : "s"}
-            {decisions.some((d) => d.state === "custom") && " · adjusted one yourself"}
+            You accepted {accepted} of {asked.length} action{asked.length === 1 ? "" : "s"}
+            {asked.some((d) => d.state === "custom") && " · adjusted one yourself"}
           </p>
         )}
         {outcome && <OutcomeBadge outcome={outcome} />}

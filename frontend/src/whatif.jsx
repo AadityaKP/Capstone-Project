@@ -17,7 +17,7 @@
 // a year" were the same flat line.
 
 import React, { useState } from "react";
-import { Activity, AlertTriangle, Loader2, Skull, Zap } from "lucide-react";
+import { Activity, AlertTriangle, ChevronDown, ChevronRight, Loader2, Skull, Zap } from "lucide-react";
 import { money, pct } from "./derive.js";
 
 // The founder-facing comparison is the board's plan against doing nothing.
@@ -229,8 +229,13 @@ function survivalCell(policy) {
   );
 }
 
+// The panel leads with the verdict — the death note, the table and the
+// server's caveat — and keeps the four charts, the legend, the shock toggle
+// and the run metadata behind one expander. The assumptions the projection
+// used are rendered by the page, in its Assumptions section, from
+// `result.assumptions`, so they sit beside the analysis's own guesses.
 export default function WhatIfPanel({ result, loading, error, onRun, shockMode, onToggleShock }) {
-  const [showAssumptions, setShowAssumptions] = useState(false);
+  const [showCharts, setShowCharts] = useState(false);
 
   if (loading) {
     return (
@@ -257,7 +262,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
     return (
       <article className="panel wi-panel">
         <div className="panel-title-row">
-          <h3><Activity size={16} /> What happens if you follow this plan</h3>
+          <h3><Activity size={16} /> The plan against doing nothing</h3>
         </div>
         <p className="subtle">
           Roll your current numbers forward {12} months under the board's plan and under
@@ -271,7 +276,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
     );
   }
 
-  const { policies, horizon_months: horizon, n_seeds: seeds, shock, assumptions } = result;
+  const { policies, horizon_months: horizon, n_seeds: seeds, shock } = result;
   const display = result.display || {};
   const panels = panelsFor(display);
   const shockMonth = shock ? shock.month : null;
@@ -286,14 +291,8 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
   return (
     <article className="panel wi-panel">
       <div className="panel-title-row">
-        <h3><Activity size={16} /> What happens if you follow this plan</h3>
-        <button
-          type="button"
-          className={`wi-shock-toggle ${shockMode ? "on" : ""}`}
-          onClick={onToggleShock}
-        >
-          <Zap size={13} /> {shockMode ? "Competitor shock on" : "Add a competitor shock"}
-        </button>
+        <h3><Activity size={16} /> The plan against doing nothing</h3>
+        {shockMode && <span className="wi-shock-on"><Zap size={13} /> competitor shock on</span>}
       </div>
 
       {recommended?.deaths > 0 && (
@@ -311,51 +310,6 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
               ` (earliest month ${recommended.earliest_death_month})`}
             .
           </span>
-        </p>
-      )}
-
-      <div className="wi-legend">
-        {POLICY_ORDER.filter((p) => policies[p]).map((p) => (
-          <span key={p}>
-            <i style={{ background: POLICY_STYLE[p].color }} /> {policies[p].label}
-          </span>
-        ))}
-      </div>
-
-      {shockMode && shock && (
-        <p className="wi-shock-note">
-          <Zap size={13} /> A competitor surge hits all three plans at month {shock.month}:{" "}
-          {shock.description}.
-        </p>
-      )}
-
-      <div className="wi-grid">
-        {panels.map((panel) => (
-          <FanChart
-            key={panel.key}
-            title={panel.label}
-            format={panel.format}
-            shockMonth={shockMonth}
-            alive={alive}
-            series={Object.fromEntries(
-              POLICY_ORDER.filter((p) => policies[p]).map((p) => [p, policies[p].series[panel.key]])
-            )}
-          />
-        ))}
-      </div>
-
-      {/* The caveat is rendered here, immediately beneath the charts, on purpose. */}
-      <p className="wi-caveat">{result.caveat}</p>
-
-      {display.rule_of_40_withheld_because && (
-        <p className="wi-caveat">{display.rule_of_40_withheld_because}</p>
-      )}
-
-      {anyDeaths && (
-        <p className="wi-survivor-note">
-          A line goes dashed once some runs have run out of cash, and ends where none are
-          left. Past that point the line averages only the companies still standing, so it
-          can rise while most of them are gone.
         </p>
       )}
 
@@ -405,37 +359,102 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
         </table>
       </div>
 
-      <p className="wi-meta">
-        Median of {seeds} simulated runs per plan, same {seeds} starting conditions for each,
-        so the plan is the only thing that differs.
-        {anyDeaths && (
-          <> Revenue and cash for a run that ended early are its figures at the month it
-          ended.</>
-        )}
-        {result.shock_tape_shared === false && (
-          <strong> Conditions diverged between plans in this run — compare with care.</strong>
-        )}
-        {shockMode && POLICY_ORDER.every((p) => policies[p]?.summary.drawdown_fraction === 0) && (
-          <> Revenue never fell below its pre-shock level under any plan, so there is no
-          recovery time to report.</>
-        )}
-      </p>
+      {/* The server's caveat sits directly under the verdict, on purpose. */}
+      <p className="wi-caveat">{result.caveat}</p>
 
-      <button type="button" className="link-button" onClick={() => setShowAssumptions(!showAssumptions)}>
-        {showAssumptions ? "Hide" : "Show"} what this projection assumes ({assumptions.length})
+      {display.rule_of_40_withheld_because && (
+        <p className="wi-caveat">{display.rule_of_40_withheld_because}</p>
+      )}
+
+      <button type="button" className="link-button" onClick={() => setShowCharts(!showCharts)}>
+        {showCharts ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+        {showCharts ? "Hide" : "Show"} the charts
       </button>
-      {showAssumptions && (
-        <ul className="wi-assumptions">
-          {assumptions.map((a) => (
-            <li key={a.field}>
-              <strong>{a.field}:</strong> {a.value}
-              <span className={`prov-chip ${a.basis === "derived" ? "simulated" : ""}`}>{a.basis}</span>
-              <span className="wi-assumption-detail">{a.detail}</span>
-              {a.source && <span className="wi-assumption-source">{a.source}</span>}
-            </li>
-          ))}
-        </ul>
+
+      {showCharts && (
+        <div className="wi-charts">
+          <div className="wi-legend-row">
+            <div className="wi-legend">
+              {POLICY_ORDER.filter((p) => policies[p]).map((p) => (
+                <span key={p}>
+                  <i style={{ background: POLICY_STYLE[p].color }} /> {policies[p].label}
+                </span>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={`wi-shock-toggle ${shockMode ? "on" : ""}`}
+              onClick={onToggleShock}
+            >
+              <Zap size={13} /> {shockMode ? "Competitor shock on" : "Add a competitor shock"}
+            </button>
+          </div>
+
+          {shockMode && shock && (
+            <p className="wi-shock-note">
+              <Zap size={13} /> A competitor surge hits both plans at month {shock.month}:{" "}
+              {shock.description}.
+            </p>
+          )}
+
+          <div className="wi-grid">
+            {panels.map((panel) => (
+              <FanChart
+                key={panel.key}
+                title={panel.label}
+                format={panel.format}
+                shockMonth={shockMonth}
+                alive={alive}
+                series={Object.fromEntries(
+                  POLICY_ORDER.filter((p) => policies[p]).map((p) => [p, policies[p].series[panel.key]])
+                )}
+              />
+            ))}
+          </div>
+
+          {anyDeaths && (
+            <p className="wi-survivor-note">
+              A line goes dashed once some runs have run out of cash, and ends where none are
+              left. Past that point the line averages only the companies still standing, so it
+              can rise while most of them are gone.
+            </p>
+          )}
+
+          <p className="wi-meta">
+            Median of {seeds} simulated runs per plan, same {seeds} starting conditions for each,
+            so the plan is the only thing that differs.
+            {anyDeaths && (
+              <> Revenue and cash for a run that ended early are its figures at the month it
+              ended.</>
+            )}
+            {result.shock_tape_shared === false && (
+              <strong> Conditions diverged between plans in this run — compare with care.</strong>
+            )}
+            {shockMode && POLICY_ORDER.every((p) => policies[p]?.summary.drawdown_fraction === 0) && (
+              <> Revenue never fell below its pre-shock level under any plan, so there is no
+              recovery time to report.</>
+            )}
+          </p>
+        </div>
       )}
     </article>
+  );
+}
+
+// The projection's own assumptions, rendered by the page beside the
+// analysis's guesses rather than inside the panel.
+export function WhatIfAssumptions({ assumptions }) {
+  if (!assumptions?.length) return null;
+  return (
+    <ul className="wi-assumptions">
+      {assumptions.map((a) => (
+        <li key={a.field}>
+          <strong>{a.field}:</strong> {a.value}
+          <span className={`prov-chip ${a.basis === "derived" ? "simulated" : ""}`}>{a.basis}</span>
+          <span className="wi-assumption-detail">{a.detail}</span>
+          {a.source && <span className="wi-assumption-source">{a.source}</span>}
+        </li>
+      ))}
+    </ul>
   );
 }

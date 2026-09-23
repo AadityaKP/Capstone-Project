@@ -68,7 +68,7 @@ function MonthColumn({ index, month, baseIso, dominant, closed, onOpenAdvice }) 
         <span><small>Churn</small><strong>{after?.churn_pct != null ? pct(after.churn_pct) : "—"}</strong></span>
       </div>
       {dead && <p className="month-dead"><AlertTriangle size={13} /> ran out of cash in simulation</p>}
-      <OefaStrip month={month} closed={closed} compact />
+      <OefaStrip month={month} closed={closed} />
       {dominant && onOpenAdvice && (
         <button className="link-button" type="button" onClick={onOpenAdvice}>
           Full advice <ChevronRight size={14} />
