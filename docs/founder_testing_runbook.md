@@ -12,6 +12,11 @@ only one that shows the simulator actually running.
 
 ---
 
+> **For a review or demo use `docs/demo_runbook.md`** (2026-09-23): it is the
+> verified run of show on the simplified interface. This runbook's Part 3
+> screen descriptions predate the Plan page folding into This month; its
+> setup, failure-state and reset sections still apply.
+
 ## What you are running
 
 Three processes, two of which you start:

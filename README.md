@@ -44,6 +44,8 @@ were actually taken become evidence.
   `llm_reachable`).
 - Run the stack for a demo with `.\start.ps1 -Prod` (sets `SIM_PROFILE=founder`;
   the review2 research profile cannot run the loop's Feedback step).
+  `docs/demo_runbook.md` is the verified run of show: what to load, the exact
+  numbers to type, and what every screen shows.
 - Before a demo: `venv\Scripts\python.exe experiments\loop_live_check.py`
   makes both silent failure modes loud; `experiments\seed_demo_company.py`
   seeds a company with history and two cycles (one closed) and Settings offers

@@ -296,8 +296,8 @@ export function UpdateRitual({ navigate, params = {} }) {
           <fieldset className="close-fields" disabled={closing}>
             <ClosableActions
               cards={actionCards} done={done} notes={notes}
-              onDone={(domain, value) => setDone({ ...done, [domain]: value })}
-              onNote={(domain, value) => setNotes({ ...notes, [domain]: value })}
+              onDone={(domain, value) => setDone((d) => ({ ...d, [domain]: value }))}
+              onNote={(domain, value) => setNotes((n) => ({ ...n, [domain]: value }))}
             />
           </fieldset>
         )}

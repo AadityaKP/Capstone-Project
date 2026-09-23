@@ -273,6 +273,19 @@ describe("rule 6 — the numbers we guessed are asked for at the moment of choic
 });
 
 describe("the close form", () => {
+  it("keeps every answer when the four toggles are clicked in one tick", () => {
+    const { container } = renderAt("/update", ownState());
+    const items = [...container.querySelectorAll(".close-item")];
+    expect(items.length).toBeGreaterThan(1);
+    const pick = ["Did it", "Partly", "Didn't", "Did it"].slice(0, items.length);
+    act(() => {
+      items.forEach((it, i) => {
+        fireEvent.click([...it.querySelectorAll(".did-option")].find((b) => b.textContent.trim() === pick[i]));
+      });
+    });
+    expect([...container.querySelectorAll(".did-option.on")].map((b) => b.textContent.trim())).toEqual(pick);
+  });
+
   it("cannot be submitted twice while the feedback is being scored", async () => {
     // The feedback POST never resolves within the test; the second click
     // must not add a second month.
