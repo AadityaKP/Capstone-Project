@@ -32,9 +32,12 @@ founder then closes the month with real numbers (did / partly / didn't per
 action) and the board is scored against its own prediction; only actions that
 were actually taken become evidence.
 
-- **Plan** page: four month columns at once, month 1 live, months 2–4 chipped
-  as projection, an OEFA strip per month, the trajectory chart, and the history
-  rail running forward past "now".
+- Navigation: **This month · History · My company · Settings**. This month
+  carries the plan, how last month's plan held up, and one Outlook chart on
+  which months land as the board deliberates (everything right of your own
+  numbers is shaded "projected"); **Why this plan** holds the reasons,
+  evidence, assumptions and an OEFA strip per horizon month; the close-the-month
+  form is the one place the founder answers. Inventory: `docs/ui_components.md`.
 - API: `POST /api/cycles` (202, months stream in), `GET /api/cycles/{id}`,
   `POST /api/cycles/{id}/feedback` (the HITL close), and `/api/health` reports
   whether the loop is actually live (`graph_store_enabled`, `memory_scope`,

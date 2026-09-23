@@ -352,6 +352,11 @@ H — see the freshness note above.
 
 ## 5. Phase 2 — The 3–4 month view
 
+> **Superseded (2026-09-23)** by `docs/ui_simplification_plan.md` and
+> decision 12: the Plan page described here was built and then folded into
+> This month (the Outlook chart and the "next 3 months" list) with the OEFA
+> beats under Why this plan → "How the board got here". Kept as history.
+
 New `frontend/src/pages/Cycle.jsx`, nav label **"Plan"**.
 
 ### 5.1 The month strip — the review's "simultaneously"
@@ -567,14 +572,21 @@ prediction error against the actual numbers the founder entered. One sentence
 frames the whole demo: *this system makes a prediction, finds out whether it was
 right, and changes.* Nothing else on the first screen.
 
-**Act 2 — Plan. Four months at once. (2 min)**
+**Act 2 — This month → Outlook → Why this plan. (2 min)**
 
-The month strip: all four visible simultaneously, month 1 dominant and live,
-months 2–4 chipped as projection. Expand month 1's OEFA strip and walk the four
-beats in order — what it observed, what it decided, what it expects (the numeric
-`expected_delta`, not a slogan), what changed as a result. Point out the
-`fresh`/`reused` brief marker (§4.1) before anyone asks; volunteering it is worth
-more than surviving the question.
+*(Re-scripted 2026-09-23, decision 12; the original walked the Plan page's
+month strip.)* Stay on This month: the plan cards are the decision for this
+month; scroll to the Outlook and switch the metric — the founder's own
+number is the opening point, everything to its right sits on the shaded
+"projected" band, and the closed month is the marked point labelled "you".
+Open "Next 3 months of the plan". Then "Why this plan" → "How the board got
+here", where month 1's strip is already open: walk the four beats in order —
+what it observed, what it decided, what it expects (the numeric
+`expected_delta`, not a slogan), what changed as a result, labelled as a
+model consistency check when it is the simulator scoring itself and as
+"your numbers" when it is the close. The loop lines at the top of that
+section (fresh vs reused reads, written back as simulated evidence) answer
+the brief-freshness question (§4.1) before anyone asks.
 
 **Act 3 — Close the month. The HITL moment. (3 min)**
 
@@ -597,11 +609,15 @@ that says "this is one observation, not proof" reads as competent.
 
 **Act 5 — Run a live cycle. (2 min)**
 
-Kick off a fresh cycle and let them watch months land one at a time as the
-background thread finishes them (§4.2). This is the moment the audience sees real
-computation rather than a rendered artifact. Keep talking over it — the elapsed
-counter and the per-month latency line are honest and worth narrating rather than
-apologising for.
+*(Re-scripted 2026-09-23, decision 12.)* Press Re-run on This month and stay
+there: the plan section becomes "Your board is planning" with the staged
+list and "Month k of 4 · m:ss"; the plan cards appear when month 1 lands,
+and the Outlook line and the "next 3 months" list fill in one month at a
+time as the background thread finishes them (§4.2). Navigate to History and
+back mid-cycle to show the run does not live on the page. This is the moment
+the audience sees real computation rather than a rendered artifact. Keep
+talking over it — the elapsed counter is honest and worth narrating rather
+than apologising for.
 
 **Act 6 — Break it on purpose. (1 min)**
 

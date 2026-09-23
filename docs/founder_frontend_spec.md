@@ -943,3 +943,19 @@ The only permitted mappings from engine vocabulary to founder surfaces. Accuracy
 ---
 
 *End of specification. Sources: repository state on branches `frontend` (HEAD 67bb71c), `backend`, and `startup-multi` as of 2026-08-24; all file citations refer to the checked-out `frontend` branch unless marked backend-branch. Items marked UNVERIFIED: none load-bearing remain; `startup-multi` internals beyond §2 citations were only partially reviewed and nothing in this spec depends on them.*
+
+---
+
+## Addendum (2026-09-23) — the post-simplification inventory
+
+Sections 8–17 describe the founder surfaces as specified in August 2026.
+The interface has since been rebuilt around the multi-month OEFA cycle
+(`docs/oefa_loop_plan.md`) and then simplified (`docs/ui_simplification_plan.md`,
+decision 12 in `docs/oefa_loop_decisions.md`): four navigation items —
+**This month, History, My company, Settings** — with the plan, the
+prediction error and one Outlook chart on This month, the reasons, evidence,
+assumptions and the loop trace under **Why this plan**, and the close-the-month
+form as the one place the founder answers. `docs/ui_components.md` is the
+current inventory and the input to any further audit; the honesty rules in
+§15 and the terminology contract in §26 still hold and are now pinned by
+`frontend/test/honesty.test.jsx`. Sections 8–17 are left as written.

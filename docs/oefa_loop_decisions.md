@@ -170,3 +170,43 @@ page shows it and offers a re-run.
 one cycle mature during the next — now true because the pending queue is
 persisted (decision 1). Within-cycle Adapt runs off weights, the track record
 and the causal graph, not off matured episodic memory.
+
+## 12. The Plan page folds into This month (2026-09-23, `ui-simplify`)
+
+The audit of `docs/ui_components.md` (executed by
+`docs/ui_simplification_plan.md`) found that the Plan page — the month
+strip, the forward timeline and the trajectory chart — was a trace viewer
+sitting in the founder's main path, and that the same facts were rendered
+in up to four places. Three things change, and why:
+
+- **The Plan page is gone; This month absorbs it.** Sections 5.1–5.3 of
+  `oefa_loop_plan.md` asked for four columns "in a form that screenshots"
+  and a rail past "now". What the thesis actually needs survives: months
+  land visibly, one at a time, on This month's Outlook chart and its
+  "next 3 months" list with the elapsed counter; and the four OEFA beats
+  for every horizon month sit one click away under Why this plan → "How
+  the board got here", month 1 open. `#/plan` still resolves. Cycle start
+  and polling moved to an app-level provider first, so a cycle started
+  from the Close form lands whichever page is open.
+- **Shaded, not dashed, means "this is the model".** The audit proposed
+  dashed lines for model output; on `FanChart` dashed already means "some
+  simulated runs ran out of cash" (§5.2 of the plan forbids overloading
+  it). The Outlook shades everything right of the founder's real numbers
+  as "projected" and keeps the band as the uncertainty grammar; one caveat
+  line under the chart.
+- **The founder answers once, on the Close form.** The Advice page's
+  "I'm doing this" toggles produced a second decision per domain (the
+  close always appends a new id) and a toggle switched back off left a
+  "suggested" row that inflated History's denominator. The toggles are
+  gone; History dedupes per domain (last entry wins) and counts only what
+  the founder was asked.
+
+Also decided: routes keep their names and only labels change (deep links
+and the seeded demo keep working); the LLM path yields no "what the board
+changed" sentence, so the Last-month card shows the adaptations when the
+rule-based agents produce them and otherwise the one true sentence — "The
+board planned this month with last month's result in hand" — read only
+from the cycle that answered the close; the honesty checklist is a vitest
+suite under `frontend/test/` (never `frontend/src`, which the Python scan
+reads). The run of show in `oefa_loop_plan.md` §8.4 is re-scripted for
+Acts 2 and 5.
