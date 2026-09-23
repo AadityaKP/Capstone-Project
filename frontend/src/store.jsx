@@ -74,9 +74,17 @@ function reducer(state, action) {
       }
       return { ...state, analyses: [...state.analyses, a] };
     }
-    case "ADD_CYCLE":
+    case "ADD_CYCLE": {
       if ((state.cycles || []).some((c) => c.id === action.cycle.id)) return state;
-      return { ...state, cycles: [...state.cycles, action.cycle] };
+      // Only the latest cycle is polled. An earlier one still deliberating
+      // when a new one starts would otherwise stay "running" in storage for
+      // ever, with an incomplete trace on Why this plan; it is marked
+      // superseded instead, and its landed months keep rendering.
+      const cycles = state.cycles.map((c) =>
+        ["queued", "running"].includes(c.status) ? { ...c, status: "superseded" } : c
+      );
+      return { ...state, cycles: [...cycles, action.cycle] };
+    }
     case "UPDATE_CYCLE":
       return {
         ...state,
@@ -179,6 +187,19 @@ export function latestClosedFeedback(state) {
     if (closed.length) return { cycle, feedback: closed[closed.length - 1] };
   }
   return null;
+}
+
+// The cycle that answered a close: planned on the month that followed the
+// closed cycle's month, and not the closed cycle itself. This month's
+// Last-month card and History's "How the plan held up" both read "what the
+// board changed" from it, through this one guard.
+export function answeringCycle(state, closedCycle) {
+  if (!closedCycle) return null;
+  const i = state.months.findIndex((m) => m.id === closedCycle.monthId);
+  const next = i >= 0 ? state.months[i + 1] : null;
+  if (!next) return null;
+  const cycle = cycleForMonth(state, next.id);
+  return cycle && cycle.id !== closedCycle.id ? cycle : null;
 }
 
 export function feedbackForCycleMonth(cycle, monthIndex) {

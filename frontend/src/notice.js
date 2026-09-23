@@ -33,7 +33,7 @@ export const RULES_ONLY_TEXT =
 //   demo         boolean                 sample company; only Close asks for it
 //   rulesOnly    "all" | "3–4" | null    which months ran without the strategist
 //   archived     { monthName }           an archived analysis, Why only
-//   actions      { retry, dismiss, rerun, current }  callbacks the page offers
+//   actions      { retry, rerun, current }  callbacks the page offers
 export function pickNotice(ctx) {
   const candidates = [];
   const a = ctx.actions || {};
@@ -44,10 +44,9 @@ export function pickNotice(ctx) {
       text: "The analysis service couldn't be reached, so no plan was started. Your numbers are "
         + "saved; nothing is made up in the meantime."
         + (ctx.startError.error && !ctx.startError.offline ? ` (${ctx.startError.error})` : ""),
-      actions: [
-        a.retry ? { label: "Retry", primary: true, onClick: a.retry } : null,
-        a.dismiss ? { label: "Continue without a plan", onClick: a.dismiss } : null
-      ].filter(Boolean)
+      // Retry only: the founder is already on This month, so "continue
+      // without a plan" would be a button that does nothing.
+      actions: a.retry ? [{ label: "Retry", primary: true, onClick: a.retry }] : []
     });
   }
   if (ctx.failed) {

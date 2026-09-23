@@ -50,10 +50,12 @@ mentions an engine-only field or renders the ∞ glyph.
 ## 2. Shell and navigation (`App.jsx`, `main.jsx`)
 
 - **Hash routes**: `#/` welcome, `#/onboarding`, `#/analyzing`, `#/home`
-  (This month), `#/advice/:id` (Why this plan), `#/history`, `#/company`,
+  (This month), `#/advice/:id` (Why this plan; `#/advice/:id/m3` opens
+  month 3's strip, `#/advice/:id/weighed` opens How the board weighed it),
+  `#/history` (`#/history/:monthId` opens that entry), `#/company`,
   `#/update` (Close the month; `#/update/fill` opens it with the
   estimated numbers expanded), `#/settings`. `#/plan` and bare `#/advice`
-  render This month. Route names are unchanged from the previous
+  redirect to `#/home`, replacing the address. Route names are unchanged from the previous
   inventory; only the labels changed (decision D5).
 - **Route guard**: without a company every route redirects to welcome; with
   one, welcome redirects to This month.
@@ -117,17 +119,17 @@ sample company. In sample mode it redirects to This month.
 
 Top to bottom, at most six sections:
 
-1. **Notice slot** (0–1 banners, chosen by `notice.js`, §4.11): start
-   failed (Retry / Continue without a plan) · cycle failed with the
-   engine's reason (Re-run) · lost contact with a running cycle ·
-   rules-only (the whole plan, or "Months 3–4 of this plan used the
-   board's built-in rules"). A condition that loses the slot becomes one
-   sentence in the plan section.
+1. **Notice slot** (0–1 banners, chosen by `pickNotice`, §4.12, in this
+   priority): start failed (Retry) · cycle failed with the engine's reason
+   (Re-run) · lost contact with a running cycle · rules-only (the whole
+   plan, or "Months 3–4 of this plan used the board's built-in rules").
+   A condition that loses the slot becomes one sentence in the plan
+   section.
 2. **Status line** (static): risk chip + one sentence assembled from brief
    enums only (`positionSentence`) + "Based on your <month> numbers · n
-   days ago". While a cycle deliberates before its first month lands: "The
-   board is reading your numbers." With no plan: "No plan yet — run your
-   first one."
+   days ago". While a new cycle deliberates it keeps the last read and
+   says "· new plan in progress" (the progress itself is shown once, in
+   the plan section). With no plan: "No plan yet — run your first one."
 3. **KPI row** (four tiles, client-computed from the month's numbers):
    *Cash lasts* (runway against net burn; "Not burning" when revenue
    covers costs; never ∞), *Revenue* (MRR), *Customers lost* ("1 in N"
@@ -146,16 +148,26 @@ Top to bottom, at most six sections:
    different cycle, planned on the latest month): nothing while it is still
    running; its per-agent adaptation sentences once month 1 has landed;
    otherwise, when it started from the track record, "The board planned
-   this month with last month's result in hand." "Details" → History.
+   this month with last month's result in hand." Both screens read the
+   answering cycle through one selector (`answeringCycle` in `store.jsx`)
+   and one sentence builder (`boardChangedLines` in `loopView.js`). At most
+   two adaptation sentences show here; "+n more" and "Details" open the
+   History entry for that month (`#/history/:monthId`). The sentences
+   cover every KPI the server scored — revenue, churn, cash, and cash
+   runway when both sides were burning — so the score line ("3 of 4 moved
+   in the right direction") always matches the list.
 5. **This month's plan**: header = the server's confidence sentence
    (verbatim; the assumption count caps the band) with "Why this plan →"
-   and, when idle, a Re-run / Plan again link; an inline amber note when
-   the plan is on the previous month's numbers or lost the notice slot;
-   full plan cards (§4.6) for the domains that are actions; one line
-   "Holding: hiring, pricing." for the rest; the "Nothing to change this
-   month" panel (with "Show what each advisor said") when no card is an
-   action; one red line "In simulation this plan runs out of cash around
-   month N" when a horizon month died.
+   and a Re-run / Plan again link only when it would change something (the
+   plan is on the previous month's numbers, or came from the built-in
+   rules); an inline amber note for those same two conditions; full plan
+   cards (§4.6) for the domains that are actions; one line "Holding:
+   hiring, pricing." for the rest; the "Nothing to change this month"
+   panel, whose "What each advisor said" opens Why this plan → How the
+   board weighed it, when no card is an action; one red line "In
+   simulation this plan runs out of cash around month N of its 4-month
+   horizon" when a horizon month died (the horizon is named so it cannot
+   seem to contradict the 12-month what-if).
    States rendered in place: **no cycle** → a "No plan yet" panel with
    *Run the plan*; **planning** → "Your board is planning" with the staged
    progress list and "Month k of 4 · m:ss" (elapsed derives from the
@@ -164,8 +176,7 @@ Top to bottom, at most six sections:
    slot. Run, Re-run and Retry call `start()` and stay on This month.
 6. **Outlook** (`outlook.jsx`, "Where this plan takes you"): **one** fan
    chart with a metric switch Revenue / Cash / Customers lost (default:
-   Cash when the runway tile is on watch, Revenue when the efficiency tile
-   is, else Cash). The opening point is the founder's own numbers; the
+   Cash, or Revenue when revenue fell since the previous month). The opening point is the founder's own numbers; the
    line is the stepped path through the horizon and the band the
    per-month spread across simulated worlds (server `projection_band`).
    Everything right of the founder's real numbers sits on a light
@@ -175,7 +186,9 @@ Top to bottom, at most six sections:
    the founder's actual numbers as a marked point labelled "you". One
    caveat line under the chart (`OUTLOOK_CAVEAT` in `loopView.js`). A
    collapsed **"Next 3 months of the plan"** lists each later month's four
-   action lines, filling in as months land ("deliberating…" until then).
+   action lines, filling in as months land ("deliberating…" until then);
+   each landed row is a link to that month's strip (`#/advice/:id/m3`), so
+   every horizon month stays two interactions from This month.
 
 ### 3.5 Why this plan (`pages/Advice.jsx`, `#/advice/:id`)
 
@@ -183,60 +196,71 @@ Why the board recommends the plan and how far to trust it; every trace two
 clicks from This month. Reached from the plan's header or a History entry.
 The actions themselves are not repeated here.
 
-1. **Notice slot** (0–1, `notice.js`): rules-only (whole plan or
-   partial months) · archived analysis ("shown as it was", with *Current
-   plan*). The loser becomes one line under the slot.
+1. **Notice slot** (0–1, `pickNotice`, same priority as §4.12): rules-only
+   (whole plan or partial months) · archived analysis ("shown as it was",
+   with *Current plan*). The loser becomes one line under the slot.
 2. **Summary**: "The board's top focus is Product." + the confidence
-   strip (the capped server sentence, why the analysis ran, whether the
-   brief was reused, numbers-from date).
+   strip: the capped server sentence and why the analysis ran; the
+   numbers-from date only for an archived analysis. Brief reuse is engine
+   detail and lives in the trace.
 3. **Watch-outs / Working in your favor**: the strategist's free-text
    bullets, guard-railed (`guardBullets`: max 3, 140 chars, a bullet whose
    numbers match nothing the founder typed is dropped).
 4. **The plan against doing nothing** (§4.10), run on demand.
 5. **Evidence — what this is based on** (collapsed): the Observed lines
    from the cycle month ("2 similar past months recalled", the revenue
-   trend, "the board's read: churn spiked"), the memories as founder
-   sentences, the causal-graph lines, and the strategist's qualitative
-   expected outcome with the simulated tag — the only place that tag
-   appears.
+   trend, "the board's read: churn spiked") — the one place they appear;
+   the memories as founder sentences, the causal-graph lines, and the
+   strategist's qualitative expected outcome with the simulated tag — the
+   only place that tag appears.
 6. **Assumptions — numbers we guessed (n)** (collapsed): every input the
-   server filled in that the founder could supply, its value and why,
-   "Fill these in" → `#/update/fill`; the projection's own assumptions
-   once it has run; engine internals collapse to "also assumes normal
-   market conditions".
-7. **How the board weighed it** (collapsed): the focus-mix bar from the
-   applied weights + reasoning bullets from the modifier words and the
-   recommended focus.
-8. **How the board got here** (collapsed): the loop lines from the cycle
-   summary (fresh vs reused reads, written back as simulated evidence or
-   "causal evidence graph off", memory scope, deliberation seconds), the
-   sentence that months 2 onward are the model compounded, then one
-   **OEFA strip** (§4.9) per horizon month — month 1 open by default,
-   with the founder's close when there is one. A pre-cycle analysis
-   renders one strip synthesised from its trace.
+   server filled in that the founder could supply, its value and why; the
+   projection's own assumptions once it has run; engine internals collapse
+   to "also assumes normal market conditions". "Fill these in" →
+   `#/update/fill` appears only when the guess is one Close can take
+   (today: acquisition cost, answered by marketing spend and new
+   customers; `CLOSE_FIELDS_FOR_GUESS` in `Company.jsx`) and never in
+   sample mode.
+7. **How the board weighed it** (collapsed; `#/advice/:id/weighed` opens
+   it): the focus-mix bar from the applied weights, reasoning bullets from
+   the modifier words and the recommended focus, and "what each advisor
+   said about what to hold" — the headline and rationale of every domain
+   the board is holding (the action cards on This month carry their own).
+8. **How the board got here** (collapsed; `#/advice/:id/m3` opens it with
+   month 3's strip): the loop lines from the cycle summary (fresh vs
+   reused reads, written back as simulated evidence or "causal evidence
+   graph off", memory scope, deliberation seconds), the sentence that
+   months 2 onward are the model compounded, a line when the cycle was
+   superseded before it finished, then one **OEFA strip** (§4.9) per
+   horizon month — month 1 open by default, its Observed beat reduced to
+   the recall count plus "see Evidence above", with the founder's close
+   when there is one. A pre-cycle analysis renders one strip synthesised
+   from its trace.
 
 ### 3.6 History (`pages/History.jsx`)
 
 Newest-first vertical rail of recorded months. From three months on, three
 mini sparklines (MRR, churn, cash lasts) sit above it. Each entry: month
 name, the risk chip of that month's analysis, "MRR $ (±%) · churn % (±pp) ·
-cash lasts", the plan focus line, and **"Did n of m · partly k"** counted
-over one decision per domain (the Close form's answer wins over any older
-row; legacy "suggested" rows still render with ○ but leave the
-denominator). Expanding shows cash/costs/price, new customers and
-marketing, each decision with its glyph (✓ did, ✎ partly with the
-founder's note, ○ didn't / suggested), **How the plan held up** (the
-close's scored prediction sentences, the score line, and what the board
-changed in the cycle planned on the following month), the **outcome
-badge** once a month six or more months later exists ("6 months later:
-growth / flat / decline — what happened next, not credit", the same ±10%
-rule the engine's memory uses), and "Why this plan".
+cash lasts", the plan focus line, and **"Did 2 · partly 1 · didn't 1 of
+4 actions"** counted over one decision per domain (the Close form's answer
+wins over any older row; legacy "suggested" rows still render but leave
+the denominator). Expanding (`#/history/:monthId` opens an entry directly)
+shows cash/costs/price, new customers and marketing, each decision with
+its glyph (✓ did, ✎ partly with the founder's note, ✕ didn't, ○ a legacy
+suggested row), **How the plan held up** (the close's scored prediction
+sentences, the score line, and what the board changed in the cycle that
+answered the close — the same `answeringCycle` selector This month uses),
+the **outcome badge** once a month six or more months later exists ("6
+months later: growth / flat / decline — what happened next, not credit",
+the same ±10% rule the engine's memory uses), and "Why this plan".
 
 ### 3.7 My company (`pages/Company.jsx` → `CompanyView`)
 
 The data ledger: one line says where the numbers come from ("From your
-September 2026 close (Sep 23). Values without a marker are yours as you
-entered them."), then every value the board uses. Markers appear only on
+September 2026 close (Sep 23)", or "From onboarding (Sep 23)" for month
+0; "Values without a marker are yours as you entered them."), then every
+value the board uses. Markers appear only on
 exceptions — **Derived**, **Estimated by the system** — never on the
 founder's own values. Sections Money (MRR, cash, costs, cash lasts),
 Customers (price, churn, new customers, marketing spend, acquisition cost
@@ -256,12 +280,17 @@ One screen, one submit (the HITL step of the loop).
   *Didn't* shows "You didn't do this, so this month won't count as evidence
   about it." Every action must be answered before submitting.
 - **Number grid**, pre-filled with last month: MRR, cash, costs, monthly
-  churn. New customers, marketing spend and price sit inline when the
-  board guessed nothing, and otherwise under a collapsed **"Numbers we
-  estimated — replace them if you know them (n)"** group that lists what
-  the latest analysis assumed (`#/update/fill` opens it). Instant diff
-  pills (MRR ±%, churn ±pp, cash ±$).
-- **Submit** ("Close the month & plan again"): saves the new month; records
+  churn, new customers, marketing spend, price. When the latest analysis
+  guessed a number Close can take (`CLOSE_FIELDS_FOR_GUESS`: acquisition
+  cost → marketing spend and new customers), only those fields move under
+  a collapsed **"Numbers we estimated — replace them if you know them
+  (n)"** group that lists the guess (`#/update/fill` opens it); every
+  other field, price included, stays inline. Instant diff pills (MRR ±%,
+  churn ±pp, cash ±$).
+- **Submit** ("Close the month & plan again"): guarded synchronously
+  against a second click; the whole form is disabled and "Scoring last
+  month's plan… this can take up to a minute" shows while the close is
+  awaited. It saves the new month; records
   the answers as the planned month's decisions; awaits the close
   (`POST /api/cycles/{id}/feedback`, 60 s timeout) with the answers and
   the actual numbers; stores the server's result (prediction error, what
@@ -274,7 +303,11 @@ One screen, one submit (the HITL step of the loop).
 
 ### 3.9 Settings (`pages/Settings.jsx`)
 
-- **Advice**: toggle for richer per-advisor explanations.
+- **Advice**: toggle for richer per-advisor explanations. When on, each
+  plan card's rationale on This month is the advisor's own two-sentence
+  reasoning (`analysis.narratives`) instead of the rule-based sentence,
+  and the Analyzing progress list says the advisors are writing it (about
+  a minute longer).
 - **Engine status** (collapsed; the title says connected / not reachable):
   the connection line, then the loop capability list from `/api/health`:
   advisor mode, and three lines each on/off with the server's reason —
@@ -295,17 +328,17 @@ One screen, one submit (the HITL step of the loop).
 | Component | What it shows |
 |---|---|
 | 4.1 `RiskChip` | Risk enum → "Low / Moderate / Elevated / Critical risk", green/blue/amber/red, shield or warning icon. |
-| 4.2 `ProvChip` | Provenance, exceptions only: Estimated by the system / Derived / Simulated. Renders nothing for a value the founder provided. |
+| 4.2 `ProvChip` | Provenance, exceptions only: Estimated by the system / Derived. Renders nothing for a value the founder provided. Simulated values carry `SimulatedTag`, inside Evidence only. |
 | 4.3 `DeltaArrow` | ±value with up/down arrow; colour depends on whether up is good (`goodWhenDown` for churn); "flat" under 0.05. |
 | 4.4 `Banner`, `Notice`, `SimulatedTag`, `DemoBadge`, `Expandable` | Info/warn banners with optional actions; `Notice` renders what `pickNotice` chose; the flask "From simulations, not real companies" tag (Evidence only); "Sample company — data is illustrative"; one collapsed panel section. |
 | 4.5 `KpiCard` | Label, big value, sub-line or delta, optional watch band, hover hint with the definition and the derived sentence. |
-| 4.6 `buildPlanCards` / `PlanCard` | The board's final action → four cards: **Product & retention** ("Invest ≈$X in product" / "Hold product spend"), **Marketing & growth** ("Spend ≈$X on performance channels / brand building", "up/down from the ≈$Y you reported"), **Hiring** ("Room to add ≈$/mo of payroll" / "Wait on hiring"), **Pricing** ("Consider a ≈N% price increase" / "Hold pricing"). Each has a rationale sentence, a "Why this number?" chain (% of monthly revenue → base rule → strategic adjustment in words like "scaled back" → floor), an `isAction` flag and a Priority pill on the domain matching the board's top weight. No accept toggle: the founder answers once, on the Close form. Rendered in exactly two places — This month and the Close form. |
+| 4.6 `buildPlanCards` / `PlanCard` | The board's final action → four cards: **Product & retention** ("Invest ≈$X in product" / "Hold product spend"), **Marketing & growth** ("Spend ≈$X on performance channels / brand building", "up/down from the ≈$Y you reported"), **Hiring** ("Room to add ≈$/mo of payroll" / "Wait on hiring"), **Pricing** ("Consider a ≈N% price increase" / "Hold pricing"). Each has a rationale sentence, a "Why this number?" chain (% of monthly revenue → base rule → strategic adjustment in words like "scaled back" → floor), an `isAction` flag and a Priority pill on the domain matching the board's top weight. No accept toggle: the founder answers once, on the Close form. The card component renders only on This month; the Close form uses the same plan-card data (domain and headline) as its did / partly / didn't rows, so an action is described from one source in exactly two places. |
 | 4.7 `FocusBar` | The board's applied weights as a four-segment bar: Product / Growth / Efficiency / Market. |
 | 4.8 `EvidenceList`, `observedLines`, `ConfidenceStrip` / `confidenceLine`, `RiskBullets`, `ProgressStages`, `MiniLine`, `OutcomeBadge` | Memories rewritten as "A simulated company at <stage, churn, momentum> grew/declined/stayed flat over the following 6 months"; causal-graph lines split into *observed in past runs* vs *the board's working assumption (a built-in prior)*; the Observed beat's sentences, shared by the strip and the Evidence section; the capped confidence sentence (server verbatim, client fallback for pre-display analyses); the guarded bullets; the three-stage progress list; sparklines; the 6-months-later badge. |
-| 4.9 `OefaStrip` | **Observed · Decided · Expected · Changed**, one component for every cycle month, under "How the board got here" (Why this plan). Header: toggle with the month label; no chips. *Observed*: "n similar past months recalled", revenue trend word, "the board's read: cash ran tight / churn spiked / …" (stress node in founder words), "causal evidence graph off" when it is. *Decided*: the four action lines, why the analysis ran, brief fresh/reused, "strategist unreachable — built-in rules" when so. *Expected*: "revenue +9.5%, churn −0.3pp, cash −3.5% over 2 months", or "no numeric prediction on this analysis". *Changed*: labelled **Changed (in simulation)** with "model consistency check, not accuracy" when scored against the simulated next state ("the simulation did $39k — we were 8% high"), or **Changed (your numbers)** once closed against the founder's real numbers; the score line; what the board changed (brief refreshed/reused and why, weight moves in founder words, per-agent adaptation sentences such as "Last month's plan expected churn −0.3pp and saw +0.2pp; product spend is held back 25% this month"); whether the month was written back as *simulated* evidence, kept apart from anything real, or the close's evidence reason. |
-| 4.10 `WhatIfPanel` / `FanChart` / `WhatIfAssumptions` | 12-month projection under two arms — the board's plan vs doing nothing (a third research arm exists server-side and is not drawn). Visible: a headline if the board's own plan ran out of cash, the summary table (revenue/cash at 12 mo, survives %, efficiency, and shock cost / recovery when a shock is on) and the server's caveat sentence. Behind **"Show the charts"**: the legend, the competitor-shock toggle, four fan-charts (revenue, cash, customers lost, and spend-per-$1 or Rule of 40 depending on size), the survivor note when lines go dashed, the seed count and the "conditions diverged" warning. The projection's assumptions render in Why's Assumptions section. `FanChart` also takes `shadeFrom` (the projected band), `markers` (filled points) and `xEndLabel` for the Outlook. |
+| 4.9 `OefaStrip` | **Observed · Decided · Expected · Changed**, one component for every cycle month, under "How the board got here" (Why this plan). Header: toggle with the month label; no chips. *Observed*: "n similar past months recalled", revenue trend word, "the board's read: cash ran tight / churn spiked / …" (stress node in founder words), "causal evidence graph off" when it is — or, for the month whose lines the page's Evidence section already carries, the recall count plus "see Evidence above". *Decided*: the four action lines, why the analysis ran, brief fresh/reused, "strategist unreachable — built-in rules" when so. *Expected*: "revenue +9.5%, churn −0.3pp, cash −3.5% over 2 months", or "no numeric prediction on this analysis". *Changed*: labelled **Changed (in simulation)** with "model consistency check, not accuracy" when scored against the simulated next state ("the simulation did $39k — we were 8% high"), or **Changed (your numbers)** once closed against the founder's real numbers; the score line; what the board changed (brief refreshed/reused and why, weight moves in founder words, per-agent adaptation sentences such as "Last month's plan expected churn −0.3pp and saw +0.2pp; product spend is held back 25% this month"); whether the month was written back as *simulated* evidence, kept apart from anything real, or the close's evidence reason. |
+| 4.10 `WhatIfPanel` / `FanChart` / `WhatIfAssumptions` | 12-month projection under two arms — the board's plan vs doing nothing (a third research arm exists server-side and is not drawn). Visible: a headline if the board's own plan ran out of cash ("Over 12 simulated months, the board's plan ran out of cash in …" — the horizon named so it cannot seem to contradict This month's 4-month line), the summary table (revenue/cash at 12 mo, "Survives (of simulated runs)", efficiency, and shock cost / recovery when a shock is on) and the server's caveat sentence. Behind **"Show the charts"**: the legend, the competitor-shock toggle, four fan-charts (revenue, cash, customers lost, and spend-per-$1 or Rule of 40 depending on size), the survivor note when lines go dashed, the seed count and the "conditions diverged" warning. The projection's assumptions render in Why's Assumptions section. `FanChart` also takes `shadeFrom` (the projected band), `markers` (filled points) and `xEndLabel` for the Outlook. |
 | 4.11 `Outlook` / `defaultOutlookMetric` | The This-month chart (§3.4.6). |
-| 4.12 `pickNotice` / `rulesOnlyMonths` (`notice.js`) | The one-notice rule: at most one notice per page, in priority — engine unreachable / cycle failed / start failed (with the action) · sample company (Close only) · rules-only (whole plan, or "Months 3–4") · archived analysis (Why only) — plus one inline sentence per condition that lost the slot. |
+| 4.12 `pickNotice` / `rulesOnlyMonths` (`notice.js`) | The one-notice rule: at most one notice per page, in this priority — start failed (Retry) · cycle failed (Re-run) · lost contact with a running cycle · sample company (Close only) · rules-only (whole plan, or "Months 3–4") · archived analysis (Why only, with Current plan) — plus one inline sentence per condition that lost the slot. §3.4 and §3.5 list the same conditions in the same order. |
 
 ---
 
@@ -350,7 +383,7 @@ from these files or from a server `display` block.
              decisions: [{ id, domain, text, state: accepted|custom|declined|suggested, note? }] }],
   analyses: [{ id, monthId, cycleId?, monthIndex?, createdAt, source: api|cycle|sample,
                llm_ok, reason, brief, trace, display, narratives }],
-  cycles:   [{ id, monthId, createdAt, source, status: queued|running|completed|failed,
+  cycles:   [{ id, monthId, createdAt, source, status: queued|running|completed|failed|superseded,
                horizon, months: [<cycle month>], summary, meta, error,
                feedback: [{ monthIndex, submitted, result, error, closedAt }],
                startedFromTrackRecord }],
@@ -360,12 +393,16 @@ from these files or from a server `display` block.
 
 Actions: ENTER_DEMO / EXIT_DEMO, IMPORT_STATE (seeded workspace),
 SAVE_DRAFT, CREATE_COMPANY, ADD_MONTH, ADD_ANALYSIS (idempotent per
-cycle month), ADD_CYCLE (idempotent per id), UPDATE_CYCLE,
+cycle month), ADD_CYCLE (idempotent per id; any earlier cycle still
+`queued`/`running` becomes `superseded`, since only the latest cycle is
+polled), UPDATE_CYCLE,
 SET_CYCLE_FEEDBACK, SET_DECISION, SET_SETTING, RESET_ALL. `StoreProvider`
 takes an optional `initialState` for tests. Selectors: latest/previous
 month, latest analysis, analysis for month, month by id, latest cycle,
 cycle for month/by id, latest closed feedback, feedback for a cycle month,
-`analysisFromCycle` (month 1 of a cycle → an analysis record).
+`answeringCycle` (the cycle planned on the month after a closed cycle's,
+and not the closed cycle itself), `analysisFromCycle` (month 1 of a cycle
+→ an analysis record).
 
 Stored data from before the simplification still renders: analyses without
 `display`, decisions with `state: "suggested"`, cycles without `feedback`,

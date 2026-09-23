@@ -3,17 +3,17 @@
 // once 3 snapshots exist. Each entry expands to its own record of the plan
 // made on that month (docs/ui_simplification_plan.md Phase F.1).
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import {
-  useStore, analysisForMonth, cycleForMonth, feedbackForCycleMonth
+  useStore, analysisForMonth, cycleForMonth, feedbackForCycleMonth, answeringCycle
 } from "../store.jsx";
 import {
   money, pct, signedPct, signedPp, monthName, monthDeltas, monthsLabel
 } from "../derive.js";
 import { runwayMonths, runwayLabel } from "../founderView.js";
 import { RiskChip, MiniLine, OutcomeBadge } from "../components.jsx";
-import { predictionSentences, scoreLine } from "../loopView.js";
+import { predictionSentences, scoreLine, boardChangedLines } from "../loopView.js";
 
 // Mirror of the engine's outcome labelling (classify_realized_outcome): ±10% MRR
 // over a 6-month horizon. Pure arithmetic on the founder's own numbers.
@@ -28,8 +28,9 @@ function maturedOutcome(months, index) {
 }
 
 // How the plan made on `month` held up: the close's scored prediction, and
-// what the board did with it in the cycle planned on the following month.
-function heldUp(state, month, next) {
+// what the board did with it in the cycle that answered the close (the same
+// selector This month's card uses, so the two cannot drift apart).
+function heldUp(state, month) {
   const cycle = cycleForMonth(state, month.id);
   const closed = cycle ? feedbackForCycleMonth(cycle, 1) : null;
   const month1 = cycle?.months?.[0];
@@ -41,20 +42,20 @@ function heldUp(state, month, next) {
     expected: month1.execute?.expected_delta,
     error: result.prediction_error
   });
-  const answering = next ? cycleForMonth(state, next.id) : null;
-  const adapt = answering && answering.id !== cycle.id ? answering.months?.[0]?.adapt : null;
-  let changed = null;
-  if (adapt) {
-    const adaptations = adapt.adaptations || [];
-    if (adaptations.length) changed = adaptations.map((a) => `${a.agent}: ${a.sentence}`);
-    else if (answering.startedFromTrackRecord) changed = ["The board planned the next month with this result in hand."];
-  }
+  const changed = boardChangedLines(answeringCycle(state, cycle), { tense: "next" });
   return { lines, score: scoreLine(result.prediction_error), changed };
 }
 
-function MonthEntry({ month, prev, next, analysis, outcome, navigate }) {
+// ✓ did · ✎ partly · ✕ didn't · ○ a legacy "suggested" row (never asked)
+const DECISION_GLYPH = { accepted: "✓", custom: "✎", declined: "✕", suggested: "○" };
+
+function MonthEntry({ month, prev, analysis, outcome, navigate, openInitially = false }) {
   const { state } = useStore();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openInitially);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (openInitially && ref.current?.scrollIntoView) ref.current.scrollIntoView({ block: "start" });
+  }, [openInitially]);
   const v = month.values;
   const deltas = monthDeltas(month, prev);
   // One decision per domain, last entry wins: the Close form appends its
@@ -68,10 +69,11 @@ function MonthEntry({ month, prev, next, analysis, outcome, navigate }) {
   const asked = decisions.filter((d) => d.state !== "suggested");
   const did = asked.filter((d) => d.state === "accepted").length;
   const partly = asked.filter((d) => d.state === "custom").length;
-  const record = heldUp(state, month, next);
+  const didnt = asked.filter((d) => d.state === "declined").length;
+  const record = heldUp(state, month);
 
   return (
-    <li className="timeline-entry">
+    <li className="timeline-entry" ref={ref}>
       <div className="timeline-rail"><i /></div>
       <div className="timeline-card">
         <button className="timeline-head" type="button" onClick={() => setOpen(!open)}>
@@ -89,7 +91,8 @@ function MonthEntry({ month, prev, next, analysis, outcome, navigate }) {
         )}
         {asked.length > 0 && (
           <p className="timeline-decisions">
-            Did {did} of {asked.length}{partly > 0 && ` · partly ${partly}`}
+            {[`Did ${did}`, partly > 0 ? `partly ${partly}` : null, didnt > 0 ? `didn't ${didnt}` : null]
+              .filter(Boolean).join(" · ")} of {asked.length} action{asked.length === 1 ? "" : "s"}
           </p>
         )}
         {open && (
@@ -99,7 +102,7 @@ function MonthEntry({ month, prev, next, analysis, outcome, navigate }) {
               {v.newCustomers != null && <li>{v.newCustomers} new customers · marketing {money(v.marketingSpend)}</li>}
               {decisions.map((d) => (
                 <li key={d.id} className={`decision-line ${d.state}`}>
-                  {d.state === "accepted" ? "✓" : d.state === "custom" ? "✎" : "○"} {d.text}
+                  {DECISION_GLYPH[d.state] || "○"} {d.text}
                   {d.note && <em> — {d.note}</em>}
                 </li>
               ))}
@@ -129,7 +132,7 @@ function MonthEntry({ month, prev, next, analysis, outcome, navigate }) {
   );
 }
 
-export default function History({ navigate }) {
+export default function History({ navigate, params = {} }) {
   const { state } = useStore();
   const months = state.months;
 
@@ -164,10 +167,10 @@ export default function History({ navigate }) {
             key={m.id}
             month={m}
             prev={newestFirst[i + 1] || null}
-            next={newestFirst[i - 1] || null}
             analysis={analysisForMonth(state, m.id)}
             outcome={maturedOutcome(months, months.indexOf(m))}
             navigate={navigate}
+            openInitially={params.monthId === m.id}
           />
         ))}
       </ol>

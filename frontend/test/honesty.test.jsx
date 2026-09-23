@@ -10,13 +10,28 @@
 // engine vocabulary, and the cycle fixtures here would trip it.
 
 import React from "react";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { render, cleanup, fireEvent, act } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { render, cleanup, fireEvent, act, waitFor } from "@testing-library/react";
 
 import { StoreProvider } from "../src/store.jsx";
 import { CycleRunProvider } from "../src/cycleRun.jsx";
 import { Shell } from "../src/App.jsx";
 import { SAMPLE } from "../src/sample.js";
+import { predictionSentences, scoreLine } from "../src/loopView.js";
+
+// The engine is never reached from here: every fetch fails as if the API
+// were down, unless a test stubs it otherwise.
+const offline = () => Promise.reject(new TypeError("Failed to fetch"));
+
+// A state in which the latest cycle is the founder's current month and is
+// still deliberating (nothing landed yet), or has failed.
+function withLatestCycle(edit) {
+  return ownState((s) => {
+    const c = s.cycles[s.cycles.length - 1];
+    c.source = "api";
+    edit(c, s);
+  });
+}
 
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
@@ -52,8 +67,8 @@ function expandAll(container) {
   }
 }
 
-beforeEach(() => { window.localStorage.clear(); });
-afterEach(() => { cleanup(); window.location.hash = ""; });
+beforeEach(() => { window.localStorage.clear(); vi.stubGlobal("fetch", vi.fn(offline)); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.location.hash = ""; });
 
 const ROUTES = ["/home", "/advice/a3", "/history", "/company", "/settings", "/update"];
 
@@ -121,6 +136,66 @@ describe("rule 7 — the sample company is labelled on every route", () => {
   });
 });
 
+describe("rule 1 — every failure state gets its one notice, with the action", () => {
+  it("start failed: one notice with Retry only, nothing invented", async () => {
+    const state = ownState((s) => { s.cycles = []; s.analyses = []; });
+    const { container } = renderAt("/home", state);
+    const run = [...container.querySelectorAll("button")].find((b) => /Run the plan/.test(b.textContent));
+    await act(async () => { fireEvent.click(run); });
+    await waitFor(() => expect(container.querySelectorAll(".banner").length).toBe(1));
+    const banner = container.querySelector(".banner");
+    expect(banner.textContent).toMatch(/couldn't be reached/);
+    expect(banner.textContent).toMatch(/Retry/);
+    expect(banner.textContent).not.toMatch(/Continue without a plan/);
+    expect(JSON.parse(window.localStorage.getItem("ssom_founder_v1")).cycles.length).toBe(0);
+  });
+
+  it("cycle failed: one notice with the engine's reason and Re-run", () => {
+    const state = withLatestCycle((c) => { c.status = "failed"; c.error = "engine restarted"; c.months = []; });
+    const { container } = renderAt("/home", state);
+    const banners = container.querySelectorAll(".banner");
+    expect(banners.length).toBe(1);
+    expect(banners[0].textContent).toMatch(/failed on the engine: engine restarted/);
+    expect(banners[0].textContent).toMatch(/Re-run/);
+  });
+
+  it("lost contact: one notice while a running cycle cannot be polled", async () => {
+    const state = withLatestCycle((c) => { c.status = "running"; c.months = []; });
+    const { container } = renderAt("/home", state);
+    await waitFor(() => expect(container.querySelectorAll(".banner").length).toBe(1));
+    expect(container.querySelector(".banner").textContent).toMatch(/Lost contact/);
+  });
+
+  it("archived analysis: one notice with Current plan", () => {
+    const { container } = renderAt("/advice/a2", ownState());
+    const banners = container.querySelectorAll(".banner");
+    expect(banners.length).toBe(1);
+    expect(banners[0].textContent).toMatch(/Archived analysis/);
+    expect(banners[0].textContent).toMatch(/Current plan/);
+  });
+
+  it("stale numbers, rules-only and a failed cycle together: the failure wins, the rest is one line", () => {
+    const state = ownState((s) => {
+      // The founder closed September; the cycle planned on it failed before
+      // any month landed, its summary says no month had the strategist; the
+      // plan on screen is still August's.
+      s.months.push({ ...clone(s.months[2]), id: "m4", index: 3 });
+      const c = clone(s.cycles[1]);
+      c.id = "c3"; c.monthId = "m4"; c.status = "failed"; c.error = "engine restarted";
+      c.months = [];
+      c.summary = { ...c.summary, llm_ok_months: 0, months_completed: 0 };
+      s.cycles.push(c);
+    });
+    const { container } = renderAt("/home", state);
+    const banners = container.querySelectorAll(".banner");
+    expect(banners.length).toBe(1);
+    expect(banners[0].textContent).toMatch(/failed on the engine/);
+    const note = container.querySelector(".plan-note").textContent;
+    expect(note).toMatch(/previous numbers/);
+    expect(note).toMatch(/built-in rules/);
+  });
+});
+
 describe("the one-notice rule", () => {
   it("This month never shows more than one banner", () => {
     for (const state of [ownState(), sampleState(), ownState((s) => {
@@ -149,17 +224,24 @@ describe("the one-notice rule", () => {
 });
 
 describe("rule 6 — the numbers we guessed are asked for at the moment of choice", () => {
-  it("Close groups the optional numbers under 'numbers we estimated' when the board guessed one, open from the deep link", () => {
-    const state = ownState((s) => {
-      s.analyses[s.analyses.length - 1].trace.assumed_fields = [
-        { field: "Acquisition cost", value: "$50", why: "not supplied", correctable: true },
-        { field: "Unemployment", value: "4.0%", why: "typical conditions", correctable: false }
-      ];
-    });
-    const { container } = renderAt("/update/fill", state);
-    expect(container.querySelector(".fill-group.open")).not.toBeNull();
-    expect(container.textContent).toMatch(/Numbers we estimated/);
-    expect(container.textContent).toMatch(/Acquisition cost/);
+  const guessedCac = (s) => {
+    s.analyses[s.analyses.length - 1].trace.assumed_fields = [
+      { field: "Acquisition cost", value: "$50", why: "not supplied", correctable: true },
+      { field: "Churn split", value: "one blended rate", why: "not supplied", correctable: true },
+      { field: "Unemployment", value: "4.0%", why: "typical conditions", correctable: false }
+    ];
+  };
+
+  it("Close groups only the fields that answer a guess, open from the deep link; price stays inline", () => {
+    const { container } = renderAt("/update/fill", ownState(guessedCac));
+    const group = container.querySelector(".fill-group.open");
+    expect(group).not.toBeNull();
+    expect(group.textContent).toMatch(/Acquisition cost/);
+    expect(group.textContent).not.toMatch(/Churn split/);
+    const grouped = [...group.querySelectorAll(".ffield-label")].map((l) => l.textContent);
+    expect(grouped).toEqual(["New customers last month (optional)", "Marketing spend last month (optional)"]);
+    const inline = [...container.querySelectorAll(".update-grid .ffield-label")].map((l) => l.textContent);
+    expect(inline).toContain("Average price (optional)");
     expect(container.querySelectorAll(".update-grid .ffield").length).toBe(7);
   });
 
@@ -167,6 +249,113 @@ describe("rule 6 — the numbers we guessed are asked for at the moment of choic
     const { container } = renderAt("/update", ownState());
     expect(container.querySelector(".fill-group")).toBeNull();
     expect(container.querySelectorAll(".update-grid .ffield").length).toBe(7);
+  });
+
+  it("Why offers 'Fill these in' only for a guess Close can take, and never in sample mode", () => {
+    const open = (container) => {
+      const head = [...container.querySelectorAll(".expand-head")].find((h) => /Assumptions/.test(h.textContent));
+      act(() => { fireEvent.click(head); });
+    };
+    const a = renderAt("/advice/a3", ownState(guessedCac));
+    open(a.container);
+    expect(a.container.textContent).toMatch(/Fill these in/);
+    a.unmount();
+    const b = renderAt("/advice/a3", ownState((s) => {
+      s.analyses[2].trace.assumed_fields = [{ field: "Churn split", value: "one blended rate", why: "not supplied", correctable: true }];
+    }));
+    open(b.container);
+    expect(b.container.textContent).not.toMatch(/Fill these in/);
+    b.unmount();
+    const c = renderAt("/advice/a3", sampleState(guessedCac));
+    open(c.container);
+    expect(c.container.textContent).not.toMatch(/Fill these in/);
+  });
+});
+
+describe("the close form", () => {
+  it("cannot be submitted twice while the feedback is being scored", async () => {
+    // The feedback POST never resolves within the test; the second click
+    // must not add a second month.
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+    const { container } = renderAt("/update", ownState());
+    for (const b of container.querySelectorAll(".did-option")) {
+      if (/Did it/.test(b.textContent)) act(() => { fireEvent.click(b); });
+    }
+    const submit = [...container.querySelectorAll("button")].find((b) => /Close the month & plan/.test(b.textContent));
+    expect(submit.disabled).toBe(false);
+    await act(async () => { fireEvent.click(submit); fireEvent.click(submit); });
+    await waitFor(() => expect(container.textContent).toMatch(/Scoring last month/));
+    expect(JSON.parse(window.localStorage.getItem("ssom_founder_v1")).months.length).toBe(4);
+    expect(container.querySelector("fieldset.close-fields").disabled).toBe(true);
+    expect(window.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("History", () => {
+  it("gives didn't its own mark and spells the line out", () => {
+    const { container } = renderAt("/history", ownState());
+    const lines = [...container.querySelectorAll(".timeline-decisions")].map((d) => d.textContent);
+    expect(lines).toContain("Did 1 · partly 1 · didn't 1 of 3 actions");
+    const heads = container.querySelectorAll(".timeline-head");
+    act(() => { fireEvent.click(heads[1]); });
+    expect(container.querySelector(".decision-line.declined").textContent).toMatch(/^✕/);
+    expect(container.querySelector(".decision-line.accepted").textContent).toMatch(/^✓/);
+  });
+
+  it("opens the entry This month's Details link points at", () => {
+    const { container } = renderAt("/history/m2", ownState());
+    const detail = container.querySelector(".timeline-detail");
+    expect(detail).not.toBeNull();
+    expect(detail.textContent).toMatch(/How the plan held up/);
+  });
+});
+
+describe("the score line and the sentences agree", () => {
+  it("writes a sentence for every scored KPI, runway included", () => {
+    const error = {
+      mrr_pct: { expected: 4, realized: 2, within_tolerance: false, sign_agrees: true },
+      cash_pct: { expected: -3, realized: -2, within_tolerance: true, sign_agrees: true },
+      churn_pp: { expected: -0.2, realized: -0.1, within_tolerance: true, sign_agrees: true },
+      runway_months: { expected: -0.6, realized: -1.4, within_tolerance: false, sign_agrees: true },
+      summary: { kpis_scored: 4, within_tolerance: 2, sign_agrees: 4 }
+    };
+    const lines = predictionSentences({
+      before: { mrr: 30000, cash: 300000 }, actual: { mrr: 30600, cash: 294000 },
+      expected: { mrr_pct: 4 }, error
+    });
+    expect(lines.length).toBe(4);
+    expect(lines[3].text).toMatch(/Cash lasts: the board expected -0.6 mo, it moved -1.4 mo/);
+    expect(scoreLine(error)).toMatch(/4 of 4/);
+  });
+});
+
+describe("This month asks for engine time only when it would change something", () => {
+  it("offers no Re-run on a fresh plan on the current numbers", () => {
+    const { container } = renderAt("/home", ownState());
+    expect(container.querySelector(".plan-section-actions").textContent).not.toMatch(/Re-run|Plan again/);
+  });
+
+  it("offers Plan again when the numbers moved on", () => {
+    const state = ownState((s) => { s.months.push({ ...clone(s.months[2]), id: "m4", index: 3 }); });
+    const { container } = renderAt("/home", state);
+    expect(container.querySelector(".plan-section-actions").textContent).toMatch(/Plan again/);
+  });
+
+  it("links each later month straight to its strip on Why this plan", () => {
+    const { container } = renderAt("/home", ownState());
+    const head = [...container.querySelectorAll(".expand-head")].find((h) => /Next 3 months/.test(h.textContent));
+    act(() => { fireEvent.click(head); });
+    const links = container.querySelectorAll(".next-month-link");
+    expect(links.length).toBe(3);
+    act(() => { fireEvent.click(links[1]); });
+    expect(window.location.hash).toBe("#/advice/a3/m3");
+  });
+
+  it("a deep link opens that month's strip under How the board got here", () => {
+    const { container } = renderAt("/advice/a3/m3", ownState());
+    const strips = container.querySelectorAll(".trace-months .oefa-strip");
+    expect(strips.length).toBe(4);
+    expect([...strips].map((s) => s.classList.contains("open"))).toEqual([false, false, true, false]);
   });
 });
 

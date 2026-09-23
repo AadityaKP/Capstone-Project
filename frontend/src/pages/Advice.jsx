@@ -15,8 +15,9 @@ import {
 import { expectedOutcomeCopy, scaleWord, FOCUS_LABELS } from "../copy.js";
 import {
   Notice, FocusBar, EvidenceList, ConfidenceStrip, RiskBullets, SimulatedTag,
-  OefaStrip, monthFromAnalysis, observedLines, Expandable
+  OefaStrip, monthFromAnalysis, observedLines, Expandable, buildPlanCards
 } from "../components.jsx";
+import { fillableGuesses } from "./Company.jsx";
 import { pickNotice, rulesOnlyMonths } from "../notice.js";
 import { deriveCac, deriveLtv, monthName, monthOffsetLabel } from "../derive.js";
 import { runwayMonths } from "../founderView.js";
@@ -48,6 +49,10 @@ export default function Advice({ navigate, params }) {
       }))
     : [{ key: 1, title: null, month: monthFromAnalysis(analysis), closed: null }].filter((t) => t.month);
   const thisMonth = traceMonths.find((t) => t.key === (analysis?.monthIndex || 1)) || traceMonths[0] || null;
+  // Deep links: #/advice/:id/m3 opens month 3's strip, #/advice/:id/weighed
+  // opens "How the board weighed it".
+  const openMonth = /^m(\d+)$/.test(params?.open || "") ? Number(params.open.slice(1)) : null;
+  const openWeighed = params?.open === "weighed";
 
   // What-if projection (D5). Run on demand rather than with the analysis: it is
   // a separate question, and firing it automatically would spend the founder's
@@ -121,6 +126,12 @@ export default function Advice({ navigate, params }) {
 
   const observed = observedLines(thisMonth?.month?.observe);
   const hasAssumptions = correctable.length > 0 || internalCount > 0 || (whatIf?.assumptions?.length > 0);
+  // "Fill these in" only when Close can actually take the number, and never
+  // in sample mode, where the form is disabled.
+  const canFill = !state.demo && fillableGuesses(correctable).length > 0;
+  // What each advisor said about the domains it is holding: the one place
+  // that text appears (the action cards on This month carry their own).
+  const held = buildPlanCards(analysis, month).filter((c) => !c.isAction);
 
   const rulesOnly = cycle
     ? (cycle.meta?.use_oracle === false ? null : rulesOnlyMonths(cycleMonths))
@@ -147,7 +158,7 @@ export default function Advice({ navigate, params }) {
       {/* Summary */}
       <article className="panel summary-panel">
         <h3>{weights ? `The board's top focus is ${FOCUS_LABELS[topWeightKey]}.` : "The board's read of this month."}</h3>
-        <ConfidenceStrip analysis={analysis} month={month} company={state.company} />
+        <ConfidenceStrip analysis={analysis} month={month} company={state.company} archived={!!isArchived} />
       </article>
 
       {/* guarded LLM bullets */}
@@ -205,9 +216,11 @@ export default function Advice({ navigate, params }) {
                   </li>
                 ))}
               </ul>
-              <button className="link-button" type="button" onClick={() => navigate("/update/fill")}>
-                Fill these in <ChevronRight size={15} />
-              </button>
+              {canFill && (
+                <button className="link-button" type="button" onClick={() => navigate("/update/fill")}>
+                  Fill these in <ChevronRight size={15} />
+                </button>
+              )}
             </>
           )}
           {whatIf?.assumptions?.length > 0 && (
@@ -223,21 +236,29 @@ export default function Advice({ navigate, params }) {
       )}
 
       {/* How the board weighed it */}
-      <Expandable title="How the board weighed it">
+      <Expandable title="How the board weighed it" defaultOpen={openWeighed}>
         <FocusBar weights={weights} />
         {reasoningBullets.length > 0 && (
           <ul className="reason-list">
             {reasoningBullets.map((b) => <li key={b}>{b}</li>)}
           </ul>
         )}
+        {held.length > 0 && (
+          <div className="held-domains">
+            <span className="bullets-title">What each advisor said about what to hold</span>
+            <ul className="reason-list">
+              {held.map((c) => <li key={c.domain}><strong>{c.title} — {c.headline}.</strong> {c.rationale}</li>)}
+            </ul>
+          </div>
+        )}
         {analysis.narratives && (
-          <p className="subtle">Each action on This month carries its advisor's own reasoning.</p>
+          <p className="subtle">Each action on This month carries its advisor's own two-sentence reasoning (Settings → richer explanations).</p>
         )}
       </Expandable>
 
       {/* How the board got here: the OEFA beats for every month of the cycle */}
       {traceMonths.length > 0 && (
-        <Expandable title="How the board got here">
+        <Expandable title="How the board got here" defaultOpen={openMonth != null}>
           {cycle?.summary && (
             <ul className="trace-lines">
               {loopLines(cycle.summary).map((l) => <li key={l}>{l}</li>)}
@@ -249,6 +270,12 @@ export default function Advice({ navigate, params }) {
               compounded, checked against themselves, not a forecast.
             </p>
           )}
+          {cycle?.status === "superseded" && (
+            <p className="subtle">
+              This plan was replaced by a newer one before it finished; the months it never
+              reached are not shown.
+            </p>
+          )}
           <div className="trace-months">
             {traceMonths.map((t) => (
               <OefaStrip
@@ -256,7 +283,8 @@ export default function Advice({ navigate, params }) {
                 month={t.month}
                 closed={t.closed}
                 title={t.title}
-                defaultOpen={t === thisMonth}
+                defaultOpen={openMonth != null ? t.key === openMonth : t === thisMonth}
+                observedInEvidence={t === thisMonth}
               />
             ))}
           </div>

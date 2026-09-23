@@ -73,7 +73,35 @@ export function predictionSentences({ before, actual, expected, error, basis = "
       text: `Cash: expected ${money(projectedFrom(before.cash, cash.expected))}, ended at ${money(actual.cash)}.`
     });
   }
+  // The server scores runway too when both sides were burning cash; without
+  // a sentence for it the score line ("3 of 4") would not match the list.
+  const runway = error.runway_months;
+  if (runway) {
+    out.push({
+      key: "runway_months",
+      tone: runway.within_tolerance ? "good" : runway.sign_agrees ? "warn" : "bad",
+      text: `Cash lasts: the board expected ${fmtDelta("runway_months", runway.expected)}, it moved ${fmtDelta("runway_months", runway.realized)}.`
+    });
+  }
   return out;
+}
+
+// "What the board changed" after a close, read from the cycle that answered
+// it (store.answeringCycle): nothing while it is still deliberating; its
+// per-agent adaptation sentences once month 1 has landed; otherwise, when it
+// started from the track record, the one sentence that is true (decision
+// D4 — the LLM path returns no adaptation sentence).
+export function boardChangedLines(answering, { tense = "this" } = {}) {
+  const adapt = answering?.months?.[0]?.adapt;
+  if (!adapt) return null;
+  const adaptations = adapt.adaptations || [];
+  if (adaptations.length) return adaptations.map((a) => `${a.agent}: ${a.sentence}`);
+  if (answering.startedFromTrackRecord) {
+    return [tense === "this"
+      ? "The board planned this month with last month's result in hand."
+      : "The board planned the next month with this result in hand."];
+  }
+  return null;
 }
 
 // The one-line verdict on a scored prediction.
@@ -116,6 +144,12 @@ export const OUTLOOK_CAVEAT =
 export function cashDeathMonth(months) {
   const i = (months || []).findIndex((m) => m?.feedback?.state_after?.survived === false);
   return i < 0 ? null : i + 1;
+}
+
+// The horizon is named so the sentence cannot seem to contradict the
+// twelve-month what-if projection on Why this plan.
+export function cashDeathSentence(month, horizon) {
+  return `In simulation this plan runs out of cash around month ${month} of its ${horizon}-month horizon.`;
 }
 
 // Which of the plan's four domains were actually actions this month.

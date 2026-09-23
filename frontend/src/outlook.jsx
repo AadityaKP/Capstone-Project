@@ -8,6 +8,7 @@
 // list of what the plan asks for in months 2 onward sits collapsed below.
 
 import React, { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { money, monthOffsetLabel } from "./derive.js";
 import { FanChart } from "./whatif.jsx";
 import { Expandable } from "./components.jsx";
@@ -21,11 +22,10 @@ export const OUTLOOK_METRICS = [
   { key: "churn_pct", label: "Customers lost", format: (v) => `1 in ${Math.round(100 / Math.max(v, 0.01))}` }
 ];
 
-// Cash when runway is on watch, Revenue when acquisition efficiency is, else Cash.
-export function defaultOutlookMetric({ runwayWatch, efficiencyWatch }) {
-  if (runwayWatch) return "cash";
-  if (efficiencyWatch) return "mrr";
-  return "cash";
+// Cash, unless revenue is falling — the one case where Revenue is the metric
+// the founder is watching.
+export function defaultOutlookMetric({ revenueFalling = false } = {}) {
+  return revenueFalling ? "mrr" : "cash";
 }
 
 // Opening point plus one entry per horizon month; months that have not landed
@@ -45,7 +45,10 @@ function seriesFor(key, opening, months, horizon) {
   return { median, p25, p75 };
 }
 
-export default function Outlook({ cycle, baseIso, closedMonth1 = null, initialMetric = "cash" }) {
+// `analysisId` + `navigate`: each "next months" row links straight to that
+// month's strip under Why this plan → How the board got here, so months 2
+// onward stay two interactions from This month.
+export default function Outlook({ cycle, baseIso, closedMonth1 = null, initialMetric = "cash", analysisId = null, navigate = null }) {
   const [metric, setMetric] = useState(initialMetric);
   const months = cycle?.months || [];
   const opening = months[0]?.observe?.state_before || null;
@@ -91,10 +94,15 @@ export default function Outlook({ cycle, baseIso, closedMonth1 = null, initialMe
           <ol className="next-months">
             {Array.from({ length: horizon - 1 }, (_, i) => {
               const m = months[i + 1];
+              const linkable = m && analysisId && navigate;
               return (
                 <li key={i + 1}>
                   <span className="next-month-label">{monthOffsetLabel(baseIso, i + 1)}</span>
-                  {m
+                  {linkable ? (
+                    <button className="link-button next-month-link" type="button" onClick={() => navigate(`/advice/${analysisId}/m${i + 2}`)}>
+                      {actionSummary(m.execute?.action).join(" · ")} <ChevronRight size={13} />
+                    </button>
+                  ) : m
                     ? <span>{actionSummary(m.execute?.action).join(" · ")}</span>
                     : <span className="muted">deliberating…</span>}
                 </li>

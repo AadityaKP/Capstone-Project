@@ -2,7 +2,7 @@
 // its provenance, plus the monthly update ritual (spec §13) as pre-filled diff
 // editing with an instant what-changed payoff.
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, LoaderCircle, PencilLine } from "lucide-react";
 import {
   useStore, latestMonth, latestCycle, latestAnalysis, feedbackForCycleMonth, uid
@@ -52,7 +52,10 @@ export function CompanyView({ navigate }) {
           </button>
         </div>
         {company.whatYouSell && <p className="subtle">{company.whatYouSell}</p>}
-        <p className="subtle ledger-source">From your {monthName(month.enteredAt)} close ({entered}). Values without a marker are yours as you entered them.</p>
+        <p className="subtle ledger-source">
+          {(month.index || 0) === 0 ? `From onboarding (${entered}).` : `From your ${monthName(month.enteredAt)} close (${entered}).`}
+          {" "}Values without a marker are yours as you entered them.
+        </p>
 
         <div className="ledger">
           <span className="ledger-section">Money</span>
@@ -98,6 +101,19 @@ const UPDATE_FIELDS = [
   { key: "marketingSpend", label: "Marketing spend last month", prefix: "$", optional: true },
   { key: "price", label: "Average price", prefix: "$", optional: true }
 ];
+
+// Which Close fields answer a guess the server reports in assumed_fields.
+// Only these guesses get a "Fill these in" link on Why this plan and a
+// group on the Close form; a guess Close cannot take (per-segment churn)
+// gets neither. Costs are always required, so "Monthly costs" needs no
+// group.
+export const CLOSE_FIELDS_FOR_GUESS = {
+  "Acquisition cost": ["marketingSpend", "newCustomers"]
+};
+
+export function fillableGuesses(assumedFields) {
+  return (assumedFields || []).filter((a) => a.correctable !== false && CLOSE_FIELDS_FOR_GUESS[a.field]);
+}
 
 function NumberField({ field, values, onChange }) {
   return (
@@ -168,12 +184,15 @@ export function UpdateRitual({ navigate, params = {} }) {
   const [notes, setNotes] = useState({});
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState(null);
-  // The optional numbers collapse into "numbers we estimated" when the latest
-  // analysis had to guess something the founder could supply (its
-  // assumed_fields marked correctable; older analyses carry no flag and are
-  // treated as correctable, as Why this plan does). "Fill these in" on Why
+  // Set synchronously on the first click: `closing` is render state and two
+  // clicks in one tick would both read it as false.
+  const submittingRef = useRef(false);
+  // The fields that answer a guess the latest analysis made collapse into
+  // "numbers we estimated"; every other field stays inline (price is never
+  // hidden because something else was guessed). "Fill these in" on Why
   // deep-links here with the group open.
-  const guessed = (latestAnalysis(state)?.trace?.assumed_fields || []).filter((a) => a.correctable !== false);
+  const guessed = fillableGuesses(latestAnalysis(state)?.trace?.assumed_fields);
+  const groupedKeys = new Set(guessed.flatMap((g) => CLOSE_FIELDS_FOR_GUESS[g.field]));
   const [fillOpen, setFillOpen] = useState(!!params.fill);
   const setValue = (key, value) => setValues((prev) => ({ ...prev, [key]: value }));
 
@@ -209,7 +228,9 @@ export function UpdateRitual({ navigate, params = {} }) {
   const valid = numbersValid && actionsAnswered;
 
   async function submit() {
-    if (!valid || state.demo || closing) return;
+    if (!valid || state.demo || closing || submittingRef.current) return;
+    submittingRef.current = true;
+    setClosing(true);
     const newMonth = {
       id: uid("m"),
       index: (last.index || 0) + 1,
@@ -220,7 +241,6 @@ export function UpdateRitual({ navigate, params = {} }) {
     dispatch({ type: "ADD_MONTH", month: newMonth });
 
     if (closable && actionCards.length) {
-      setClosing(true);
       setCloseError(null);
       // The founder's answers become the planned month's decisions, so
       // History shows them with the same glyphs it always used.
@@ -249,7 +269,6 @@ export function UpdateRitual({ navigate, params = {} }) {
         result: r.ok ? r.data : null,
         error: r.ok ? null : (r.offline ? "engine unreachable" : r.error)
       });
-      setClosing(false);
       if (!r.ok) {
         // The numbers are saved either way; the founder is told the close did
         // not reach the board rather than shown a plan that pretends it did.
@@ -274,15 +293,21 @@ export function UpdateRitual({ navigate, params = {} }) {
         <p className="subtle">Pre-filled with last month ({dateLabel(last.enteredAt)}) — edit what changed. ~2 minutes.</p>
         <Notice notice={pickNotice({ demo: state.demo }).notice} />
         {closable && actionCards.length > 0 && (
-          <ClosableActions
-            cards={actionCards} done={done} notes={notes}
-            onDone={(domain, value) => setDone({ ...done, [domain]: value })}
-            onNote={(domain, value) => setNotes({ ...notes, [domain]: value })}
-          />
+          <fieldset className="close-fields" disabled={closing}>
+            <ClosableActions
+              cards={actionCards} done={done} notes={notes}
+              onDone={(domain, value) => setDone({ ...done, [domain]: value })}
+              onNote={(domain, value) => setNotes({ ...notes, [domain]: value })}
+            />
+          </fieldset>
         )}
         {closeError && <Banner tone="warn">{closeError}</Banner>}
+        {closing && (
+          <p className="subtle closing-note"><LoaderCircle size={14} className="spin" /> Scoring last month's plan… this can take up to a minute.</p>
+        )}
+        <fieldset className="close-fields" disabled={closing}>
         <div className="update-grid">
-          {UPDATE_FIELDS.filter((f) => !f.optional || !guessed.length).map((f) => (
+          {UPDATE_FIELDS.filter((f) => !groupedKeys.has(f.key)).map((f) => (
             <NumberField key={f.key} field={f} values={values} onChange={setValue} />
           ))}
         </div>
@@ -300,7 +325,7 @@ export function UpdateRitual({ navigate, params = {} }) {
                   ))}
                 </ul>
                 <div className="update-grid">
-                  {UPDATE_FIELDS.filter((f) => f.optional).map((f) => (
+                  {UPDATE_FIELDS.filter((f) => groupedKeys.has(f.key)).map((f) => (
                     <NumberField key={f.key} field={f} values={values} onChange={setValue} />
                   ))}
                 </div>
@@ -308,6 +333,7 @@ export function UpdateRitual({ navigate, params = {} }) {
             )}
           </div>
         )}
+        </fieldset>
         {diffs.length > 0 && (
           <div className="diff-row">
             {diffs.map((d) => <span className="diff-pill" key={d}>{d}</span>)}
@@ -317,7 +343,7 @@ export function UpdateRitual({ navigate, params = {} }) {
           <p className="subtle">Say what happened to each of the board's actions above to continue.</p>
         )}
         <div className="wizard-foot inline">
-          <button className="secondary-button" type="button" onClick={() => navigate("/company")}>Cancel</button>
+          <button className="secondary-button" type="button" disabled={closing} onClick={() => navigate("/company")}>Cancel</button>
           <button className="primary-button" type="button" disabled={!valid || state.demo || closing} onClick={submit}>
             {closing ? <><LoaderCircle size={15} className="spin" /> Scoring last month…</>
               : <>{closable && actionCards.length ? "Close the month & plan again" : "Save & plan"} <ChevronRight size={16} /></>}

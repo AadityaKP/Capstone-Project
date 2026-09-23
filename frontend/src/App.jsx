@@ -61,10 +61,14 @@ function useHashRoute() {
 function parseRoute(route) {
   const parts = route.split("/").filter(Boolean);
   if (parts.length === 0) return { page: "welcome", params: {} };
-  if (parts[0] === "advice" && parts[1]) return { page: "advice", params: { id: parts[1] } };
+  // #/advice/:id/m3 opens month 3's strip under "How the board got here";
+  // #/advice/:id/weighed opens "How the board weighed it".
+  if (parts[0] === "advice" && parts[1]) return { page: "advice", params: { id: parts[1], open: parts[2] || null } };
   if (parts[0] === "advice" || parts[0] === "plan") return { page: "home", params: {} };
   // #/update/fill opens the Close form with the estimated numbers expanded.
   if (parts[0] === "update" && parts[1] === "fill") return { page: "update", params: { fill: true } };
+  // #/history/:monthId opens that entry.
+  if (parts[0] === "history" && parts[1]) return { page: "history", params: { monthId: parts[1] } };
   return { page: parts[0], params: {} };
 }
 
@@ -78,8 +82,11 @@ export function Shell() {
   useEffect(() => {
     if (!hasCompany && !["welcome", "onboarding"].includes(page)) navigate("/");
     if (hasCompany && page === "welcome") navigate("/home");
+    // The old Plan route redirects (replacing the entry) so the address is
+    // canonical and the nav highlights This month.
+    if (route.startsWith("/plan") || route === "/advice") window.location.replace("#/home");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasCompany, page]);
+  }, [hasCompany, page, route]);
 
   const bare = ["welcome", "onboarding", "analyzing"].includes(page) || !hasCompany;
   const month = latestMonth(state);
@@ -92,8 +99,8 @@ export function Shell() {
     home: <Home navigate={navigate} />,
     // Keyed on the analysis so expander state does not carry over between
     // one analysis and the next.
-    advice: <Advice key={params.id || "latest"} navigate={navigate} params={params} />,
-    history: <History navigate={navigate} />,
+    advice: <Advice key={`${params.id || "latest"}/${params.open || ""}`} navigate={navigate} params={params} />,
+    history: <History navigate={navigate} params={params} />,
     company: <CompanyView navigate={navigate} />,
     update: <UpdateRitual navigate={navigate} params={params} />,
     settings: <Settings navigate={navigate} />

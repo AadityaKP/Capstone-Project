@@ -319,7 +319,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
         <p className="wi-death-note">
           <Skull size={14} />
           <span>
-            In simulation, the board's plan ran out of cash in{" "}
+            Over {horizon} simulated months, the board's plan ran out of cash in{" "}
             {recommended.deaths === recommended.runs
               ? "every run"
               : `${recommended.deaths} of ${recommended.runs} runs`}
@@ -340,7 +340,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
               <th>Plan</th>
               <th>Revenue in {horizon} mo</th>
               <th>Cash in {horizon} mo</th>
-              <th>Survives</th>
+              <th>Survives (of simulated runs)</th>
               <th>{display.efficiency_panel_label || "Rule of 40"}</th>
               {shockMode && <th>Shock cost</th>}
               {shockMode && <th>Recovery</th>}

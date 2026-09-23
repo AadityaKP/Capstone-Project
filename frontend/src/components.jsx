@@ -34,12 +34,12 @@ export function RiskChip({ level, large = false }) {
 }
 
 // Markers only on exceptions (Phase E): a value the founder gave needs no
-// chip, so the chips that remain — estimated, derived, simulated — stand out.
+// chip, so the two that remain — estimated, derived — stand out. Simulated
+// values carry SimulatedTag, inside Evidence only.
 export function ProvChip({ kind }) {
   const copy = {
     estimated: "Estimated by the system",
-    derived: "Derived",
-    simulated: "Simulated"
+    derived: "Derived"
   };
   if (!copy[kind]) return null;
   return <span className={`prov-chip ${kind}`}>{copy[kind]}</span>;
@@ -362,18 +362,20 @@ export function confidenceLine(analysis, month, company) {
     || confidenceSentence(analysis.brief?.confidence, estimatedInputCount(analysis, month, company));
 }
 
-export function ConfidenceStrip({ analysis, month, company = null }) {
+// The confidence sentence and why the analysis ran. Whether the brief was
+// reused is engine detail that lives in the trace; the numbers-from date
+// repeats This month's status line, so it appears only for an archived
+// analysis, where it is the one thing the reader needs to know.
+export function ConfidenceStrip({ analysis, month, company = null, archived = false }) {
   if (!analysis) return null;
   const sentence = confidenceLine(analysis, month, company);
   const reason = refreshReasonCopy(analysis.trace?.refresh_reason || analysis.reason);
-  const reuse = briefSourceCopy(analysis.trace?.brief_source);
   return (
     <div className="confidence-strip">
       <span>{sentence}</span>
       <span className="dot-sep">·</span>
       <span>{reason}</span>
-      {reuse && (<><span className="dot-sep">·</span><span>{reuse}</span></>)}
-      {month && (<><span className="dot-sep">·</span><span>numbers from {new Date(month.enteredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></>)}
+      {archived && month && (<><span className="dot-sep">·</span><span>numbers from {new Date(month.enteredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></>)}
     </div>
   );
 }
@@ -520,7 +522,10 @@ function weightMoveLine(move) {
   return `${label} focus ${move.delta > 0 ? "up" : "down"} to ${Math.round(move.to * 100)}%`;
 }
 
-export function OefaStrip({ month, closed = null, defaultOpen = false, title = null }) {
+// `observedInEvidence`: the page already lists the Observed lines in its
+// Evidence section, so this beat keeps the recall count and points there.
+// `superseded`: the cycle was replaced before it finished.
+export function OefaStrip({ month, closed = null, defaultOpen = false, title = null, observedInEvidence = false }) {
   const [open, setOpen] = useState(defaultOpen);
   if (!month) return null;
   const { observe, execute, feedback, adapt } = month;
@@ -547,7 +552,12 @@ export function OefaStrip({ month, closed = null, defaultOpen = false, title = n
       {open && (
         <div className="oefa-body">
           <Beat label="Observed">
-            {observedLines(observe).map((l) => <li key={l.key} className={l.muted ? "muted" : ""}>{l.text}</li>)}
+            {observedInEvidence
+              ? <>
+                  <li>{observedLines(observe)[0]?.text}</li>
+                  <li className="muted">see Evidence above</li>
+                </>
+              : observedLines(observe).map((l) => <li key={l.key} className={l.muted ? "muted" : ""}>{l.text}</li>)}
           </Beat>
           <Beat label="Decided">
             {actionSummary(execute?.action).map((line) => <li key={line}>{line}</li>)}

@@ -1770,6 +1770,12 @@ code {
 .next-months li { display: flex; gap: 10px; align-items: baseline; }
 .next-months .muted { color: var(--muted); }
 .next-month-label { flex: 0 0 72px; font-weight: 700; color: var(--purple); font-size: 12.5px; }
+.next-month-link { padding: 0; font-weight: 500; color: var(--ink); text-align: left; }
+.next-month-link svg { color: var(--purple); }
+.close-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.close-fields:disabled { opacity: 0.6; }
+.closing-note { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; }
+.held-domains { display: grid; gap: 6px; margin-top: 8px; }
 
 /* ---- close the month (plan section 6.1) ---- */
 .close-month { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fbfbfd; }
