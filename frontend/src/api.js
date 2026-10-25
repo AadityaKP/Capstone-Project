@@ -129,6 +129,21 @@ export async function demoBootstrap() {
   return request("/demo/bootstrap", {}, 8_000);
 }
 
+// ---- EDGAR dataset view (additive; read-only) ----
+
+// Dataset-card numbers for the EDGAR view header, computed server-side from the
+// frozen panel at request time — nothing hand-typed here.
+export async function reviewMeta() {
+  return request("/review/meta", {}, 15_000);
+}
+
+// Raw EDGAR panel rows for the Dataset view (server-side filter/sort/pagination).
+export async function reviewPanel({ ticker = null, offset = 0, limit = 25, order = "asc" }) {
+  const params = new URLSearchParams({ offset, limit, order });
+  if (ticker) params.set("ticker", ticker);
+  return request(`/review/panel?${params}`, {}, 15_000);
+}
+
 // Twelve-month projection under three policies (D5). Pure simulation — no LLM
 // call — so it returns in well under a second and gets a short timeout rather
 // than the 120s the analysis needs. The board's plan is taken from an analysis

@@ -156,6 +156,39 @@ def whatif(payload: WhatIfRequest) -> dict:
         ) from exc
 
 
+# ---- EDGAR dataset view (read-only; additive) ----
+# review_service is imported inside the handlers so that nothing about the EDGAR
+# data files can affect API startup or any founder-product route.
+
+@app.get("/api/review/meta")
+def review_meta() -> dict:
+    """Dataset-card numbers for the EDGAR view header, computed from the panel."""
+    try:
+        from backend.review_service import dataset_meta
+        return {"dataset": dataset_meta()}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503, detail=f"EDGAR dataset unavailable: {exc}"
+        ) from exc
+
+
+@app.get("/api/review/panel")
+def review_panel(
+    ticker: str | None = Query(default=None),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=25, ge=1, le=200),
+    order: str = Query(default="asc", pattern="^(asc|desc)$"),
+) -> dict:
+    """Raw EDGAR panel rows for the Dataset view — as-ingested dollars, paginated."""
+    try:
+        from backend.review_service import panel_rows
+        return panel_rows(ticker, offset, limit, descending=(order == "desc"))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503, detail=f"EDGAR dataset unavailable: {exc}"
+        ) from exc
+
+
 @app.post("/api/cycles", status_code=202)
 def cycles_create(payload: CycleRequest) -> dict:
     """Start one Observe -> Execute -> Feedback -> Adapt cycle of H months.

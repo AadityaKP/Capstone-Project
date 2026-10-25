@@ -95,6 +95,17 @@ marketing $5,000. Chosen so the board's own plan survives twelve simulated
 months under the fitted physics; a structurally dying company teaches
 nothing about the loop.
 
+### Optional: the EDGAR dataset view
+
+Every screen has an **EDGAR dataset** button in the topbar (and the Welcome
+page has a "Browse the EDGAR dataset" link). It opens a read-only table of
+the raw SEC EDGAR panel for five companies (DOCN, MDB, PCTY, ZETA, ZM) with a
+company filter, sort and paging; **Back** returns to where you were. It is
+reference data only: it never touches the loop, the founder's numbers or a
+cycle in flight. It needs `data/edgar_facts.csv` and `data/edgar_ratios.csv`
+(git-ignored local exports); without them the view shows a 503 message and
+nothing else in the app is affected.
+
 ## 4. Run of show (about 10 minutes)
 
 Four navigation items: **This month · History · My company · Settings**.

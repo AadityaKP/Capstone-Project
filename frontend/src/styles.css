@@ -1799,3 +1799,26 @@ code {
 
 .oefa-toggle { min-width: 0; }
 .oefa-toggle span { min-width: 0; flex: 1 1 auto; }
+
+/* ---- EDGAR dataset view (additive; the raw panel table) ---- */
+
+.rv-panel { display: grid; gap: 12px; }
+.rv-panel .panel-title-row { margin-bottom: 0; }
+
+.rv-controls {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: end;
+}
+.rv-field { display: grid; gap: 4px; font-size: 12px; font-weight: 600; }
+.rv-field select {
+  font: inherit; font-weight: 500; padding: 7px 9px;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  min-width: 130px;
+}
+
+.rv-header-line { margin: 0; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.rv-pager {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 12.5px; color: var(--muted); align-self: end; padding-bottom: 2px;
+}
+.rv-panel-table td, .rv-panel-table th { font-variant-numeric: tabular-nums; }
+.rv-panel-table td:first-child { font-weight: 600; }
