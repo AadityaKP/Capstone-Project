@@ -24,6 +24,10 @@ data/*
 !data/panel_extract.md
 !data/panel_shortlist.csv
 !data/edgar.db
+# The EDGAR dataset view reads these (frozen panel exports, ~2.3MB total).
+!data/edgar_facts.csv
+!data/edgar_ratios.csv
+!data/DATASET_CARD.md
 chroma_db_founder/
 backups/
 audit_*.json
