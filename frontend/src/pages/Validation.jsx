@@ -226,9 +226,9 @@ export default function Validation() {
       <div className="validation-callout"><Info size={19}/><div><strong>How to read these results</strong><p>We compare historical company growth reported to SEC EDGAR with simulated outcomes based on mapped historical company data. Boardroom advice and no action are simulated scenarios, not actual results reported by the companies.</p></div></div>
       <div className="validation-stat-grid validation-stat-grid-single">
         <article className="validation-stat validation-improvement-stat">
-          <span>Improvement from Boardroom advice vs No action</span>
-          <strong>{pct(company.advisoryBoard - company.noAction)} <small>percentage points</small></strong>
-          <small>Simulated four-quarter growth difference. Relative uplift: {company.noAction > 0 ? `${(((company.advisoryBoard - company.noAction) / Math.abs(company.noAction)) * 100).toFixed(1)}%` : "not defined"} vs the No action baseline.</small>
+          <span>Boardroom advice vs Observed growth</span>
+          <strong>{pct(company.advisoryBoard - company.actualGrowth)} <small>percentage points</small></strong>
+          <small>Difference from observed four-quarter growth. Relative difference: {company.noAction > 0 ? `${(((company.advisoryBoard - company.actualGrowth) / Math.abs(company.actualGrowth)) * 100).toFixed(1)}%` : "not defined"} vs observed growth.</small>
         </article>
       </div>
       <article className="panel validation-panel">
@@ -240,7 +240,7 @@ export default function Validation() {
         <div className="validation-result-grid">
           <div className="validation-result-card"><span>Observed 4-quarter growth</span><strong>{pct(company.actualGrowth)}</strong><small>Historical EDGAR metric</small></div>
           <div className="validation-result-card"><span>Simulated Boardroom growth</span><strong>{pct(company.advisoryBoard)}</strong><small>Counterfactual median</small></div>
-          <div className="validation-result-card"><span>Boardroom - No action</span><strong className={company.advisoryBoard > company.noAction ? "validation-positive" : ""}>{pct(company.advisoryBoard - company.noAction)}</strong><small>Simulated median growth difference</small></div>
+          <div className="validation-result-card"><span>Boardroom - Observed growth</span><strong className={company.advisoryBoard > company.actualGrowth ? "validation-positive" : ""}>{pct(company.advisoryBoard - company.actualGrowth)}</strong><small>Difference from observed 4-quarter growth</small></div>
         </div>
         <div className="validation-chart-title"><div><h4>Observed vs simulated growth</h4><p>Four-quarter growth rates Â· evaluation split Â· $250/month price assumption</p></div><span className="status-pill neutral">Historical + simulated</span></div>
         <PolicyComparisonChart company={company}/>
@@ -248,7 +248,7 @@ export default function Validation() {
         <MonthlyMRRChart company={company} />
         <div className="validation-outcome-note"><TrendingUp size={17}/><p><strong>Interpretation:</strong> the simulated Boardroom is compared with the no-action simulation. This is a model-based comparison; the company did not necessarily use the advice, and the simulated outcome is not a reported real-world result.</p></div>
         <div className="validation-chart-title"><div><h4>Historical vs agent-advice comparison</h4><p>Same four-quarter growth metric; simulated values use the EVAL2 split and $250/month assumed price.</p></div></div>
-        <div className="validation-table-wrap"><table className="validation-table"><thead><tr><th>Metric</th><th>Observed company</th><th>No action (simulated)</th><th>Boardroom - Observed</th></tr></thead><tbody>
+        <div className="validation-table-wrap"><table className="validation-table"><thead><tr><th>Metric</th><th>Observed company</th><th>No action (simulated)</th><th>Boardroom advice (simulated)</th><th>Boardroom - Observed</th></tr></thead><tbody>
           <tr><td>Four-quarter growth</td><td>{pct(company.actualGrowth)}</td><td>{pct(company.noAction)}</td><td>{pct(company.advisoryBoard)}</td><td className={company.advisoryBoard > company.actualGrowth ? "validation-positive" : ""}>{pct(company.advisoryBoard - company.actualGrowth)}</td></tr>
         </tbody></table></div>
         <p className="validation-footnote"><AlertTriangle size={14}/> Financing model: opportunistic. Historical EDGAR data supplies four-quarter revenue growth; monthly MRR trajectories shown above are simulated counterfactuals. They must not be interpreted as observed company revenue or causal real-world effects. Results are conditional on mapping and pricing assumptions and are not causal real-world effects.</p>
