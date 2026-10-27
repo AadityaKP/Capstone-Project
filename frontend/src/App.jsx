@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  BrainCircuit, Building2, ChevronRight, Database,
+  BrainCircuit, Building2, ChevronRight, BarChart3,
   History as HistoryIcon, LayoutDashboard, PencilLine,
   Settings as SettingsIcon
 } from "lucide-react";
@@ -24,7 +24,7 @@ import Advice from "./pages/Advice.jsx";
 import History from "./pages/History.jsx";
 import { CompanyView, UpdateRitual } from "./pages/Company.jsx";
 import Settings from "./pages/Settings.jsx";
-import Dataset from "./pages/Dataset.jsx";
+import Validation from "./pages/Validation.jsx";
 
 // Four items (docs/ui_simplification_plan.md §3). The Plan page folded into
 // This month; /advice/:id is "Why this plan", reached from the plan itself
@@ -34,13 +34,14 @@ const NAV = [
   { id: "home", path: "/home", label: "This month", icon: LayoutDashboard },
   { id: "history", path: "/history", label: "History", icon: HistoryIcon },
   { id: "company", path: "/company", label: "My company", icon: Building2 },
+  { id: "validation", path: "/validation", label: "Validation & Results", icon: BarChart3 },
   { id: "settings", path: "/settings", label: "Settings", icon: SettingsIcon }
 ];
 
 const TITLES = {
   home: "This month", advice: "Why this plan", history: "History", company: "My company",
-  settings: "Settings", update: "Close the month", onboarding: "Set up your company",
-  analyzing: "Analysis", welcome: "Welcome", dataset: "Dataset (EDGAR)"
+  settings: "Settings", validation: "Validation & Results", update: "Close the month", onboarding: "Set up your company",
+  analyzing: "Analysis", welcome: "Welcome"
 };
 
 function useHashRoute() {
@@ -79,11 +80,9 @@ export function Shell() {
   const { page, params } = parseRoute(route);
   const hasCompany = !!state.company;
 
-  // Route guard: no company → welcome/onboarding. The EDGAR dataset view is
-  // read-only reference data and never touches founder data, so it is
-  // reachable without a company.
+  // Route guard: no company → welcome/onboarding.
   useEffect(() => {
-    if (!hasCompany && !["welcome", "onboarding", "dataset"].includes(page)) navigate("/");
+    if (!hasCompany && !["welcome", "onboarding"].includes(page)) navigate("/");
     if (hasCompany && page === "welcome") navigate("/home");
     // The old Plan route redirects (replacing the entry) so the address is
     // canonical and the nav highlights This month.
@@ -107,7 +106,7 @@ export function Shell() {
     company: <CompanyView navigate={navigate} />,
     update: <UpdateRitual navigate={navigate} params={params} />,
     settings: <Settings navigate={navigate} />,
-    dataset: <Dataset onBack={() => navigate(hasCompany ? "/home" : "/")} />
+    validation: <Validation />
   };
   const content = pages[page] || pages.home;
 
@@ -153,19 +152,10 @@ export function Shell() {
           </div>
           <div className="topbar-actions">
             {state.demo && <DemoBadge />}
-            {page !== "dataset" && (
-              <button
-                className="secondary-button small"
-                type="button"
-                onClick={() => navigate("/dataset")}
-              >
-                <Database size={14} /> EDGAR dataset
-              </button>
-            )}
             {/* Primary on age only: "not current" is true from the moment a
                 founder closes until month 1 lands, and "failed" wants Re-run,
                 not Close. Both belong to the notice slot on This month. */}
-            {!state.demo && page !== "update" && page !== "dataset" && (
+            {!state.demo && page !== "update" && (
               <button
                 className={`${closeDue ? "primary-button" : "secondary-button"} small`}
                 type="button"
