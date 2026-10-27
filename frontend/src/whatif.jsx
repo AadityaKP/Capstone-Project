@@ -17,7 +17,7 @@
 // a year" were the same flat line.
 
 import React, { useState } from "react";
-import { Activity, AlertTriangle, Loader2, Skull, Zap } from "lucide-react";
+import { Activity, AlertTriangle, ChevronDown, ChevronRight, Loader2, Skull, Zap } from "lucide-react";
 import { money, pct } from "./derive.js";
 
 // The founder-facing comparison is the board's plan against doing nothing.
@@ -68,18 +68,22 @@ function lifespan(median, alive) {
   return { last, full: full < 0 ? 0 : full };
 }
 
-// One panel: three median lines, each inside its own IQR band, on shared axes.
-// Exported for the review compare screen, which reuses it with its own policy
-// keys/colours plus three optional research overlays (all inert by default):
-//   band         horizontal reference band {p10,p25,median,p75,p90,tooltip}
-//                (the EDGAR QoQ-growth band), grey with a dashed median
+// One panel: median lines, each inside its own IQR band, on shared axes.
+// Exported so the multi-month Plan page can draw its trajectory with the same
+// grammar. Two optional overlays, both inert by default:
 //   shockMarkers [{month, type}] labelled vertical lines at scheduled shocks
-//   refLines     [{from, to, value, color}] horizontal segments (pre-shock
-//                Rule-of-40 levels, so the recovery gap is visible)
+//   refLines     [{from, to, value, color}] horizontal segments
+//   shadeFrom    month index from which everything to the right is the model's
+//                projection: a light background band labelled "projected".
+//                Dashed keeps meaning "some runs died" (oefa_loop_plan.md 5.2).
+//   markers      [{month, value, label}] filled points, e.g. a closed month's
+//                actual numbers
+//   xEndLabel    the right-hand axis label (defaults to "{n} mo")
 export function FanChart({
   title, series, alive, format, shockMonth,
   policies = POLICY_ORDER, styles = POLICY_STYLE,
-  band = null, shockMarkers = null, refLines = null, xStartLabel = "now"
+  shockMarkers = null, refLines = null, xStartLabel = "now",
+  shadeFrom = null, markers = null, xEndLabel = null
 }) {
   const w = 320, h = 130, padX = 6, padTop = 8, padBottom = 18;
 
@@ -89,8 +93,8 @@ export function FanChart({
     return [...s.p25, ...s.p75, ...s.median].filter((v) => v != null);
   });
   if (!all.length) return null;
-  if (band) all.push(band.p10, band.p90);
   (refLines || []).forEach((r) => all.push(r.value));
+  (markers || []).forEach((m) => { if (m.value != null) all.push(m.value); });
 
   const min = Math.min(...all), max = Math.max(...all);
   const span = max - min || 1;
@@ -127,25 +131,14 @@ export function FanChart({
     <div className="wi-chart">
       <span className="wi-chart-title">{title}</span>
       <svg viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`${title} projection`}>
+        {shadeFrom != null && shadeFrom < months && (
+          <g className="wi-projected">
+            <rect x={x(shadeFrom)} y={padTop - 4} width={w - padX - x(shadeFrom)} height={h - padTop - padBottom + 8} />
+            <text x={w - padX - 2} y={padTop + 4} textAnchor="end">projected</text>
+          </g>
+        )}
         {zeroY !== null && (
           <line x1={padX} x2={w - padX} y1={zeroY} y2={zeroY} className="wi-zero" />
-        )}
-        {band && (
-          <g>
-            <rect
-              x={padX} width={w - padX * 2}
-              y={y(band.p90)} height={Math.max(y(band.p10) - y(band.p90), 0)}
-              className="wi-edgar-band"
-            >
-              <title>{band.tooltip}</title>
-            </rect>
-            <line
-              x1={padX} x2={w - padX} y1={y(band.median)} y2={y(band.median)}
-              className="wi-edgar-median"
-            >
-              <title>{band.tooltip}</title>
-            </line>
-          </g>
         )}
         {shockMonth != null && shockMonth < months && (
           <line
@@ -215,9 +208,15 @@ export function FanChart({
             </g>
           );
         })}
+        {(markers || []).filter((m) => m.value != null && m.month < months).map((m) => (
+          <g key={`m-${m.month}`} className="wi-marker">
+            <circle cx={x(m.month)} cy={y(m.value)} r="3.6" />
+            {m.label && <text x={x(m.month) + 6} y={y(m.value) - 5}>{m.label}</text>}
+          </g>
+        ))}
         <text x={padX} y={h - 5} className="wi-axis">{xStartLabel}</text>
         <text x={w - padX} y={h - 5} className="wi-axis" textAnchor="end">
-          {months} mo
+          {xEndLabel || `${months} mo`}
         </text>
       </svg>
       <span className="wi-chart-end">
@@ -250,8 +249,13 @@ function survivalCell(policy) {
   );
 }
 
+// The panel leads with the verdict — the death note, the table and the
+// server's caveat — and keeps the four charts, the legend, the shock toggle
+// and the run metadata behind one expander. The assumptions the projection
+// used are rendered by the page, in its Assumptions section, from
+// `result.assumptions`, so they sit beside the analysis's own guesses.
 export default function WhatIfPanel({ result, loading, error, onRun, shockMode, onToggleShock }) {
-  const [showAssumptions, setShowAssumptions] = useState(false);
+  const [showCharts, setShowCharts] = useState(false);
 
   if (loading) {
     return (
@@ -278,7 +282,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
     return (
       <article className="panel wi-panel">
         <div className="panel-title-row">
-          <h3><Activity size={16} /> What happens if you follow this plan</h3>
+          <h3><Activity size={16} /> The plan against doing nothing</h3>
         </div>
         <p className="subtle">
           Roll your current numbers forward {12} months under the board's plan and under
@@ -292,7 +296,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
     );
   }
 
-  const { policies, horizon_months: horizon, n_seeds: seeds, shock, assumptions } = result;
+  const { policies, horizon_months: horizon, n_seeds: seeds, shock } = result;
   const display = result.display || {};
   const panels = panelsFor(display);
   const shockMonth = shock ? shock.month : null;
@@ -307,21 +311,15 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
   return (
     <article className="panel wi-panel">
       <div className="panel-title-row">
-        <h3><Activity size={16} /> What happens if you follow this plan</h3>
-        <button
-          type="button"
-          className={`wi-shock-toggle ${shockMode ? "on" : ""}`}
-          onClick={onToggleShock}
-        >
-          <Zap size={13} /> {shockMode ? "Competitor shock on" : "Add a competitor shock"}
-        </button>
+        <h3><Activity size={16} /> The plan against doing nothing</h3>
+        {shockMode && <span className="wi-shock-on"><Zap size={13} /> competitor shock on</span>}
       </div>
 
       {recommended?.deaths > 0 && (
         <p className="wi-death-note">
           <Skull size={14} />
           <span>
-            In simulation, the board's plan ran out of cash in{" "}
+            Over {horizon} simulated months, the board's plan ran out of cash in{" "}
             {recommended.deaths === recommended.runs
               ? "every run"
               : `${recommended.deaths} of ${recommended.runs} runs`}
@@ -335,51 +333,6 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
         </p>
       )}
 
-      <div className="wi-legend">
-        {POLICY_ORDER.filter((p) => policies[p]).map((p) => (
-          <span key={p}>
-            <i style={{ background: POLICY_STYLE[p].color }} /> {policies[p].label}
-          </span>
-        ))}
-      </div>
-
-      {shockMode && shock && (
-        <p className="wi-shock-note">
-          <Zap size={13} /> A competitor surge hits all three plans at month {shock.month}:{" "}
-          {shock.description}.
-        </p>
-      )}
-
-      <div className="wi-grid">
-        {panels.map((panel) => (
-          <FanChart
-            key={panel.key}
-            title={panel.label}
-            format={panel.format}
-            shockMonth={shockMonth}
-            alive={alive}
-            series={Object.fromEntries(
-              POLICY_ORDER.filter((p) => policies[p]).map((p) => [p, policies[p].series[panel.key]])
-            )}
-          />
-        ))}
-      </div>
-
-      {/* The caveat is rendered here, immediately beneath the charts, on purpose. */}
-      <p className="wi-caveat">{result.caveat}</p>
-
-      {display.rule_of_40_withheld_because && (
-        <p className="wi-caveat">{display.rule_of_40_withheld_because}</p>
-      )}
-
-      {anyDeaths && (
-        <p className="wi-survivor-note">
-          A line goes dashed once some runs have run out of cash, and ends where none are
-          left. Past that point the line averages only the companies still standing, so it
-          can rise while most of them are gone.
-        </p>
-      )}
-
       <div className="wi-table-wrap">
         <table className="wi-table">
           <thead>
@@ -387,7 +340,7 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
               <th>Plan</th>
               <th>Revenue in {horizon} mo</th>
               <th>Cash in {horizon} mo</th>
-              <th>Survives</th>
+              <th>Survives (of simulated runs)</th>
               <th>{display.efficiency_panel_label || "Rule of 40"}</th>
               {shockMode && <th>Shock cost</th>}
               {shockMode && <th>Recovery</th>}
@@ -426,37 +379,102 @@ export default function WhatIfPanel({ result, loading, error, onRun, shockMode, 
         </table>
       </div>
 
-      <p className="wi-meta">
-        Median of {seeds} simulated runs per plan, same {seeds} starting conditions for each,
-        so the plan is the only thing that differs.
-        {anyDeaths && (
-          <> Revenue and cash for a run that ended early are its figures at the month it
-          ended.</>
-        )}
-        {result.shock_tape_shared === false && (
-          <strong> Conditions diverged between plans in this run — compare with care.</strong>
-        )}
-        {shockMode && POLICY_ORDER.every((p) => policies[p]?.summary.drawdown_fraction === 0) && (
-          <> Revenue never fell below its pre-shock level under any plan, so there is no
-          recovery time to report.</>
-        )}
-      </p>
+      {/* The server's caveat sits directly under the verdict, on purpose. */}
+      <p className="wi-caveat">{result.caveat}</p>
 
-      <button type="button" className="link-button" onClick={() => setShowAssumptions(!showAssumptions)}>
-        {showAssumptions ? "Hide" : "Show"} what this projection assumes ({assumptions.length})
+      {display.rule_of_40_withheld_because && (
+        <p className="subtle">{display.rule_of_40_withheld_because}</p>
+      )}
+
+      <button type="button" className="link-button" onClick={() => setShowCharts(!showCharts)}>
+        {showCharts ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+        {showCharts ? "Hide" : "Show"} the charts
       </button>
-      {showAssumptions && (
-        <ul className="wi-assumptions">
-          {assumptions.map((a) => (
-            <li key={a.field}>
-              <strong>{a.field}:</strong> {a.value}
-              <span className={`prov-chip ${a.basis === "derived" ? "simulated" : ""}`}>{a.basis}</span>
-              <span className="wi-assumption-detail">{a.detail}</span>
-              {a.source && <span className="wi-assumption-source">{a.source}</span>}
-            </li>
-          ))}
-        </ul>
+
+      {showCharts && (
+        <div className="wi-charts">
+          <div className="wi-legend-row">
+            <div className="wi-legend">
+              {POLICY_ORDER.filter((p) => policies[p]).map((p) => (
+                <span key={p}>
+                  <i style={{ background: POLICY_STYLE[p].color }} /> {policies[p].label}
+                </span>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={`wi-shock-toggle ${shockMode ? "on" : ""}`}
+              onClick={onToggleShock}
+            >
+              <Zap size={13} /> {shockMode ? "Competitor shock on" : "Add a competitor shock"}
+            </button>
+          </div>
+
+          {shockMode && shock && (
+            <p className="wi-shock-note">
+              <Zap size={13} /> A competitor surge hits both plans at month {shock.month}:{" "}
+              {shock.description}.
+            </p>
+          )}
+
+          <div className="wi-grid">
+            {panels.map((panel) => (
+              <FanChart
+                key={panel.key}
+                title={panel.label}
+                format={panel.format}
+                shockMonth={shockMonth}
+                alive={alive}
+                series={Object.fromEntries(
+                  POLICY_ORDER.filter((p) => policies[p]).map((p) => [p, policies[p].series[panel.key]])
+                )}
+              />
+            ))}
+          </div>
+
+          {anyDeaths && (
+            <p className="wi-survivor-note">
+              A line goes dashed once some runs have run out of cash, and ends where none are
+              left. Past that point the line averages only the companies still standing, so it
+              can rise while most of them are gone.
+            </p>
+          )}
+
+          <p className="wi-meta">
+            Median of {seeds} simulated runs per plan, same {seeds} starting conditions for each,
+            so the plan is the only thing that differs.
+            {anyDeaths && (
+              <> Revenue and cash for a run that ended early are its figures at the month it
+              ended.</>
+            )}
+            {result.shock_tape_shared === false && (
+              <strong> Conditions diverged between plans in this run — compare with care.</strong>
+            )}
+            {shockMode && POLICY_ORDER.every((p) => policies[p]?.summary.drawdown_fraction === 0) && (
+              <> Revenue never fell below its pre-shock level under any plan, so there is no
+              recovery time to report.</>
+            )}
+          </p>
+        </div>
       )}
     </article>
+  );
+}
+
+// The projection's own assumptions, rendered by the page beside the
+// analysis's guesses rather than inside the panel.
+export function WhatIfAssumptions({ assumptions }) {
+  if (!assumptions?.length) return null;
+  return (
+    <ul className="wi-assumptions">
+      {assumptions.map((a) => (
+        <li key={a.field}>
+          <strong>{a.field}:</strong> {a.value}
+          <span className={`prov-chip ${a.basis === "derived" ? "simulated" : ""}`}>{a.basis}</span>
+          <span className="wi-assumption-detail">{a.detail}</span>
+          {a.source && <span className="wi-assumption-source">{a.source}</span>}
+        </li>
+      ))}
+    </ul>
   );
 }

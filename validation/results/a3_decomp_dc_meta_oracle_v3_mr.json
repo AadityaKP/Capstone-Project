@@ -1,0 +1,1 @@
+{"arm": "dc", "policy": "oracle_v3", "label": "oracle_v3_mr", "episodes": 20, "freq": 10, "env": {"deterministic_rng": true, "marketing_curve": "v2", "competitive_entry": "scale_neutral", "shock_recovery": "mean_revert"}, "agent": {"corridor": "scale_aware"}, "model": "llama3.1:8b", "wall_seconds": 2404.0, "llm_calls_total": 585}

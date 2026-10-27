@@ -123,6 +123,14 @@ export function monthName(iso) {
   return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
+// "Oct 2026" for the month `offset` months after the month `iso` falls in:
+// how a cycle's horizon months are labelled.
+export function monthOffsetLabel(iso, offset) {
+  const d = new Date(iso || Date.now());
+  d.setMonth(d.getMonth() + offset, 1);
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
 // Deltas between two month snapshots, for KPI arrows and "what changed" (§9, §13).
 export function monthDeltas(current, previous) {
   if (!current || !previous) return null;

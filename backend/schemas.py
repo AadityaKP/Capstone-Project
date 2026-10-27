@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -79,28 +81,51 @@ class AdviseRequest(BaseModel):
     history: list[FounderHistoryEntry] = Field(default_factory=list)
 
 
-class CompareRequest(BaseModel):
-    """One arm of the review-demo policy comparison (backend/review_service.py).
+class CycleRequest(BaseModel):
+    """One Observe -> Execute -> Feedback -> Adapt cycle of H months
+    (docs/oefa_loop_plan.md section 4). Same founder shape as AdviseRequest
+    plus the cycle controls.
 
-    The client sends one request per policy so a fast arm (boardroom) can render
-    while a slow one (oracle_v3 on the local LLM) is still running.
+    `previous_track_record` is what the last HITL close returned: the board's
+    previous action, its prediction and the founder's actual numbers. Passing
+    it back is how "the next cycle starts from the actual state, carrying the
+    previous cycle's prediction error into the prompt context" happens.
     """
 
-    policy: str = "boardroom"
+    company_id: str
+    company_age_months: int = Field(default=0, ge=0)
+    month_index: int = Field(default=0, ge=0)
+    config: FounderConfig
+    history: list[FounderHistoryEntry] = Field(default_factory=list)
+    horizon_months: int = Field(default=4, ge=1, le=6)
+    use_oracle: bool = True
     seed: int = Field(default=0, ge=0)
+    previous_track_record: dict | None = None
 
 
-class BacktestRunRequest(BaseModel):
-    """One arm of the real-company Run tab (backend/review_service.py).
+class ActionFeedback(BaseModel):
+    action_key: Literal["marketing", "product", "hiring", "pricing"]
+    done: Literal["did", "partly", "didnt"]
+    note: str | None = Field(default=None, max_length=500)
 
-    The client sends one request per policy — three fast rule arms first, then
-    oracle_v3 (local LLM) with a progress indicator.
-    """
 
-    ticker: str
-    policy: str = "boardroom"
-    seed: int = Field(default=0, ge=0)
-    horizon: int = Field(default=12, ge=1, le=120)
+class CycleActuals(BaseModel):
+    """The founder's real numbers a month later. churn is percent per month,
+    the unit the founder types; costs is optional and defaults to what the
+    cycle was told."""
+
+    mrr: float = Field(ge=0)
+    cash: float = Field(ge=0)
+    churn: float = Field(ge=0, le=100)
+    costs: float | None = Field(default=None, ge=0)
+
+
+class CycleFeedbackRequest(BaseModel):
+    """The HITL close (plan section 6): what happened to last month's plan."""
+
+    month_index: int = Field(default=1, ge=1)
+    per_action: list[ActionFeedback] = Field(default_factory=list)
+    actuals: CycleActuals
 
 
 class WhatIfRequest(BaseModel):

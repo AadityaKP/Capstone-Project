@@ -47,7 +47,22 @@ FOUNDER_CHROMA_PATH = os.environ.get(
 FOUNDER_ORACLE_MODE = os.getenv("FOUNDER_ORACLE_MODE", "oracle_v4_causal")
 
 # One analysis per request, so the founder Oracle refreshes on every call.
+# (The multi-month cycle overrides this to 0 so events earn the refresh -
+# see backend/cycle_service.CYCLE_ORACLE_FREQUENCY.)
 FOUNDER_ORACLE_FREQUENCY = 1
+
+# Which marketing-response curve the founder physics run (docs/oefa_loop_decisions.md,
+# decision 9). "v2" is the customer/CAC-anchored curve with the saturation
+# rate physics_v2 fitted on the CAL panel (0.0727, HOLDOUT median growth error
+# 8.1pp); "scale_aware" is the same curve with the ASSUMED rate 0.20 the
+# product shipped with before the loop, which that fit falsified (49.7pp on
+# CAL). The product's expected_delta is a prediction the founder is later
+# scored against, and at founder scale the assumed rate predicts roughly twice
+# the marketing response of the fitted one (sample company, 10% of MRR on
+# marketing: +16.9% vs +8.4% MRR over two months), so every close would have
+# read "we were high". Set FOUNDER_MARKETING_CURVE=scale_aware to reproduce
+# the pre-loop product.
+FOUNDER_MARKETING_CURVE = os.getenv("FOUNDER_MARKETING_CURVE", "v2")
 
 # The boardroom's absolute spend floors are calibrated at this MRR (spec G11).
 CALIBRATION_MRR = 50_000.0
@@ -116,24 +131,50 @@ def use_causal_proposals() -> bool:
     return is_founder() and get_oracle_mode() == "oracle_v4_causal"
 
 
-def get_oracle_kwargs(churn_benchmark_pct: float | None = None) -> dict[str, Any]:
+def get_memory_scope(company_id: str | None) -> str:
+    """The Oracle run_id for a product analysis: stable per company.
+
+    OracleMemoryStore.retrieve_similar filters on run_id, so the scope is what
+    decides whether an analysis can read what a previous one wrote. A fresh
+    UUID per request (the previous behaviour) made founder memory write-only:
+    nothing any earlier analysis stored was ever reachable. One key per company
+    is what lets Adapt and the HITL close see the company's own past.
+
+    Without a company id there is nothing to scope to, and a UUID keeps the
+    old isolation rather than pooling anonymous requests together.
+    """
+    if not company_id:
+        return str(uuid.uuid4())
+    return f"company:{company_id}"
+
+
+def get_oracle_kwargs(
+    churn_benchmark_pct: float | None = None,
+    company_id: str | None = None,
+) -> dict[str, Any]:
     """Extra kwargs for Oracle(...) beyond mode.
 
     founder: the isolated chroma_db_founder store (never the research corpus),
     burn context in the prompt, and the published churn benchmark when one
     covers the company's price band.
 
-    review2: nothing - Oracle(mode="oracle_v3") builds its own
-    OracleMemoryStore against CHROMA_PATH (default ./chroma_db, the repo
-    research corpus) and the research prompt stays byte-identical.
+    review2: only the memory scope and month de-duplication. Oracle(mode=
+    "oracle_v3") still builds its own OracleMemoryStore against CHROMA_PATH
+    (default ./chroma_db) and the research prompt template stays byte-identical;
+    what changes is that a second analysis of the same company can now retrieve
+    memories the first one matured, which under a per-request UUID it never
+    could.
     """
+    scope = get_memory_scope(company_id)
     if not is_founder():
-        return {}
+        return {"run_id": scope, "dedupe_months": True}
     from oracle.memory import OracleMemoryStore
 
     return {
+        "run_id": scope,
+        "dedupe_months": True,
         "memory_store": OracleMemoryStore(
-            run_id=str(uuid.uuid4()),
+            run_id=scope,
             chroma_path=FOUNDER_CHROMA_PATH,
         ),
         "include_burn_context": True,
@@ -159,10 +200,17 @@ def get_env_kwargs(gross_margin: float | None = None) -> dict[str, Any]:
     on, absolute marketing/R&D constants, revenue booked at 100% margin."""
     if not is_founder():
         return {}
+    if FOUNDER_MARKETING_CURVE not in {"scale_aware", "v2"}:
+        raise ValueError(
+            f"FOUNDER_MARKETING_CURVE must be 'v2' or 'scale_aware', got {FOUNDER_MARKETING_CURVE!r}"
+        )
     return {
         "max_months": 10_000,          # horizon is controlled by the caller
         "scheduled_shocks": False,     # research fixture, not founder physics
-        "scale_aware_marketing": True, # ships with the burn fix; see whatif_service
+        # The customer/CAC-anchored curve either way (ships with the burn fix;
+        # see whatif_service); "v2" additionally uses the fitted saturation rate.
+        "scale_aware_marketing": True,
+        "marketing_curve": FOUNDER_MARKETING_CURVE,
         "scale_aware_rnd": True,       # R&D that can move the product at all
         "gross_margin": gross_margin,
     }

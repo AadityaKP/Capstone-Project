@@ -33,6 +33,40 @@ except ImportError:
     NEO4J_AVAILABLE = False
 
 
+# Evidence provenance (docs/oefa_loop_decisions.md, decision 3). Simulated and
+# observed outcomes must not share an edge: the product's cycle writes four
+# simulated months per cycle against one real month per month, so on a shared
+# edge the simulator's opinion would permanently outweigh reality and the board
+# would end up citing its own physics back to itself as evidence.
+#
+#   observed  the founder's real month, entered through the HITL close.
+#             Lands on MAY_CAUSE at the full increment and can promote to
+#             CONFIRMED_CAUSE.
+#   sim       a month the cycle stepped through the environment. Lands on a
+#             separate MAY_CAUSE_SIM relationship at 0.4x the increment and
+#             never promotes. The proposal prompt still sees it (the predicate
+#             name says what it is); founder-facing evidence ignores it.
+#   None      legacy: what every recorded research run wrote. MAY_CAUSE, full
+#             increment, no provenance property. Kept byte-identical.
+EVIDENCE_SOURCES: Dict[str, Dict[str, Any]] = {
+    "observed": {"relationship": "MAY_CAUSE", "positive": 0.05, "negative": -0.03, "promotable": True},
+    "sim": {"relationship": "MAY_CAUSE_SIM", "positive": 0.02, "negative": -0.012, "promotable": False},
+}
+LEGACY_EVIDENCE = {"relationship": "MAY_CAUSE", "positive": 0.05, "negative": -0.03, "promotable": True}
+
+
+def evidence_rule(source: Optional[str]) -> Dict[str, Any]:
+    """The edge, increments and promotability for one evidence source."""
+    if source is None:
+        return LEGACY_EVIDENCE
+    try:
+        return EVIDENCE_SOURCES[source]
+    except KeyError as exc:
+        raise ValueError(
+            f"unknown evidence source {source!r}; expected one of {sorted(EVIDENCE_SOURCES)}"
+        ) from exc
+
+
 class CausalGraphStore:
     def __init__(
         self,
@@ -405,12 +439,31 @@ class CausalGraphStore:
         stress_node: Optional[str] = None,
         episode_id: Optional[int] = None,
         month: Optional[int] = None,
+        source: Optional[str] = None,
+        weight: float = 1.0,
     ) -> None:
-        """Write closed-loop action-to-KPI evidence for causal proposal learning."""
+        """Write closed-loop action-to-KPI evidence for causal proposal learning.
+
+        One call writes one edge PER KPI in `kpi_delta`, not one edge total.
+
+        `source` routes the evidence (see EVIDENCE_SOURCES): "observed" for a
+        founder's real month, "sim" for a month the product stepped through the
+        environment, None for the legacy research path. `weight` scales the
+        confidence increment - the HITL close passes 0.5 for an action the
+        founder only partly did - and never changes which edge is written.
+
+        `confidence` is the base for a NEW edge only (it reaches the query
+        through coalesce(r.confidence, $base_confidence)); it has no effect on
+        an existing edge, which is why weighting evidence is done through the
+        increment and not through this parameter.
+        """
 
         if not self.enabled:
             return
 
+        rule = evidence_rule(source)
+        relationship = rule["relationship"]
+        weight = max(0.0, float(weight))
         action_name = self._action_pattern_name(action)
         stress_name = stress_node or "Steady_State"
         for metric, delta in kpi_delta.items():
@@ -419,22 +472,25 @@ class CausalGraphStore:
             delta_value = float(delta)
             delta_name = self._kpi_delta_name(metric, delta_value)
             positive = 1 if self._is_positive_delta(metric, delta_value) else 0
-            confidence_increment = 0.05 if positive else -0.03
+            confidence_increment = (rule["positive"] if positive else rule["negative"]) * weight
 
-            cypher = """
-            MERGE (s:Stress {name: $stress_name})
-            MERGE (a:ActionPattern {name: $action_name})
+            # Relationship types cannot be parameterised in Cypher; the name is
+            # taken from the whitelist above, never from caller input.
+            source_clause = ",\n                r.source = $source" if source is not None else ""
+            cypher = f"""
+            MERGE (s:Stress {{name: $stress_name}})
+            MERGE (a:ActionPattern {{name: $action_name}})
             SET a.last_episode_id = $episode_id,
                 a.last_month = $month
-            MERGE (k:KPIDelta {name: $delta_name})
+            MERGE (k:KPIDelta {{name: $delta_name}})
             SET k.metric = $metric
             MERGE (s)-[:OBSERVED_WITH]->(a)
-            MERGE (a)-[r:MAY_CAUSE]->(k)
+            MERGE (a)-[r:{relationship}]->(k)
             SET r.observations = coalesce(r.observations, 0) + 1,
                 r.positive_observations = coalesce(r.positive_observations, 0) + $positive,
                 r.last_delta = $delta_value,
                 r.last_episode_id = $episode_id,
-                r.last_month = $month,
+                r.last_month = $month{source_clause},
                 r.confidence = CASE
                     WHEN coalesce(r.confidence, $base_confidence) + $confidence_increment > 0.95 THEN 0.95
                     WHEN coalesce(r.confidence, $base_confidence) + $confidence_increment < 0.05 THEN 0.05
@@ -453,10 +509,15 @@ class CausalGraphStore:
                 "episode_id": int(episode_id or 0),
                 "month": int(month or 0),
             }
+            if source is not None:
+                params["source"] = source
             self._run(cypher, params)
 
-            promote_cypher = """
-            MATCH (a:ActionPattern {name: $action_name})-[r:MAY_CAUSE]->(k:KPIDelta {name: $delta_name})
+            if not rule["promotable"]:
+                continue
+
+            promote_cypher = f"""
+            MATCH (a:ActionPattern {{name: $action_name}})-[r:{relationship}]->(k:KPIDelta {{name: $delta_name}})
             WHERE r.confidence >= 0.85 AND r.positive_observations >= 3
             MERGE (a)-[c:CONFIRMED_CAUSE]->(k)
             SET c.confidence = r.confidence,

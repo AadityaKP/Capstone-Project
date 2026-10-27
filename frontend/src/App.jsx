@@ -4,16 +4,16 @@
 // deliberately absent from every founder surface (spec §19).
 
 import React, { useCallback, useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
 import {
-  BrainCircuit, Building2, ChevronRight, Database, FlaskConical,
-  History as HistoryIcon, LayoutDashboard, PencilLine, Play,
-  Settings as SettingsIcon, Sparkles
+  BrainCircuit, Building2, ChevronRight, BarChart3,
+  History as HistoryIcon, LayoutDashboard, PencilLine,
+  Settings as SettingsIcon
 } from "lucide-react";
 import "./styles.css";
 
 import { StoreProvider, useStore, latestMonth } from "./store.jsx";
-import { dateLabel } from "./derive.js";
+import { CycleRunProvider } from "./cycleRun.jsx";
+import { daysSince } from "./derive.js";
 import { DemoBadge } from "./components.jsx";
 
 import Welcome from "./pages/Welcome.jsx";
@@ -24,30 +24,24 @@ import Advice from "./pages/Advice.jsx";
 import History from "./pages/History.jsx";
 import { CompanyView, UpdateRitual } from "./pages/Company.jsx";
 import Settings from "./pages/Settings.jsx";
-import Review from "./pages/Review.jsx";
-import Dataset from "./pages/Dataset.jsx";
-import Run from "./pages/Run.jsx";
+import Validation from "./pages/Validation.jsx";
 
+// Four items (docs/ui_simplification_plan.md §3). The Plan page folded into
+// This month; /advice/:id is "Why this plan", reached from the plan itself
+// or from a History entry. Routes keep their old names (D5) so deep links
+// and the seeded demo keep working; only the labels changed.
 const NAV = [
-  { id: "home", path: "/home", label: "Home", icon: LayoutDashboard },
-  { id: "advice", path: "/advice", label: "Advice", icon: Sparkles },
+  { id: "home", path: "/home", label: "This month", icon: LayoutDashboard },
   { id: "history", path: "/history", label: "History", icon: HistoryIcon },
   { id: "company", path: "/company", label: "My company", icon: Building2 },
-  { id: "review", path: "/review", label: "Compare policies", icon: FlaskConical },
-  { id: "dataset", path: "/dataset", label: "Dataset (EDGAR)", icon: Database },
-  { id: "run", path: "/run", label: "Run", icon: Play },
+  { id: "validation", path: "/validation", label: "Validation & Results", icon: BarChart3 },
   { id: "settings", path: "/settings", label: "Settings", icon: SettingsIcon }
 ];
 
-// Review-demo surfaces: reachable without a company, since they run the
-// research configuration and never touch founder data.
-const REVIEW_PAGES = ["review", "dataset", "run"];
-
 const TITLES = {
-  home: "Home", advice: "Advice", history: "History", company: "My company",
-  settings: "Settings", update: "Update numbers", onboarding: "Set up your company",
-  analyzing: "Analysis", welcome: "Welcome",
-  review: "Compare policies", dataset: "Dataset (EDGAR)", run: "Run"
+  home: "This month", advice: "Why this plan", history: "History", company: "My company",
+  settings: "Settings", validation: "Validation & Results", update: "Close the month", onboarding: "Set up your company",
+  analyzing: "Analysis", welcome: "Welcome"
 };
 
 function useHashRoute() {
@@ -69,41 +63,50 @@ function useHashRoute() {
 function parseRoute(route) {
   const parts = route.split("/").filter(Boolean);
   if (parts.length === 0) return { page: "welcome", params: {} };
-  if (parts[0] === "advice" && parts[1]) return { page: "advice", params: { id: parts[1] } };
+  // #/advice/:id/m3 opens month 3's strip under "How the board got here";
+  // #/advice/:id/weighed opens "How the board weighed it".
+  if (parts[0] === "advice" && parts[1]) return { page: "advice", params: { id: parts[1], open: parts[2] || null } };
+  if (parts[0] === "advice" || parts[0] === "plan") return { page: "home", params: {} };
+  // #/update/fill opens the Close form with the estimated numbers expanded.
+  if (parts[0] === "update" && parts[1] === "fill") return { page: "update", params: { fill: true } };
+  // #/history/:monthId opens that entry.
+  if (parts[0] === "history" && parts[1]) return { page: "history", params: { monthId: parts[1] } };
   return { page: parts[0], params: {} };
 }
 
-function Shell() {
+export function Shell() {
   const { state } = useStore();
   const [route, navigate] = useHashRoute();
   const { page, params } = parseRoute(route);
   const hasCompany = !!state.company;
 
-  // Route guards: no company → welcome/onboarding (plus the review surfaces,
-  // which don't need founder data).
+  // Route guard: no company → welcome/onboarding.
   useEffect(() => {
-    if (!hasCompany && !["welcome", "onboarding", ...REVIEW_PAGES].includes(page)) navigate("/");
+    if (!hasCompany && !["welcome", "onboarding"].includes(page)) navigate("/");
     if (hasCompany && page === "welcome") navigate("/home");
+    // The old Plan route redirects (replacing the entry) so the address is
+    // canonical and the nav highlights This month.
+    if (route.startsWith("/plan") || route === "/advice") window.location.replace("#/home");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasCompany, page]);
+  }, [hasCompany, page, route]);
 
-  const bare = ["welcome", "onboarding", "analyzing"].includes(page)
-    || (!hasCompany && !REVIEW_PAGES.includes(page));
+  const bare = ["welcome", "onboarding", "analyzing"].includes(page) || !hasCompany;
   const month = latestMonth(state);
+  const closeDue = month ? (daysSince(month.enteredAt) ?? 0) > 35 : false;
 
   const pages = {
     welcome: <Welcome navigate={navigate} />,
     onboarding: <Onboarding navigate={navigate} />,
     analyzing: <Analyzing navigate={navigate} />,
     home: <Home navigate={navigate} />,
-    advice: <Advice navigate={navigate} params={params} />,
-    history: <History navigate={navigate} />,
+    // Keyed on the analysis so expander state does not carry over between
+    // one analysis and the next.
+    advice: <Advice key={`${params.id || "latest"}/${params.open || ""}`} navigate={navigate} params={params} />,
+    history: <History navigate={navigate} params={params} />,
     company: <CompanyView navigate={navigate} />,
-    update: <UpdateRitual navigate={navigate} />,
+    update: <UpdateRitual navigate={navigate} params={params} />,
     settings: <Settings navigate={navigate} />,
-    review: <Review />,
-    dataset: <Dataset />,
-    run: <Run />
+    validation: <Validation />
   };
   const content = pages[page] || pages.home;
 
@@ -140,23 +143,25 @@ function Shell() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-status">
-          <span>Advisor</span>
-          <strong>{state.demo ? "Sample company" : "Ready"}</strong>
-          <small>{month ? `numbers from ${dateLabel(month.enteredAt)}` : "no data yet"}</small>
-        </div>
       </aside>
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p>{TITLES[page] || "Home"}</p>
+            <p>{TITLES[page] || TITLES.home}</p>
             <h1>{state.company?.name}</h1>
           </div>
           <div className="topbar-actions">
             {state.demo && <DemoBadge />}
-            {!state.demo && page !== "update" && !REVIEW_PAGES.includes(page) && (
-              <button className="secondary-button small" type="button" onClick={() => navigate("/update")}>
-                <PencilLine size={14} /> Update numbers
+            {/* Primary on age only: "not current" is true from the moment a
+                founder closes until month 1 lands, and "failed" wants Re-run,
+                not Close. Both belong to the notice slot on This month. */}
+            {!state.demo && page !== "update" && page !== "validation" && (
+              <button
+                className={`${closeDue ? "primary-button" : "secondary-button"} small`}
+                type="button"
+                onClick={() => navigate("/update")}
+              >
+                <PencilLine size={14} /> Close the month
               </button>
             )}
           </div>
@@ -170,13 +175,9 @@ function Shell() {
 export default function App() {
   return (
     <StoreProvider>
-      <Shell />
+      <CycleRunProvider>
+        <Shell />
+      </CycleRunProvider>
     </StoreProvider>
   );
 }
-
-createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);

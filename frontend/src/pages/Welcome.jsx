@@ -1,7 +1,7 @@
 // S1 Welcome — honest framing before any input (spec §7 O1).
 
 import React, { useState } from "react";
-import { BrainCircuit, ChevronDown, ChevronRight, FlaskConical } from "lucide-react";
+import { BrainCircuit, ChevronDown, ChevronRight, Database, FlaskConical } from "lucide-react";
 import { useStore } from "../store.jsx";
 
 export default function Welcome({ navigate }) {
@@ -30,6 +30,9 @@ export default function Welcome({ navigate }) {
           <FlaskConical size={15} /> Explore a sample company
         </button>
       </div>
+      <button className="link-button center" type="button" onClick={() => navigate("/dataset")}>
+        <Database size={15} /> Browse the EDGAR dataset
+      </button>
       <button className="link-button center" type="button" onClick={() => setHow(!how)}>
         {how ? <ChevronDown size={15} /> : <ChevronRight size={15} />} How it works
       </button>

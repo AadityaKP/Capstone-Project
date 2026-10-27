@@ -13,20 +13,31 @@ class BatchedCausalProposalGenerator:
 
     ROLES = ("CFO", "CMO", "CPO")
 
-    def __init__(self, llm_client, scale: float = 1.0):
+    def __init__(self, llm_client, scale: float = 1.0, expectation=None):
         self.llm_client = llm_client
         # scale carries the G11 calibration factor into the fallback path, so a
         # dropped LLM call degrades to correctly-sized advice rather than to
         # constants tuned for a ~$50k-MRR company.
         self.scale = scale
+        # Product path (plan section 3): the expected_delta predictor, applied
+        # to every proposal the model returns, and the board's track record,
+        # which the prompt shows the model before it chooses. Both None on
+        # research arms.
+        self.expectation = expectation
+        self.track_record: dict[str, Any] | None = None
         self.fallback_agents = {
-            "CFO": CFOProposalAgent(scale=scale),
-            "CMO": CMOProposalAgent(scale=scale),
-            "CPO": CPOProposalAgent(scale=scale),
+            "CFO": CFOProposalAgent(scale=scale, expectation=expectation),
+            "CMO": CMOProposalAgent(scale=scale, expectation=expectation),
+            "CPO": CPOProposalAgent(scale=scale, expectation=expectation),
         }
         self.llm_calls = 0
         self.last_source = "none"
         self.last_error: str | None = None
+
+    def set_track_record(self, record: dict[str, Any] | None) -> None:
+        self.track_record = dict(record) if record else None
+        for agent in self.fallback_agents.values():
+            agent.set_track_record(record)
 
     def propose_all(
         self,
@@ -123,6 +134,7 @@ class BatchedCausalProposalGenerator:
                 f"(graph_confidence={context.confidence:.2f})"
             )
         bounds = self._action_bounds(state, stress_node, persistence_months)
+        track_record_block = self._track_record_block()
 
         return f"""
 Current KPIs:
@@ -141,7 +153,7 @@ Stress persistence signal:
 - Consecutive months in this stress node: {persistence_months}
 - Previous final action pattern: {recent_action_summary}
 - If the same stress persists for more than 10 months despite similar actions, switch or escalate levers rather than repeating the same spend, hiring, product, or pricing response.
-
+{track_record_block}
 Generate one proposal for each role. Keep action keys exactly as specified.
 Use these numeric action bounds exactly:
 - CFO hiring.hires: 0 to {bounds["hires_max"]}
@@ -197,6 +209,22 @@ Respond with this exact JSON shape:
 }}
 """.strip()
 
+    def _track_record_block(self) -> str:
+        """The board's own track record, so the model reasons from what its
+        last decision did rather than from the state alone (plan section 3.2b).
+        Empty on the research path, which keeps that prompt byte-identical."""
+        if self.track_record is None:
+            return ""
+        from boardroom.expectation import describe_track_record
+
+        return (
+            "\nBoard track record (what the last plan predicted vs what happened):\n"
+            + describe_track_record(self.track_record)
+            + "\n- A lever whose predicted effect did not materialise is evidence "
+            "against repeating it at the same size. Change the lever or its size, "
+            "and say so in the rationale.\n"
+        )
+
     def _parse_json_object(self, raw: str) -> dict[str, Any]:
         text = raw.strip()
         if text.startswith("```"):
@@ -234,13 +262,21 @@ Respond with this exact JSON shape:
                 raise ValueError(f"Missing {role} actions")
 
             context = causal_contexts[role]
+            normalized = self._normalize_actions(role, actions, state, context, stress_persistence_months)
             proposals.append(
                 Proposal(
                     agent=role,
                     objective=str(payload.get("objective") or self._default_objective(role)),
-                    actions=self._normalize_actions(role, actions, state, context, stress_persistence_months),
+                    actions=normalized,
                     expected_impact=str(
                         payload.get("expected_impact") or self._default_impact(role)
+                    ),
+                    # The model chooses; the simulator predicts. See
+                    # boardroom.expectation for why the number is not the LLM's.
+                    expected_delta=(
+                        self.expectation(state, normalized)
+                        if self.expectation is not None
+                        else None
                     ),
                     risks=self._normalize_risks(payload.get("risks")),
                     rationale=self._optional_str(payload.get("rationale")),

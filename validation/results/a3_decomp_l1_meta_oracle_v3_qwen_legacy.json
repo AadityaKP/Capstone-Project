@@ -1,0 +1,1 @@
+{"arm": "l1", "policy": "oracle_v3", "label": "oracle_v3_qwen_legacy", "episodes": 20, "freq": 10, "env": {"deterministic_rng": true}, "agent": {}, "model": "qwen2.5:7b-instruct", "wall_seconds": 2375.1, "llm_calls_total": 624}

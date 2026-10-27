@@ -88,43 +88,60 @@ export async function advise(company, month) {
   });
 }
 
-// ---- review demo (compare + dataset tab) ----
+// ---- the OEFA cycle (docs/oefa_loop_plan.md section 4) ----
 
-// EDGAR growth band + dataset-card numbers. Server-computed from
-// validation/results/ and data/edgar_ratios.csv — nothing hand-typed here.
+// Start one Observe → Execute → Feedback → Adapt cycle of `horizon` months.
+// Returns 202 immediately with the cycle id; the work runs on the server and
+// months land as they finish, so leaving the page really does keep your seat.
+// `previousTrackRecord` is what the last close-the-month returned — passing
+// it back is how the next cycle starts from your actual numbers carrying the
+// board's previous prediction error.
+export async function startCycle(company, month, { horizon = 4, previousTrackRecord = null } = {}) {
+  const base = buildAdvisePayload(company, month);
+  return request("/cycles", {
+    method: "POST",
+    body: JSON.stringify({
+      ...base,
+      horizon_months: horizon,
+      use_oracle: true,
+      previous_track_record: previousTrackRecord
+    })
+  }, 20_000);
+}
+
+// Status plus every month finished so far.
+export async function getCycle(cycleId) {
+  return request(`/cycles/${cycleId}`, {}, 15_000);
+}
+
+// Close a month with your real numbers: did/partly/didn't per action, plus
+// the actuals. The server scores the prediction, writes evidence only for the
+// actions you took, and returns the track record the next cycle starts from.
+export async function submitCycleFeedback(cycleId, { monthIndex = 1, perAction, actuals }) {
+  return request(`/cycles/${cycleId}/feedback`, {
+    method: "POST",
+    body: JSON.stringify({ month_index: monthIndex, per_action: perAction, actuals })
+  }, 60_000);
+}
+
+// The seeded demo workspace (experiments/seed_demo_company.py), if one exists.
+export async function demoBootstrap() {
+  return request("/demo/bootstrap", {}, 8_000);
+}
+
+// ---- EDGAR dataset view (additive; read-only) ----
+
+// Dataset-card numbers for the EDGAR view header, computed server-side from the
+// frozen panel at request time — nothing hand-typed here.
 export async function reviewMeta() {
   return request("/review/meta", {}, 15_000);
 }
 
-// One policy x one seed x 120 months, deterministic RNG. The oracle_v3 arm runs
-// on the local LLM (Ollama) and can take minutes, so the timeout is generous;
-// the caller fires one request per arm and renders each as it lands.
-export async function reviewCompare(policy, seed) {
-  return request("/review/compare", {
-    method: "POST",
-    body: JSON.stringify({ policy, seed })
-  }, 1_800_000);
-}
-
-// Raw EDGAR panel rows for the Dataset tab (server-side filter/sort/pagination).
+// Raw EDGAR panel rows for the Dataset view (server-side filter/sort/pagination).
 export async function reviewPanel({ ticker = null, offset = 0, limit = 25, order = "asc" }) {
   const params = new URLSearchParams({ offset, limit, order });
   if (ticker) params.set("ticker", ticker);
   return request(`/review/panel?${params}`, {}, 15_000);
-}
-
-// The 39 C1-mapped company states for the Run tab dropdown.
-export async function reviewBacktestCompanies() {
-  return request("/review/backtest/companies", {}, 15_000);
-}
-
-// One policy from one company's C1-mapped state. oracle_v3 goes through the
-// local LLM, so the timeout is generous; rule arms return in well under a second.
-export async function reviewBacktestRun(ticker, policy, seed, horizon) {
-  return request("/review/backtest/run", {
-    method: "POST",
-    body: JSON.stringify({ ticker, policy, seed, horizon })
-  }, 1_800_000);
 }
 
 // Twelve-month projection under three policies (D5). Pure simulation — no LLM

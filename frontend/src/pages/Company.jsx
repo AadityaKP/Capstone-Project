@@ -2,22 +2,29 @@
 // its provenance, plus the monthly update ritual (spec §13) as pre-filled diff
 // editing with an instant what-changed payoff.
 
-import React, { useMemo, useState } from "react";
-import { ChevronRight, PencilLine } from "lucide-react";
-import { useStore, latestMonth, uid } from "../store.jsx";
+import React, { useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronRight, LoaderCircle, PencilLine } from "lucide-react";
+import {
+  useStore, latestMonth, latestCycle, latestAnalysis, feedbackForCycleMonth, uid
+} from "../store.jsx";
 import {
   CROWDEDNESS, MATURITY, deriveCac, deriveLtv,
-  money, moneyExact, pct, signedPct, signedPp, dateLabel, monthsLabel
+  money, moneyExact, pct, signedPct, signedPp, dateLabel, monthName
 } from "../derive.js";
 import { runwayLabel } from "../founderView.js";
-import { ProvChip, Banner } from "../components.jsx";
+import { ProvChip, Banner, Notice, buildPlanCards } from "../components.jsx";
+import { pickNotice } from "../notice.js";
+import { submitCycleFeedback } from "../api.js";
+import { useCycleRun } from "../cycleRun.jsx";
+import { DONE_STATES, DONE_TO_DECISION } from "../loopView.js";
 
-function Row({ label, value, chip, chipDate }) {
+// A value the founder gave carries no marker; only the exceptions do.
+function Row({ label, value, chip = "provided" }) {
   return (
     <div className="ledger-row">
       <span className="ledger-label">{label}</span>
       <strong className="ledger-value">{value}</strong>
-      <ProvChip kind={chip} date={chipDate} />
+      <ProvChip kind={chip} />
     </div>
   );
 }
@@ -45,19 +52,23 @@ export function CompanyView({ navigate }) {
           </button>
         </div>
         {company.whatYouSell && <p className="subtle">{company.whatYouSell}</p>}
+        <p className="subtle ledger-source">
+          {(month.index || 0) === 0 ? `From onboarding (${entered}).` : `From your ${monthName(month.enteredAt)} close (${entered}).`}
+          {" "}Values without a marker are yours as you entered them.
+        </p>
 
         <div className="ledger">
           <span className="ledger-section">Money</span>
-          <Row label="Monthly recurring revenue" value={moneyExact(v.mrr)} chip="provided" chipDate={entered} />
-          <Row label="Cash in the bank" value={moneyExact(v.cash)} chip="provided" chipDate={entered} />
-          <Row label="Total monthly costs" value={moneyExact(v.costs)} chip="provided" chipDate={entered} />
+          <Row label="Monthly recurring revenue" value={moneyExact(v.mrr)} />
+          <Row label="Cash in the bank" value={moneyExact(v.cash)} />
+          <Row label="Total monthly costs" value={moneyExact(v.costs)} />
           <Row label="Cash lasts" value={runwayLabel(v)} chip="derived" />
 
           <span className="ledger-section">Customers</span>
-          <Row label="Average price" value={`$${v.price}/user/mo`} chip="provided" chipDate={entered} />
-          <Row label="Monthly churn" value={`${pct(v.churnMonthly)}/mo`} chip="provided" chipDate={entered} />
-          {v.newCustomers != null && <Row label="New customers last month" value={v.newCustomers} chip="provided" chipDate={entered} />}
-          {v.marketingSpend != null && <Row label="Marketing spend last month" value={moneyExact(v.marketingSpend)} chip="provided" chipDate={entered} />}
+          <Row label="Average price" value={`$${v.price}/user/mo`} />
+          <Row label="Monthly churn" value={`${pct(v.churnMonthly)}/mo`} />
+          {v.newCustomers != null && <Row label="New customers last month" value={v.newCustomers} />}
+          {v.marketingSpend != null && <Row label="Marketing spend last month" value={moneyExact(v.marketingSpend)} />}
           <Row
             label="Customer acquisition cost"
             value={cac.value ? money(cac.value) : "unknown"}
@@ -66,18 +77,17 @@ export function CompanyView({ navigate }) {
           <Row label="Customer lifetime value" value={ltv ? money(ltv) : "—"} chip="derived" />
 
           <span className="ledger-section">Company & market</span>
-          <Row label="Company age" value={`${ageNow} months`} chip="provided" />
-          <Row label="Market crowdedness" value={crowd?.label || "—"} chip="provided" />
+          <Row label="Company age" value={`${ageNow} months`} />
+          <Row label="Market crowdedness" value={crowd?.label || "—"} />
           <Row label="Product maturity" value={maturity?.label || "Not set"} chip={maturity ? "provided" : "estimated"} />
-          {company.headcountReal && <Row label="Team size" value={`${company.headcountReal} people`} chip="provided" />}
+          {company.headcountReal && <Row label="Team size" value={`${company.headcountReal} people`} />}
           <Row label="Market conditions (rates, confidence)" value="Typical conditions assumed" chip="estimated" />
         </div>
       </article>
 
-      <Banner tone="info">
-        Every value above feeds the board's analysis exactly as labelled — nothing else is
-        collected or observed. "Estimated" values are the system's assumptions, not measurements.
-      </Banner>
+      <p className="subtle">
+        Every value above feeds the board's analysis exactly as labelled; estimated values are the system's assumptions, not measurements.
+      </p>
     </section>
   );
 }
@@ -92,10 +102,110 @@ const UPDATE_FIELDS = [
   { key: "price", label: "Average price", prefix: "$", optional: true }
 ];
 
-export function UpdateRitual({ navigate }) {
+// Which Close fields answer a guess the server reports in assumed_fields.
+// Only these guesses get a "Fill these in" link on Why this plan and a
+// group on the Close form; a guess Close cannot take (per-segment churn)
+// gets neither. Costs are always required, so "Monthly costs" needs no
+// group.
+export const CLOSE_FIELDS_FOR_GUESS = {
+  "Acquisition cost": ["marketingSpend", "newCustomers"]
+};
+
+export function fillableGuesses(assumedFields) {
+  return (assumedFields || []).filter((a) => a.correctable !== false && CLOSE_FIELDS_FOR_GUESS[a.field]);
+}
+
+function NumberField({ field, values, onChange }) {
+  return (
+    <label className="ffield">
+      <span className="ffield-label">{field.label}{field.optional ? " (optional)" : ""}</span>
+      <span className="num-input">
+        {field.prefix && <em>{field.prefix}</em>}
+        <input
+          type="number" inputMode="decimal" step="any"
+          value={values[field.key] ?? ""}
+          onChange={(e) => onChange(field.key, e.target.value === "" ? null : Number(e.target.value))}
+        />
+        {field.suffix && <em>{field.suffix}</em>}
+      </span>
+    </label>
+  );
+}
+
+// The HITL close (plan section 6.1), merged into the update ritual rather than
+// added beside it: one screen, one set of numbers, one submit. Above the
+// number grid the founder says what happened to each of last month's actions
+// (did / partly / didn't, plus a note); the numbers follow; the server then
+// scores the prediction, writes evidence only for what was actually done, and
+// the next cycle starts from these real numbers.
+function ClosableActions({ cards, done, notes, onDone, onNote }) {
+  return (
+    <div className="close-month">
+      <h4>Last month the board asked for these — what happened?</h4>
+      <ul className="close-list">
+        {cards.map((c) => (
+          <li key={c.domain} className="close-item">
+            <div className="close-item-head">
+              <span className="plan-domain">{c.title}</span>
+              <strong>{c.headline}</strong>
+            </div>
+            <div className="did-toggle" role="group" aria-label={`${c.title}: what happened`}>
+              {DONE_STATES.map((s) => (
+                <button
+                  key={s.id} type="button"
+                  className={`did-option ${done[c.domain] === s.id ? `on ${s.id}` : ""}`}
+                  onClick={() => onDone(c.domain, s.id)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text" className="close-note" placeholder="Optional note — e.g. did $4k instead"
+              value={notes[c.domain] || ""}
+              onChange={(e) => onNote(c.domain, e.target.value)}
+            />
+            {done[c.domain] === "didnt" && (
+              <span className="close-hint">You didn't do this, so this month won't count as evidence about it.</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function UpdateRitual({ navigate, params = {} }) {
   const { state, dispatch } = useStore();
+  const { requestStart } = useCycleRun();
   const last = latestMonth(state);
   const [values, setValues] = useState(() => ({ ...last?.values }));
+  const [done, setDone] = useState({});
+  const [notes, setNotes] = useState({});
+  const [closing, setClosing] = useState(false);
+  const [closeError, setCloseError] = useState(null);
+  // Set synchronously on the first click: `closing` is render state and two
+  // clicks in one tick would both read it as false.
+  const submittingRef = useRef(false);
+  // The fields that answer a guess the latest analysis made collapse into
+  // "numbers we estimated"; every other field stays inline (price is never
+  // hidden because something else was guessed). "Fill these in" on Why
+  // deep-links here with the group open.
+  const guessed = fillableGuesses(latestAnalysis(state)?.trace?.assumed_fields);
+  const groupedKeys = new Set(guessed.flatMap((g) => CLOSE_FIELDS_FOR_GUESS[g.field]));
+  const [fillOpen, setFillOpen] = useState(!!params.fill);
+  const setValue = (key, value) => setValues((prev) => ({ ...prev, [key]: value }));
+
+  // The plan to close: the latest cycle, if it was made on the month being
+  // closed and hasn't been closed already.
+  const cycle = latestCycle(state);
+  const closable = !state.demo && cycle && last && cycle.monthId === last.id
+    && (cycle.months || []).length > 0 && !feedbackForCycleMonth(cycle, 1);
+  const cycleAnalysis = closable ? state.analyses.find((a) => a.cycleId === cycle.id) : null;
+  const actionCards = useMemo(
+    () => (closable && cycleAnalysis ? buildPlanCards(cycleAnalysis, last).filter((c) => c.isAction) : []),
+    [closable, cycleAnalysis, last]
+  );
 
   if (!last) { navigate("/"); return null; }
 
@@ -113,54 +223,130 @@ export function UpdateRitual({ navigate }) {
     return out;
   }, [values, last]);
 
-  const valid = values.mrr > 0 && values.cash > 0 && values.costs > 0 && values.churnMonthly != null && values.churnMonthly >= 0;
+  const numbersValid = values.mrr > 0 && values.cash > 0 && values.costs > 0 && values.churnMonthly != null && values.churnMonthly >= 0;
+  const actionsAnswered = actionCards.every((c) => done[c.domain]);
+  const valid = numbersValid && actionsAnswered;
 
-  function submit() {
-    if (!valid || state.demo) return;
-    dispatch({
-      type: "ADD_MONTH",
-      month: {
-        id: uid("m"),
-        index: (last.index || 0) + 1,
-        enteredAt: new Date().toISOString(),
-        values: { ...last.values, ...values },
-        decisions: []
+  async function submit() {
+    if (!valid || state.demo || closing || submittingRef.current) return;
+    submittingRef.current = true;
+    setClosing(true);
+    const newMonth = {
+      id: uid("m"),
+      index: (last.index || 0) + 1,
+      enteredAt: new Date().toISOString(),
+      values: { ...last.values, ...values },
+      decisions: []
+    };
+    dispatch({ type: "ADD_MONTH", month: newMonth });
+
+    if (closable && actionCards.length) {
+      setCloseError(null);
+      // The founder's answers become the planned month's decisions, so
+      // History shows them with the same glyphs it always used.
+      for (const c of actionCards) {
+        dispatch({
+          type: "SET_DECISION",
+          monthId: last.id,
+          decision: {
+            id: uid("d"), domain: c.domain, text: c.headline,
+            state: DONE_TO_DECISION[done[c.domain]], note: notes[c.domain] || null
+          }
+        });
       }
-    });
-    navigate("/analyzing");
+      const perAction = actionCards.map((c) => ({
+        action_key: c.domain, done: done[c.domain], note: notes[c.domain] || null
+      }));
+      const actuals = {
+        mrr: newMonth.values.mrr, cash: newMonth.values.cash,
+        churn: newMonth.values.churnMonthly, costs: newMonth.values.costs ?? null
+      };
+      const r = await submitCycleFeedback(cycle.id, { monthIndex: 1, perAction, actuals });
+      dispatch({
+        type: "SET_CYCLE_FEEDBACK",
+        cycleId: cycle.id, monthIndex: 1,
+        submitted: { per_action: perAction, actuals },
+        result: r.ok ? r.data : null,
+        error: r.ok ? null : (r.offline ? "engine unreachable" : r.error)
+      });
+      if (!r.ok) {
+        // The numbers are saved either way; the founder is told the close did
+        // not reach the board rather than shown a plan that pretends it did.
+        setCloseError(r.offline
+          ? "Your numbers are saved, but the engine couldn't be reached to score last month's plan. The next plan will start from your numbers without that score."
+          : r.error);
+      }
+    }
+    // The next cycle is asked for, not started here: the provider's effect
+    // runs start() on the render that already holds the new month and the
+    // feedback result. `await start()` from this handler would build the
+    // cycle from the closure's stale state — without the month just closed
+    // and without the track record.
+    requestStart();
+    navigate("/home");
   }
 
   return (
     <section className="content-stack narrow-col">
       <article className="panel">
-        <h3>Update your numbers</h3>
+        <h3>{closable && actionCards.length ? "Close the month" : "Update your numbers"}</h3>
         <p className="subtle">Pre-filled with last month ({dateLabel(last.enteredAt)}) — edit what changed. ~2 minutes.</p>
-        {state.demo && <Banner tone="info">Sample company — updates are disabled here. Start your own company from the welcome screen.</Banner>}
+        <Notice notice={pickNotice({ demo: state.demo }).notice} />
+        {closable && actionCards.length > 0 && (
+          <fieldset className="close-fields" disabled={closing}>
+            <ClosableActions
+              cards={actionCards} done={done} notes={notes}
+              onDone={(domain, value) => setDone((d) => ({ ...d, [domain]: value }))}
+              onNote={(domain, value) => setNotes((n) => ({ ...n, [domain]: value }))}
+            />
+          </fieldset>
+        )}
+        {closeError && <Banner tone="warn">{closeError}</Banner>}
+        {closing && (
+          <p className="subtle closing-note"><LoaderCircle size={14} className="spin" /> Scoring last month's plan… this can take up to a minute.</p>
+        )}
+        <fieldset className="close-fields" disabled={closing}>
         <div className="update-grid">
-          {UPDATE_FIELDS.map((f) => (
-            <label className="ffield" key={f.key}>
-              <span className="ffield-label">{f.label}{f.optional ? " (optional)" : ""}</span>
-              <span className="num-input">
-                {f.prefix && <em>{f.prefix}</em>}
-                <input
-                  type="number" inputMode="decimal" step="any"
-                  value={values[f.key] ?? ""}
-                  onChange={(e) => setValues({ ...values, [f.key]: e.target.value === "" ? null : Number(e.target.value) })}
-                />
-                {f.suffix && <em>{f.suffix}</em>}
-              </span>
-            </label>
+          {UPDATE_FIELDS.filter((f) => !groupedKeys.has(f.key)).map((f) => (
+            <NumberField key={f.key} field={f} values={values} onChange={setValue} />
           ))}
         </div>
+        {guessed.length > 0 && (
+          <div className={`fill-group ${fillOpen ? "open" : ""}`}>
+            <button className="link-button" type="button" onClick={() => setFillOpen(!fillOpen)}>
+              {fillOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+              Numbers we estimated — replace them if you know them ({guessed.length})
+            </button>
+            {fillOpen && (
+              <>
+                <ul className="wi-assumptions">
+                  {guessed.map((a) => (
+                    <li key={a.field}><strong>{a.field}:</strong> {String(a.value)}<span className="wi-assumption-detail">{a.why}</span></li>
+                  ))}
+                </ul>
+                <div className="update-grid">
+                  {UPDATE_FIELDS.filter((f) => groupedKeys.has(f.key)).map((f) => (
+                    <NumberField key={f.key} field={f} values={values} onChange={setValue} />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        </fieldset>
         {diffs.length > 0 && (
           <div className="diff-row">
             {diffs.map((d) => <span className="diff-pill" key={d}>{d}</span>)}
           </div>
         )}
+        {actionCards.length > 0 && !actionsAnswered && (
+          <p className="subtle">Say what happened to each of the board's actions above to continue.</p>
+        )}
         <div className="wizard-foot inline">
-          <button className="secondary-button" type="button" onClick={() => navigate("/company")}>Cancel</button>
-          <button className="primary-button" type="button" disabled={!valid || state.demo} onClick={submit}>
-            Save & re-analyse <ChevronRight size={16} />
+          <button className="secondary-button" type="button" disabled={closing} onClick={() => navigate("/company")}>Cancel</button>
+          <button className="primary-button" type="button" disabled={!valid || state.demo || closing} onClick={submit}>
+            {closing ? <><LoaderCircle size={15} className="spin" /> Scoring last month…</>
+              : <>{closable && actionCards.length ? "Close the month & plan again" : "Save & plan"} <ChevronRight size={16} /></>}
           </button>
         </div>
       </article>

@@ -195,21 +195,101 @@ def assumed_fields(payload: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _replay_history(boardroom: Boardroom, state: EnvState, history: list[dict]) -> int:
     """Feed prior months through Oracle.observe_state so trend context is the
-    founder's own trajectory rather than a single point. Returns months seen."""
+    founder's own trajectory rather than a single point. Returns months seen.
+
+    With the Oracle's state now persisted per company, a month the Oracle has
+    already seen must not be observed again: entries older than the latest
+    persisted snapshot are skipped, and an entry for the same month replaces
+    it (Oracle.dedupe_months). Only genuinely new months are appended.
+    """
     if not boardroom.use_oracle or not history:
         return 0
 
+    oracle = boardroom.oracle
+    latest = getattr(oracle, "latest_snapshot", None)
+    already_seen = latest.source_month if latest is not None else None
+
     seen = 0
-    for entry in history:
+    for position, entry in enumerate(history):
         past = state.model_copy(deep=True)
         past.mrr = _f(entry.get("mrr"), state.mrr)
         churn = entry.get("churn")
         if churn is not None:
             past.churn_smb = min(max(_f(churn, state.churn_smb), 0.0), 1.0)
-        past.months_elapsed = max(0, state.months_elapsed - (len(history) - seen))
-        boardroom.oracle.observe_state(past)
+        past.months_elapsed = max(0, state.months_elapsed - (len(history) - position))
+        if already_seen is not None and past.months_elapsed < already_seen:
+            continue
+        oracle.observe_state(past)
         seen += 1
     return seen
+
+
+def build_oracle(state: EnvState, company_id: str | None) -> tuple[Oracle, Any]:
+    """The product Oracle for one company: profile-resolved mode and kwargs,
+    scoped to the company's memory, with its persisted state restored.
+
+    Returns (oracle, churn_benchmark). Shared by the single-month advise path
+    and the multi-month cycle so both read and write the same memory.
+    """
+    # Published median churn for this company's price point, if a source covers
+    # it. None when it does not, in which case the prompt simply omits the line
+    # rather than showing an invented comparison. Only the founder profile
+    # feeds it to the Oracle; the review2 research prompt stays byte-identical.
+    churn_benchmark = cal.monthly_churn(state.price, kind="gross")
+
+    # founder: memory isolation is injected, not inherited from CHROMA_PATH -
+    # a founder analysis must never write to the research corpus. review2: the
+    # Oracle builds its store against the repo chroma_db exactly as the batch
+    # runner's oracle_v3 arm does. Both are scoped to the company, so a second
+    # analysis can read what the first matured (plan section 2.1).
+    oracle = Oracle(
+        mode=sim_profile.get_oracle_mode(),
+        **sim_profile.get_oracle_kwargs(
+            churn_benchmark_pct=(
+                churn_benchmark.value * 100.0 if churn_benchmark.is_observed else None
+            ),
+            company_id=company_id,
+        ),
+    )
+    return oracle, churn_benchmark
+
+
+def build_boardroom(
+    state: EnvState,
+    oracle: Oracle,
+    scale: float,
+    oracle_frequency: int | None = None,
+    expectation=None,
+) -> Boardroom:
+    """The product Boardroom around a prepared Oracle. `expectation` is the
+    expected_delta predictor (boardroom.expectation) - None keeps proposals
+    without a prediction, which is what the Review 2 arms must see."""
+    proposal_generator = None
+    if sim_profile.use_causal_proposals():
+        proposal_generator = BatchedCausalProposalGenerator(
+            create_llm_client("ollama", "llama3.1:8b"),
+            scale=scale,
+            expectation=expectation,
+        )
+
+    return Boardroom(
+        [
+            CFOProposalAgent(scale=scale, expectation=expectation),
+            CMOProposalAgent(scale=scale, expectation=expectation),
+            CPOProposalAgent(scale=scale, expectation=expectation),
+        ],
+        use_oracle=True,
+        oracle_mode=oracle.mode,
+        oracle_frequency=(
+            sim_profile.get_oracle_frequency()
+            if oracle_frequency is None
+            else oracle_frequency
+        ),
+        oracle_instance=oracle,
+        proposal_generator=proposal_generator,
+        expectation=expectation,
+        **sim_profile.get_boardroom_kwargs(state.mrr),
+    )
 
 
 def _apply_spend_ceiling(action: dict[str, Any], state: EnvState) -> dict[str, Any] | None:
@@ -253,57 +333,34 @@ def _apply_spend_ceiling(action: dict[str, Any], state: EnvState) -> dict[str, A
 
 def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     """One analysis. Returns brief, decision trace and an honest llm_ok flag."""
+    from backend.oracle_state import load_oracle_state, save_oracle_state
+    from boardroom.expectation import make_expectation
+
     state = build_env_state(payload)
+    company_id = payload.get("company_id")
 
     oracle_mode = sim_profile.get_oracle_mode()
     scale = sim_profile.get_agent_scale(state.mrr)
 
-    # Published median churn for this company's price point, if a source covers
-    # it. None when it does not, in which case the prompt simply omits the line
-    # rather than showing an invented comparison. Only the founder profile
-    # feeds it to the Oracle; the review2 research prompt stays byte-identical.
-    churn_benchmark = cal.monthly_churn(state.price, kind="gross")
-
-    # founder: memory isolation is injected, not inherited from CHROMA_PATH -
-    # a founder analysis must never write to the research corpus. review2: no
-    # extra kwargs, so the Oracle builds its store against the repo chroma_db
-    # exactly as the batch runner's oracle_v3 arm does.
-    oracle = Oracle(
-        mode=oracle_mode,
-        **sim_profile.get_oracle_kwargs(
-            churn_benchmark_pct=(
-                churn_benchmark.value * 100.0 if churn_benchmark.is_observed else None
-            ),
+    oracle, churn_benchmark = build_oracle(state, company_id)
+    expectation = make_expectation(
+        env_kwargs=sim_profile.get_env_kwargs(
+            gross_margin=sim_profile.get_applied_gross_margin()
         ),
     )
-
-    proposal_generator = None
-    if sim_profile.use_causal_proposals():
-        proposal_generator = BatchedCausalProposalGenerator(
-            create_llm_client("ollama", "llama3.1:8b"),
-            scale=scale,
-        )
-
-    boardroom = Boardroom(
-        [
-            CFOProposalAgent(scale=scale),
-            CMOProposalAgent(scale=scale),
-            CPOProposalAgent(scale=scale),
-        ],
-        use_oracle=True,
-        oracle_mode=oracle_mode,
-        oracle_frequency=sim_profile.get_oracle_frequency(),
-        oracle_instance=oracle,
-        proposal_generator=proposal_generator,
-        **sim_profile.get_boardroom_kwargs(state.mrr),
-    )
+    boardroom = build_boardroom(state, oracle, scale, expectation=expectation)
+    # start_episode clears the Oracle's history, so the persisted per-company
+    # state is restored after it, not before.
     boardroom.start_episode(episode_seed=None)
+    oracle.import_state(load_oracle_state(company_id))
 
     months_replayed = _replay_history(boardroom, state, payload.get("history") or [])
 
     action = boardroom.decide(state)
     trace = boardroom.get_last_decision_trace() or {}
     brief = trace.get("brief") or {}
+
+    save_oracle_state(company_id, oracle.export_state())
 
     # G3: a fallback brief carries no signal. Say so rather than letting the UI
     # present safe defaults as though the board had actually read the numbers.
@@ -336,6 +393,15 @@ def run_analysis(payload: dict[str, Any]) -> dict[str, Any]:
     trace["history_months_replayed"] = months_replayed
     trace["absolute_scale"] = scale
     trace["graph_summary"] = _graph_summary(trace)
+    # Loop plumbing, stated per analysis rather than assumed (plan section 2):
+    # which memory scope this read and wrote, whether a causal write would land
+    # anywhere, and how far the Oracle's own calendar has advanced.
+    trace["memory_scope"] = oracle.memory_scope
+    trace["graph_store_enabled"] = oracle.graph_store_enabled
+    trace["oracle_state"] = {
+        "global_month": oracle.global_month,
+        "pending_memories": len(oracle.pending_memories),
+    }
 
     # Engine vocabulary is translated once, here, and the client renders the
     # result. Raw brief and trace keys are untouched underneath for debugging.

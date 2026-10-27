@@ -16,6 +16,16 @@ class Proposal(BaseModel):
 
     # Evaluation
     expected_impact: str
+    # The falsifiable form of expected_impact (plan section 3.2a): signed
+    # per-KPI deltas over a stated horizon, e.g.
+    #   {"mrr_pct": 4.0, "churn_pp": -0.3, "cash_pct": -6.1,
+    #    "runway_months": -0.4, "horizon_months": 2}
+    # Produced by boardroom.expectation on the product path; None on every
+    # research arm, which must keep reproducing byte-identically.
+    expected_delta: Optional[dict] = None
+    # One sentence saying how the agent's own track record changed this
+    # proposal (plan section 3.2b), or None when it did not.
+    adaptation: Optional[str] = None
     rationale: Optional[str] = None
     causal_confidence: Optional[float] = None
     risks: List[str]

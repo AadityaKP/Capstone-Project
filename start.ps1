@@ -61,7 +61,13 @@ param(
     [switch]$NoBrowser,
     [switch]$Force,
     [int]$ApiPort = 8000,
-    [int]$UiPort  = 5173
+    [int]$UiPort  = 5173,
+    # Which engine configuration the product runs (backend/sim_profile.py).
+    # founder: scale-aware physics, real burn, oracle_v4_causal - the only
+    # profile under which the learning loop can be live. review2: the Review 2
+    # research configuration (research physics unscaled, no causal graph).
+    [ValidateSet('founder', 'review2')]
+    [string]$Profile = 'founder'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -381,6 +387,10 @@ try {
     Write-Host ""
     Write-Host "Starting services" -ForegroundColor White
 
+    # The profile is read per request by the API; setting it here is what makes
+    # /api/health's sim_profile line match what start.ps1 claims.
+    $env:SIM_PROFILE = $Profile
+    Write-Step "SIM_PROFILE=$Profile"
     $uvicornArgs = "-m uvicorn backend.main:app --host 127.0.0.1 --port $ApiPort"
     if ($Reload) { $uvicornArgs += ' --reload' }
     Write-Step "api on $ApiPort..."

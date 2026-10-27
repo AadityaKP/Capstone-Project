@@ -12,24 +12,22 @@ from fastapi.staticfiles import StaticFiles
 from backend.database import connect, initialize_database, parse_json_fields, row_to_dict, utc_now
 from backend.schemas import (
     AdviseRequest,
-    BacktestRunRequest,
-    CompareRequest,
+    CycleFeedbackRequest,
+    CycleRequest,
     ScenarioCreate,
     SimulationCreate,
     WhatIfRequest,
 )
 from backend.advise_service import run_analysis, store_analysis
-from backend.review_service import (
-    BACKTEST_POLICIES,
-    COMPARE_POLICIES,
-    backtest_companies,
-    dataset_meta,
-    edgar_growth_band,
-    figure_path,
-    panel_rows,
-    run_backtest_policy,
-    run_compare_policy,
+from backend.cycle_service import (
+    create_cycle,
+    fail_orphaned_cycles,
+    get_cycle,
+    list_cycles,
+    start_cycle,
+    submit_feedback,
 )
+from backend.loop_status import loop_status
 from backend.sim_profile import get_oracle_mode, get_profile
 from backend.whatif_service import run_whatif
 from backend.simulation_service import (
@@ -48,6 +46,9 @@ FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     initialize_database()
+    orphaned = fail_orphaned_cycles()
+    if orphaned:
+        print(f"[cycles] {orphaned} cycle(s) were running when the engine last stopped; marked failed")
     yield
 
 
@@ -67,12 +68,20 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health() -> dict:
+    """Service status plus whether the learning loop is actually live.
+
+    `loop` says, per capability, whether Feedback writes land (graph store),
+    whether Adapt can read the company's own past (memory scope) and whether
+    Execute can get a fresh brief (LLM). Each failure mode is silent inside the
+    engine, so this is where it is made visible (plan section 2.2).
+    """
     return {
         "status": "ok",
         "database": "sqlite",
         "simulation_engine": "ready",
         "advisor_mode": get_oracle_mode(),
         "sim_profile": get_profile(),
+        "loop": loop_status(),
     }
 
 
@@ -147,46 +156,19 @@ def whatif(payload: WhatIfRequest) -> dict:
         ) from exc
 
 
+# ---- EDGAR dataset view (read-only; additive) ----
+# review_service is imported inside the handlers so that nothing about the EDGAR
+# data files can affect API startup or any founder-product route.
+
 @app.get("/api/review/meta")
 def review_meta() -> dict:
-    """EDGAR growth band + dataset-card numbers for the review demo.
-
-    Everything numeric is read from validation/results/environment_stats.csv or
-    computed from data/edgar_ratios.csv at request time (review ground rule:
-    nothing hand-typed).
-    """
-    return {
-        "edgar_growth": edgar_growth_band(),
-        "dataset": dataset_meta(),
-        "compare_policies": COMPARE_POLICIES,
-    }
-
-
-@app.get("/api/review/figures/{key}")
-def review_figure(key: str):
-    """The two dataset-card figures, served from validation/figures/review/."""
-    path = figure_path(key)
-    if path is None:
-        raise HTTPException(status_code=404, detail="Unknown review figure")
-    return FileResponse(path)
-
-
-@app.post("/api/review/compare")
-def review_compare(payload: CompareRequest) -> dict:
-    """One policy x one seed x 120 months under deterministic_rng.
-
-    Synchronous on purpose: the client fires one request per arm, renders the
-    fast arm as it lands, and keeps a progress indicator up for the LLM arm.
-    Runs are serialized inside review_service (shared global RNG), so the
-    boardroom request submitted first also finishes first.
-    """
-    if payload.policy not in COMPARE_POLICIES:
-        raise HTTPException(status_code=422, detail="Unsupported compare policy")
+    """Dataset-card numbers for the EDGAR view header, computed from the panel."""
     try:
-        return run_compare_policy(payload.policy, payload.seed)
+        from backend.review_service import dataset_meta
+        return {"dataset": dataset_meta()}
     except Exception as exc:
         raise HTTPException(
-            status_code=503, detail=f"Simulation failed: {exc}"
+            status_code=503, detail=f"EDGAR dataset unavailable: {exc}"
         ) from exc
 
 
@@ -197,35 +179,68 @@ def review_panel(
     limit: int = Query(default=25, ge=1, le=200),
     order: str = Query(default="asc", pattern="^(asc|desc)$"),
 ) -> dict:
-    """Raw EDGAR panel rows for the Dataset tab — as-ingested dollars, paginated."""
-    return panel_rows(ticker, offset, limit, descending=(order == "desc"))
-
-
-@app.get("/api/review/backtest/companies")
-def review_backtest_companies() -> dict:
-    """The 39 C1-mapped company states for the Run tab dropdown."""
-    return backtest_companies()
-
-
-@app.post("/api/review/backtest/run")
-def review_backtest_run(payload: BacktestRunRequest) -> dict:
-    """One policy from one company's C1-mapped state, deterministic RNG.
-
-    Synchronous; the client fires the three rule arms first, then oracle_v3.
-    Runs are serialized inside review_service (shared global RNG).
-    """
-    if payload.policy not in BACKTEST_POLICIES:
-        raise HTTPException(status_code=422, detail="Unsupported backtest policy")
+    """Raw EDGAR panel rows for the Dataset view — as-ingested dollars, paginated."""
     try:
-        return run_backtest_policy(
-            payload.ticker, payload.policy, payload.seed, payload.horizon
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        from backend.review_service import panel_rows
+        return panel_rows(ticker, offset, limit, descending=(order == "desc"))
     except Exception as exc:
         raise HTTPException(
-            status_code=503, detail=f"Simulation failed: {exc}"
+            status_code=503, detail=f"EDGAR dataset unavailable: {exc}"
         ) from exc
+
+
+@app.post("/api/cycles", status_code=202)
+def cycles_create(payload: CycleRequest) -> dict:
+    """Start one Observe -> Execute -> Feedback -> Adapt cycle of H months.
+
+    Returns immediately; the work runs on a background thread and months land
+    as they finish. One Boardroom.decide() is 20-90s on the local model, so
+    four months can be minutes - well past the client's single-request budget,
+    which is why this is not synchronous like /api/advise.
+    """
+    cycle = create_cycle(payload.model_dump())
+    start_cycle(cycle["id"])
+    return cycle
+
+
+@app.get("/api/cycles/{cycle_id}")
+def cycles_detail(cycle_id: str) -> dict:
+    """Status plus every month finished so far, plus any HITL close."""
+    cycle = get_cycle(cycle_id)
+    if cycle is None:
+        raise HTTPException(status_code=404, detail="Cycle not found")
+    return cycle
+
+
+@app.get("/api/companies/{company_id}/cycles")
+def company_cycles(company_id: str, limit: int = Query(default=10, ge=1, le=50)) -> list[dict]:
+    return list_cycles(company_id, limit)
+
+
+@app.post("/api/cycles/{cycle_id}/feedback")
+def cycles_feedback(cycle_id: str, payload: CycleFeedbackRequest) -> dict:
+    """The HITL close: did the improvements actually happen (plan section 6)."""
+    try:
+        return submit_feedback(cycle_id, payload.model_dump())
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Cycle not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Feedback could not be recorded: {exc}") from exc
+
+
+DEMO_BOOTSTRAP = ROOT_DIR / "data" / "demo_bootstrap.json"
+
+
+@app.get("/api/demo/bootstrap")
+def demo_bootstrap() -> dict:
+    """The seeded demo workspace written by experiments/seed_demo_company.py,
+    in the browser store's shape. 404 until the seed script has run."""
+    if not DEMO_BOOTSTRAP.exists():
+        raise HTTPException(status_code=404, detail="No seeded demo company; run experiments/seed_demo_company.py")
+    with open(DEMO_BOOTSTRAP, encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 @app.get("/api/companies/{company_id}/analyses")

@@ -12,7 +12,7 @@ import { reviewMeta, reviewPanel } from "../api.js";
 const PAGE_SIZE = 25;
 
 // Headers name the simulation input each column becomes, so the table reads
-// one-to-one against the Run tab's starting state.
+// one-to-one against the simulator's starting state.
 const COLUMN_LABELS = {
   ticker: "Company",
   fiscal_period: "Quarter",
@@ -28,7 +28,7 @@ function cell(column, value) {
   return `$${Math.round(value).toLocaleString("en-US")}`;
 }
 
-export default function Dataset() {
+export default function Dataset({ onBack = null }) {
   const [meta, setMeta] = useState(null);
   const [page, setPage] = useState(null);
   const [error, setError] = useState(null);
@@ -71,8 +71,13 @@ export default function Dataset() {
       <article className="panel rv-panel">
         <div className="panel-title-row">
           <h3><Database size={16} /> Dataset (EDGAR)</h3>
-          {headerLine && <span className="rv-header-line">{headerLine}</span>}
+          {onBack && (
+            <button type="button" className="secondary-button small" onClick={onBack}>
+              <ChevronLeft size={14} /> Back
+            </button>
+          )}
         </div>
+        {headerLine && <p className="rv-header-line">{headerLine}</p>}
 
         {error && <p className="wi-error"><AlertTriangle size={15} /> {error}</p>}
 
@@ -134,13 +139,11 @@ export default function Dataset() {
         </div>
 
         <p className="wi-meta">
-          Mapping into the simulator's starting state (a company's earliest complete
-          quarter): MRR = quarterly revenue ÷ 3 · gross margin = (revenue − cost of
-          revenue) ÷ revenue · monthly burn = G&A ÷ 3 · starting cash = cash +
-          short-term investments. Price, churn and CAC are assumed — they don't exist
-          in EDGAR. The panel also carries S&M, R&D and operating cash flow (the
-          companies' real spending); those aren't shown here because the Run tab's
-          policies choose their own spending instead of replaying the company's.
+          Raw as-ingested figures from the SEC EDGAR XBRL panel, shown for the five
+          demo companies only; the full panel is larger (see the header). The panel
+          also carries S&amp;M, R&amp;D and operating cash flow, which are not shown here.
+          Price, churn and CAC do not exist in EDGAR and are assumed wherever the
+          simulator needs them.
         </p>
       </article>
     </section>

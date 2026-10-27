@@ -43,7 +43,14 @@ class Boardroom:
         corridor: str = "legacy",
         modifier_bound: str = "none",
         runway_estimator: str = "legacy",
+        expectation=None,
     ):
+        # Product path (plan section 3): the expected_delta predictor for the
+        # final action, and the board's track record fed to every agent. None
+        # on research arms - no extra key is computed and the trace is unchanged
+        # apart from two null-valued entries.
+        self.expectation = expectation
+        self.track_record: dict | None = None
         # Spec G11. The absolute spend floors below are calibrated for a ~$50k
         # MRR company; applied unscaled to a $12k-MRR founder they demand more
         # than the company earns. Product surfaces pass mrr/50k here; research
@@ -147,6 +154,17 @@ class Boardroom:
 
     def get_last_decision_trace(self):
         return self.last_decision_trace
+
+    def set_track_record(self, record: dict | None) -> None:
+        """What the board proposed last month, what it predicted, and what
+        actually happened - handed to every agent that can use it (plan
+        section 3.2b). None clears it."""
+        self.track_record = deepcopy(record) if record else None
+        for agent in self.agents:
+            if hasattr(agent, "set_track_record"):
+                agent.set_track_record(self.track_record)
+        if self.proposal_generator is not None and hasattr(self.proposal_generator, "set_track_record"):
+            self.proposal_generator.set_track_record(self.track_record)
 
     def decide(self, state: EnvState) -> dict:
         use_batched_proposals = self.proposal_generator is not None
@@ -292,6 +310,16 @@ class Boardroom:
         final_action_snapshot = deepcopy(final_action)
         self.last_final_action_snapshot = deepcopy(final_action_snapshot)
 
+        # The board's prediction for the action it actually settled on, after
+        # every modifier and guard. This is what Feedback and the HITL close
+        # score against; per-proposal expected_delta values are each lever in
+        # isolation and travel in `proposals` below.
+        expected_delta = (
+            self.expectation(state, final_action_snapshot)
+            if self.expectation is not None
+            else None
+        )
+
         negotiation.final_action = final_action
         negotiation.consensus_reached = True
         if (
@@ -362,6 +390,8 @@ class Boardroom:
             "pre_modifier_action": pre_modifier_action,
             "post_modifier_action": post_modifier_action,
             "final_action": final_action_snapshot,
+            "expected_delta": expected_delta,
+            "track_record": deepcopy(self.track_record),
             "action_modifier_applied": modifier_applied,
             "brief_floor_applied": (list(getattr(self.oracle, "last_floor_applied", []))
                                     if self.use_oracle else []),
@@ -763,6 +793,8 @@ class Boardroom:
                     "objective": proposal.objective,
                     "actions": deepcopy(proposal.actions),
                     "expected_impact": proposal.expected_impact,
+                    "expected_delta": deepcopy(proposal.expected_delta),
+                    "adaptation": proposal.adaptation,
                     "risks": list(proposal.risks),
                     "rationale": proposal.rationale,
                     "causal_confidence": proposal.causal_confidence,

@@ -7,15 +7,19 @@ import {
   AlertTriangle, ArrowDownRight, ArrowUpRight, CheckCircle2, ChevronDown,
   ChevronRight, Circle, FlaskConical, Info, Minus, ShieldAlert, Sparkles
 } from "lucide-react";
+// (CheckCircle2 and Circle remain for ProgressStages.)
 import {
-  money, moneyExact, pct, signedPct, signedPp, pctOfMrr, monthsLabel
+  money, moneyExact, pct, signedPct, signedPp, pctOfMrr, monthsLabel, deriveCac
 } from "./derive.js";
 import {
-  RISK, OUTCOME, FOCUS_LABELS, CHANNEL_COPY, DOMAIN_META,
+  RISK, OUTCOME, FOCUS_LABELS, CHANNEL_COPY, DOMAIN_META, CAUSAL_STRESS,
   refreshReasonCopy, briefSourceCopy, scaleWord,
   guardBullets, rewriteMemory, SIMULATED_PREFIX, causalEvidenceCopy
 } from "./copy.js";
 import { confidenceSentence } from "./founderView.js";
+import {
+  expectedLine, predictionSentences, scoreLine, briefFreshness, actionSummary
+} from "./loopView.js";
 
 // ---- small primitives ----
 
@@ -29,14 +33,40 @@ export function RiskChip({ level, large = false }) {
   );
 }
 
-export function ProvChip({ kind, date }) {
+// Markers only on exceptions (Phase E): a value the founder gave needs no
+// chip, so the two that remain — estimated, derived — stand out. Simulated
+// values carry SimulatedTag, inside Evidence only.
+export function ProvChip({ kind }) {
   const copy = {
-    provided: date ? `You provided · ${date}` : "You provided",
     estimated: "Estimated by the system",
-    derived: "Derived",
-    simulated: "Simulated"
+    derived: "Derived"
   };
-  return <span className={`prov-chip ${kind}`}>{copy[kind] || kind}</span>;
+  if (!copy[kind]) return null;
+  return <span className={`prov-chip ${kind}`}>{copy[kind]}</span>;
+}
+
+// One notice, rendered from what pickNotice (notice.js) chose.
+export function Notice({ notice }) {
+  if (!notice) return null;
+  return (
+    <Banner
+      tone={notice.tone}
+      icon={notice.tone === "warn" ? <AlertTriangle size={17} /> : null}
+      actions={notice.actions.length ? notice.actions.map((act) => (
+        <button
+          key={act.label}
+          className={`${act.primary ? "primary-button" : "secondary-button"} small`}
+          type="button"
+          disabled={!!act.disabled}
+          onClick={act.onClick}
+        >
+          {act.label}
+        </button>
+      )) : null}
+    >
+      {notice.text}
+    </Banner>
+  );
 }
 
 export function DeltaArrow({ value, goodWhenDown = false, format = signedPct }) {
@@ -70,6 +100,20 @@ export function SimulatedTag() {
 
 export function DemoBadge() {
   return <span className="demo-badge">Sample company — data is illustrative</span>;
+}
+
+// One collapsed section: a panel whose body renders only once opened.
+export function Expandable({ title, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <article className={`panel expandable ${open ? "open" : ""}`}>
+      <button className="expand-head" type="button" onClick={() => setOpen(!open)}>
+        {open ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
+        <h3>{title}</h3>
+      </button>
+      {open && <div className="expand-body">{children}</div>}
+    </article>
+  );
 }
 
 // ---- KPI card (§9) ----
@@ -209,7 +253,11 @@ export function buildPlanCards(analysis, month) {
   return cards;
 }
 
-export function PlanCard({ card, compact = false, decisionState = null, onDecide = null }) {
+// The accept toggle that used to sit here is gone: the founder says what they
+// did on the Close form, once, and that answer is the decision History reads.
+// A pre-commit toggle produced a second decision per domain and inflated the
+// "accepted n of m" denominator.
+export function PlanCard({ card, compact = false }) {
   const [open, setOpen] = useState(false);
   return (
     <article className={`plan-card ${card.starred ? "starred" : ""} ${compact ? "compact" : ""}`}>
@@ -218,30 +266,18 @@ export function PlanCard({ card, compact = false, decisionState = null, onDecide
         {card.starred && <span className="priority-pill">Priority</span>}
       </div>
       <strong className="plan-headline">{card.headline}</strong>
-      <span className="plan-meta">
-        {card.share != null && <>≈{Math.round(card.share)}% of MRR</>}
-        {card.sub && <> · {card.sub}</>}
-      </span>
+      {card.sub && <span className="plan-meta">{card.sub}</span>}
       {!compact && <p className="plan-rationale">{card.rationale}</p>}
       {!compact && (
         <div className="plan-actions">
           <button className="link-button" type="button" onClick={() => setOpen(!open)}>
             {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />} Why this number?
           </button>
-          {onDecide && (
-            <button
-              className={`accept-button ${decisionState === "accepted" ? "on" : ""}`}
-              type="button"
-              onClick={() => onDecide(card, decisionState === "accepted" ? "suggested" : "accepted")}
-            >
-              {decisionState === "accepted" ? <CheckCircle2 size={15} /> : <Circle size={15} />}
-              {decisionState === "accepted" ? "Doing this" : "I'm doing this"}
-            </button>
-          )}
         </div>
       )}
       {!compact && open && (
         <ol className="plan-chain">
+          {card.share != null && <li>≈{Math.round(card.share)}% of your monthly revenue</li>}
           {card.chain.map((step) => <li key={step}>{step}</li>)}
         </ol>
       )}
@@ -307,20 +343,39 @@ export function EvidenceList({ analysis }) {
 // They are now one sentence in which the count caps the band, computed by
 // founder_view on the server; confidenceSentence is the fallback for analyses
 // stored before display blocks existed.
-export function ConfidenceStrip({ analysis, month, estimatedCount = 0 }) {
+// How many of the analysis's inputs were guessed. The server reports what it
+// actually assumed (trace.assumed_fields); the client-side count is only the
+// fallback for analyses stored before that field existed.
+export function estimatedInputCount(analysis, month, company) {
+  const assumed = analysis?.trace?.assumed_fields;
+  if (assumed) return assumed.length;
+  const cac = month?.values ? deriveCac(month.values) : { source: "estimated" };
+  return (cac.source === "estimated" ? 1 : 0) + (company?.maturity ? 0 : 1) + 1;
+}
+
+// The one confidence sentence, verbatim from the server's display block (the
+// assumption count caps the band there); never shortened or recomposed here.
+export function confidenceLine(analysis, month, company) {
   if (!analysis) return null;
-  const sentence = analysis.display?.confidence?.sentence
+  return analysis.display?.confidence?.sentence
     || analysis.trace?.display?.confidence?.sentence
-    || confidenceSentence(analysis.brief?.confidence, estimatedCount);
+    || confidenceSentence(analysis.brief?.confidence, estimatedInputCount(analysis, month, company));
+}
+
+// The confidence sentence and why the analysis ran. Whether the brief was
+// reused is engine detail that lives in the trace; the numbers-from date
+// repeats This month's status line, so it appears only for an archived
+// analysis, where it is the one thing the reader needs to know.
+export function ConfidenceStrip({ analysis, month, company = null, archived = false }) {
+  if (!analysis) return null;
+  const sentence = confidenceLine(analysis, month, company);
   const reason = refreshReasonCopy(analysis.trace?.refresh_reason || analysis.reason);
-  const reuse = briefSourceCopy(analysis.trace?.brief_source);
   return (
     <div className="confidence-strip">
       <span>{sentence}</span>
       <span className="dot-sep">·</span>
       <span>{reason}</span>
-      {reuse && (<><span className="dot-sep">·</span><span>{reuse}</span></>)}
-      {month && (<><span className="dot-sep">·</span><span>numbers from {new Date(month.enteredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></>)}
+      {archived && month && (<><span className="dot-sep">·</span><span>numbers from {new Date(month.enteredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></>)}
     </div>
   );
 }
@@ -395,6 +450,152 @@ export function MiniLine({ points, label, goodWhenDown = false, format = (v) => 
         />
       </svg>
       <span className="mini-line-value">{format(points[points.length - 1])}</span>
+    </div>
+  );
+}
+
+// ---- the OEFA strip (plan section 5.1) ----
+//
+// Observed / Decided / Expected / Changed, one component used everywhere a
+// month appears: each Plan column, the timeline, and retroactively the Advice
+// detail page. It is the Module 6 explainability payload in a form that
+// screenshots, and it is built from the server's numbers only.
+
+const TREND_WORDS = { INCREASING: "rising", FLAT: "flat", DECREASING: "falling" };
+
+// A single-month analysis (from /api/advise or an older stored one) has the
+// Observe/Execute/Expected half of a cycle month and no Feedback: the strip
+// still renders, and says the last beat is waiting on the real month.
+export function monthFromAnalysis(analysis) {
+  if (!analysis?.trace) return null;
+  const t = analysis.trace;
+  return {
+    month_index: 1,
+    projection: false,
+    observe: {
+      memory_count: t.memory_count ?? (t.retrieved_memories || []).length,
+      memories: t.retrieved_memories || [],
+      trend: null,
+      graph: { stress_node: t.causal_stress_node || t.graph_summary?.stress_node || null, enabled: t.graph_store_enabled ?? null }
+    },
+    execute: {
+      action: t.final_action,
+      brief: analysis.brief,
+      llm_ok: analysis.llm_ok !== false,
+      brief_source: t.brief_source,
+      refresh_reason: t.refresh_reason,
+      expected_delta: t.expected_delta || null,
+      proposals: t.proposals || []
+    },
+    feedback: null,
+    adapt: null
+  };
+}
+
+function Beat({ label, children, tone = "" }) {
+  return (
+    <div className={`oefa-beat ${tone}`}>
+      <span className="oefa-beat-label">{label}</span>
+      <ul className="oefa-lines">{children}</ul>
+    </div>
+  );
+}
+
+// The Observed beat's sentences, shared with the Evidence section on Why this
+// plan so the two say the same thing about what the board recalled.
+export function observedLines(observe) {
+  if (!observe) return [];
+  const stress = observe.graph?.stress_node ? CAUSAL_STRESS[observe.graph.stress_node] : null;
+  const trend = observe.trend?.mrr_trend ? TREND_WORDS[observe.trend.mrr_trend] : null;
+  const lines = [
+    { key: "memory", text: observe.memory_count ? `${observe.memory_count} similar past month${observe.memory_count === 1 ? "" : "s"} recalled` : "no similar past months yet" }
+  ];
+  if (trend) lines.push({ key: "trend", text: `revenue trend ${trend}` });
+  if (stress) lines.push({ key: "stress", text: `the board's read: ${stress}` });
+  if (observe.graph?.enabled === false) lines.push({ key: "graph", text: "causal evidence graph off", muted: true });
+  return lines;
+}
+
+// Weight moves in the founder's words: the server reports {key, from, to, delta}.
+function weightMoveLine(move) {
+  const label = FOCUS_LABELS[move.key] || move.key;
+  return `${label} focus ${move.delta > 0 ? "up" : "down"} to ${Math.round(move.to * 100)}%`;
+}
+
+// `observedInEvidence`: the page already lists the Observed lines in its
+// Evidence section, so this beat keeps the recall count and points there.
+// `superseded`: the cycle was replaced before it finished.
+export function OefaStrip({ month, closed = null, defaultOpen = false, title = null, observedInEvidence = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  if (!month) return null;
+  const { observe, execute, feedback, adapt } = month;
+  const fresh = briefFreshness(execute?.brief_source);
+  const expected = execute?.expected_delta;
+  const adaptations = adapt?.adaptations || [];
+  const weightMoves = adapt?.weight_moves || [];
+  // The server also narrates weight moves in what_changed; with the moves
+  // rendered in their own words those lines would be a second copy.
+  const whatChanged = (adapt?.what_changed || []).filter((line) => !(weightMoves.length && / weight /.test(line)));
+  // Closed by the founder: the actual numbers replace the simulated ones.
+  const result = closed?.result || null;
+  const changeError = result ? result.prediction_error : feedback?.prediction_error;
+  const changeBefore = observe?.state_before;
+  const changeAfter = result ? result.actual_state : feedback?.state_after;
+  const changedLabel = result ? "Changed (your numbers)" : changeError ? "Changed (in simulation)" : "Changed";
+
+  return (
+    <div className={`oefa-strip ${open ? "open" : ""}`}>
+      <button className="oefa-toggle" type="button" onClick={() => setOpen(!open)}>
+        {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        <span>{title ? `${title} · ` : ""}Observed · Decided · Expected · Changed</span>
+      </button>
+      {open && (
+        <div className="oefa-body">
+          <Beat label="Observed">
+            {observedInEvidence
+              ? <>
+                  <li>{observedLines(observe)[0]?.text}</li>
+                  <li className="muted">see Evidence above</li>
+                </>
+              : observedLines(observe).map((l) => <li key={l.key} className={l.muted ? "muted" : ""}>{l.text}</li>)}
+          </Beat>
+          <Beat label="Decided">
+            {actionSummary(execute?.action).map((line) => <li key={line}>{line}</li>)}
+            <li className="muted">{refreshReasonCopy(execute?.refresh_reason)} · brief {fresh.label}</li>
+            {execute?.llm_ok === false && <li className="muted">strategist unreachable — built-in rules</li>}
+          </Beat>
+          <Beat label="Expected">
+            {expected ? <li>{expectedLine(expected)}</li> : <li className="muted">no numeric prediction on this analysis</li>}
+          </Beat>
+          <Beat label={changedLabel} tone={result ? "actual" : ""}>
+            {changeError && !result && (
+              <li className="muted">model consistency check, not accuracy</li>
+            )}
+            {changeError ? (
+              <>
+                {predictionSentences({ before: changeBefore, actual: changeAfter, expected, error: changeError, basis: result ? "actual" : "simulated" })
+                  .map((s) => <li key={s.key} className={`pe-line ${s.tone}`}>{s.text}</li>)}
+                <li className="muted">{scoreLine(changeError)}</li>
+              </>
+            ) : (
+              <li className="muted">waiting on your real numbers — close the month to score this plan</li>
+            )}
+            {whatChanged.slice(0, 3).map((line) => <li key={line}>{line}</li>)}
+            {weightMoves.map((m) => <li key={m.key}>{weightMoveLine(m)}</li>)}
+            {adaptations.map((a) => <li key={a.agent}><strong>{a.agent}:</strong> {a.sentence}</li>)}
+            {feedback && !result && (
+              <li className="muted">
+                {feedback.evidence_written
+                  ? "this simulated month was written back as simulated evidence, kept apart from anything real"
+                  : "not written back as evidence (causal graph off)"}
+              </li>
+            )}
+            {result && (
+              <li className="muted">{result.evidence?.reason}</li>
+            )}
+          </Beat>
+        </div>
+      )}
     </div>
   );
 }
