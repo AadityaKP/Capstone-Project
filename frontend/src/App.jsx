@@ -155,7 +155,7 @@ export function Shell() {
             {/* Primary on age only: "not current" is true from the moment a
                 founder closes until month 1 lands, and "failed" wants Re-run,
                 not Close. Both belong to the notice slot on This month. */}
-            {!state.demo && page !== "update" && (
+            {!state.demo && page !== "update" && page !== "validation" && (
               <button
                 className={`${closeDue ? "primary-button" : "secondary-button"} small`}
                 type="button"
